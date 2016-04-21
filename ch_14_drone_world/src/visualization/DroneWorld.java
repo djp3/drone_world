@@ -81,8 +81,7 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 	private Map<Place,Spatial> places;
 	private Map<Drone, Node> drones;
 
-	public DroneWorld(Simulator simulator, Collection<Person> people, Collection<Place> places,
-			Collection<Drone> drones) {
+	public DroneWorld(Simulator simulator, Collection<Person> people, Collection<Place> places, Collection<Drone> drones) {
 		if (simulator == null) {
 			throw new IllegalArgumentException("\"simulator\" can't be null");
 		}
@@ -236,6 +235,7 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			case IN_TRANSIT: {
 				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
 						drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
+				baseNode.rotate(0,0.5f*tpf,0);
 				particlesNode.detachAllChildren();
 			}
 				break;
@@ -320,8 +320,8 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		canonical_place.setShadowMode(ShadowMode.Cast);
 	}
 
-	private void initDrone() {
-		boolean bluebox = false;
+	private void initDrone(boolean isHighResolution) {
+		boolean bluebox = !isHighResolution;
 
 		if (bluebox) {
 			Box b = new Box(0.1f, 0.1f, 0.1f); // create cube shape
@@ -393,7 +393,7 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		initMaterials();
 		initGround();
 		initBase();
-		initDrone();
+		initDrone(this.simulator.isHighResolution());
 		initPerson();
 
 

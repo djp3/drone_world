@@ -106,7 +106,16 @@ public class Simulator {
 		clockTick = -SIMULATION_SPEED;
 		long previousTime = System.currentTimeMillis();
 		long currentTime = System.currentTimeMillis();
-		long waitTime = SIMULATION_SPEED/10;
+		
+		//Set up the speed of the simulation
+		long factor = controller.simulatorSpeed();
+		if(factor <= 0){
+			factor = 1;
+		}
+		else if (factor > SIMULATION_SPEED){
+			factor = SIMULATION_SPEED;
+		}
+		long waitTime = SIMULATION_SPEED/factor;
 		
 		while(!quitting && !simulationEnded){
 			simulationEnded = true;
@@ -380,6 +389,10 @@ public class Simulator {
 		drone.setDisembarkingStart(-drone.getDisembarkingDuration());
 	}
 	
+	public boolean isHighResolution(){
+		return this.controller.isHighResolution();
+	}
+	
 	public TreeSet<Place> getPlaces(){
 		TreeSet<Place> ret = new TreeSet<Place>();
 		if(places != null){
@@ -405,9 +418,17 @@ public class Simulator {
 		Set<Place> ret = new TreeSet<Place>();
 		ret.add(new Place("Winter Hall",new Position(34.448868,-119.6629439,0)));
 		ret.add(new Place("SBCC",new Position(34.4060661,-119.69755,0)));
+		
 		ret.add(new Place("Show Grounds",new Position(34.4300057,-119.7363983,0)));
-		//ret.add(new Place("Dining Commons",new Position(34.4495896,-119.6602979)));
-		//ret.add(new Place("Page Hall", new Position(34.4517064,-119.6623229)));
+		ret.add(new Place("Santa Barbara Bowl",new Position(34.4351155,-119.6935015,0)));
+		ret.add(new Place("Reservoir", new Position(34.4537095,-119.7277611,0)));
+		
+		ret.add(new Place("Trader Joe's",new Position(34.4392777,-119.7293757,0)));
+		ret.add(new Place("Water Tower",new Position(34.4677583,-119.7480575,0)));
+		ret.add(new Place("Mother Stearn's Candy",new Position(34.4097893,-119.6855427,0)));
+		
+		ret.add(new Place("Doctor Evil's Sub",new Position(34.3979696,-119.6640514,0)));
+		ret.add(new Place("Dog Beach",new Position(34.4026544,-119.7426834,0)));
 		return ret;
 	}
 
@@ -419,14 +440,11 @@ public class Simulator {
 		
 		for(int i = 0; i < MAX_DRONES ; i++){
 			int start = random.nextInt(randomize.size());
-			int end = random.nextInt(randomize.size());
-			while((start == end) && (randomize.size() > 1)){
-				end = random.nextInt(randomize.size());
-			}
+			int end = start;
 			Place startPlace = randomize.get(start);
 			Place endPlace = randomize.get(end);
 			Drone drone = new Drone(startPlace,endPlace,1);
-			drone.setState(DroneState.BEGIN);
+			drone.setState(DroneState.IDLING);
 			ret.add(drone);
 		}
 		
@@ -475,7 +493,7 @@ public class Simulator {
 
 	
 	//These are the things that the controller is supposed to be able to call
-
+	
 	public void redirectDrone(Drone drone, Place place) {
 		for(Drone d:drones){
 			if(d.getId().equals(drone.getId())){
