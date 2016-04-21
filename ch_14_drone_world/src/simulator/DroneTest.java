@@ -29,11 +29,11 @@ public class DroneTest {
 	@Test
 	public void test() {
 		String name = "Timbuktu";
-		Position position = new Position(10.0,20.0);
+		Position position = new Position(10.0,20.0,0.0);
 		Place start = new Place(name, position);
 		
 		name = "Timbuk3";
-		position = new Position(15.0,25.0);
+		position = new Position(15.0,25.0,0.0);
 		Place destination = new Place(name, position);
 		
 		Drone d1 = new Drone(start,destination,1);
