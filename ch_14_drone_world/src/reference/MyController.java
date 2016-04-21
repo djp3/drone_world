@@ -10,6 +10,16 @@ public class MyController implements Controller {
 	protected Simulator simulator;
 
 	@Override
+	public boolean isHighResolution() {
+		return true;
+	}
+
+	@Override
+	public long simulatorSpeed() {
+		return 20;
+	}
+
+	@Override
 	public void setSimulator(Simulator simulator) {
 		this.simulator = simulator;
 	}
@@ -137,5 +147,6 @@ public class MyController implements Controller {
 		simulator.getPlaces();
 		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Drone Idling");
 	}
+
 
 }
