@@ -1,0 +1,5 @@
+package simulator;
+
+public enum DroneState {
+	BEGIN,EMBARKING, ASCENDING, IN_TRANSIT, DESCENDING, DISEMBARKING, RECHARGING, IDLING;
+}
