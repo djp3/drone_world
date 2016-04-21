@@ -14,7 +14,7 @@ public class Person implements Comparable<Person>, Savable{
 	String start;
 	//Name of place where person is going
 	String destination;
-	Position currentLocation;
+	Position position;
 	PersonState state;
 	
 
@@ -34,12 +34,12 @@ public class Person implements Comparable<Person>, Savable{
 		return start;
 	}
 	
-	public Position getPosition(){
-		return new Position(currentLocation);
+	public void setPosition(Position position){
+		this.position = position;
 	}
 	
-	public void setPosition(Position position){
-		this.currentLocation = position;
+	public Position getPosition(){
+		return new Position(position);
 	}
 	
 	void setState(PersonState newState){
@@ -54,7 +54,7 @@ public class Person implements Comparable<Person>, Savable{
 		this.id = id;
 		this.name = name;
 		this.start = start ;
-		this.currentLocation = new Position(currentLocation);
+		this.position = new Position(currentLocation);
 		this.destination = destination;
 	}
 	
@@ -62,6 +62,7 @@ public class Person implements Comparable<Person>, Savable{
 		this.id = person.getId();
 		this.name = person.getName();
 		this.start = person.getStart();
+		this.position = new Position(person.getPosition());
 		this.destination = person.getDestination();
 		this.state = person.getState();
 	}
@@ -73,7 +74,7 @@ public class Person implements Comparable<Person>, Savable{
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((currentLocation == null) ? 0 : currentLocation.hashCode());
+		result = prime * result + ((position == null) ? 0 : position.hashCode());
 		result = prime * result + ((destination == null) ? 0 : destination.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
@@ -91,10 +92,10 @@ public class Person implements Comparable<Person>, Savable{
 		if (!(obj instanceof Person))
 			return false;
 		Person other = (Person) obj;
-		if (currentLocation == null) {
-			if (other.currentLocation != null)
+		if (position == null) {
+			if (other.position != null)
 				return false;
-		} else if (!currentLocation.equals(other.currentLocation))
+		} else if (!position.equals(other.position))
 			return false;
 		if (destination == null) {
 			if (other.destination != null)
@@ -148,14 +149,12 @@ public class Person implements Comparable<Person>, Savable{
 
 	@Override
 	public void read(JmeImporter arg0) throws IOException {
-		// TODO Auto-generated method stub
-		
+		throw new RuntimeException("Not implemented");
 	}
 
 	@Override
 	public void write(JmeExporter arg0) throws IOException {
-		// TODO Auto-generated method stub
-		
+		throw new RuntimeException("Not implemented");
 	}
 	
 	
