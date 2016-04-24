@@ -96,24 +96,28 @@ public class Position implements Comparable<Position>{
 	 * West to East, then North to South, then low to high
 	 */
 	public int compareTo(Position other) {
-		if(other == null){
-			return 1;
-		}
-		
-		if( this.equals(other)){
+		if (this == other)
 			return 0;
-		}
+		if (other == null)
+			return 1;
 		
-		int c = Double.compare(this.getLongitude(), other.getLongitude());
-		if(c == 0){
-			c = Double.compare(other.getLatitude(), this.getLatitude());
-			if(c == 0){
-				c = Double.compare(this.getHeight(), other.getHeight());
-				return c;
-			}
-			return c;
-		}
-		return c;
+		if (Double.doubleToLongBits(longitude) != Double.doubleToLongBits(other.longitude))
+			return Double.compare(longitude, other.longitude);
+		
+		if (Double.doubleToLongBits(latitude) != Double.doubleToLongBits(other.latitude))
+			return Double.compare(other.latitude,latitude);
+		
+		if (Double.doubleToLongBits(height) != Double.doubleToLongBits(other.height))
+			return Double.compare(height, other.height);
+		
+		return 0;
+	}
+
+	
+	public String toString(){
+		StringBuffer out = new StringBuffer();
+		out.append("("+latitude+","+longitude+","+height+")");
+		return out.toString();
 	}
 
 	
