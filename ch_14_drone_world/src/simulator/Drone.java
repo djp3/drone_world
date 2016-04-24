@@ -2,12 +2,13 @@ package simulator;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class Drone implements Comparable<Drone>{
 	
 	private static final int ONE_SECOND = 1000;
-	private static final int ONE_MINUTE = 60*ONE_SECOND;
-	private static final int ONE_HOUR = 60*ONE_MINUTE;
+	//private static final int ONE_MINUTE = 60*ONE_SECOND;
+	//private static final int ONE_HOUR = 60*ONE_MINUTE;
 	
 	// Name to identify the drone by
 	private String id;
@@ -41,9 +42,8 @@ public class Drone implements Comparable<Drone>{
 	
 	// between 0.0 and 1.0 with 1.0 full charged
 	private double charge;
-	// time of start of recharging
-	private long rechargeStart;
-	// How many milliseconds until a full charge;
+	
+	// Percentage of charged gained per second while recharging
 	private double rechargeRate;
 	
 	// How many passengers can this drone carry?
@@ -65,7 +65,7 @@ public class Drone implements Comparable<Drone>{
 		return name;
 	}
 
-	public void setName(String name) {
+	void setName(String name) {
 		this.name = name;
 	}
 
@@ -73,7 +73,7 @@ public class Drone implements Comparable<Drone>{
 		return start;
 	}
 	
-	public void setStart(Place start) {
+	void setStart(Place start) {
 		this.start = start;
 	}
 	
@@ -81,12 +81,12 @@ public class Drone implements Comparable<Drone>{
 		return position;
 	}
 
-	Place getDestination() {
+	public Place getDestination() {
 		return destination;
 	}
 	
 	void setDestination(Place place){
-		destination = new Place(place);
+		destination = place;
 	}
 
 	public DroneState getState(){
@@ -137,11 +137,11 @@ public class Drone implements Comparable<Drone>{
 		return disembarkers;
 	}
 
-	long getAscentionTime() {
+	public long getAscentionTime() {
 		return this.ascentionTime;
 	}
 
-	long getDescentionTime() {
+	public long getDescentionTime() {
 		return this.descentionTime;
 	}
 
@@ -161,15 +161,7 @@ public class Drone implements Comparable<Drone>{
 		this.transitEnd = transitEnd;
 	}
 
-	long getRechargeStartTime() {
-		return rechargeStart;
-	}
-
-	void setRechargeStartTime(long rechargeStart) {
-		this.rechargeStart = rechargeStart;
-	}
-
-	double getCharge() {
+	public double getCharge() {
 		return charge;
 	}
 
@@ -177,7 +169,7 @@ public class Drone implements Comparable<Drone>{
 		this.charge = charge;
 	}
 
-	double getRechargeRate() {
+	public double getRechargeRate() {
 		return rechargeRate;
 	}
 
@@ -185,7 +177,7 @@ public class Drone implements Comparable<Drone>{
 		this.rechargeRate = rechargeRate;
 	}
 
-	int getCapacity() {
+	public int getCapacity() {
 		return capacity;
 	}
 
@@ -197,7 +189,7 @@ public class Drone implements Comparable<Drone>{
 		return passengers;
 	}
 
-	double getSpeed(){
+	public double getSpeed(){
 		return speed;
 	}
 
@@ -205,7 +197,7 @@ public class Drone implements Comparable<Drone>{
 		this.id = "#"+System.currentTimeMillis();
 		speed = 100.0;
 		charge = 1.0;
-		rechargeRate = ONE_MINUTE;
+		rechargeRate = 0.10;
 		
 		embarkingDuration= 20*ONE_SECOND;
 		embarkingCapacity = 1;
@@ -227,7 +219,7 @@ public class Drone implements Comparable<Drone>{
 		}
 		
 		this.capacity = capacity;
-		this.passengers = new HashSet<Person>();
+		this.passengers = new TreeSet<Person>();
 		
 	}
 	
@@ -270,7 +262,6 @@ public class Drone implements Comparable<Drone>{
 		this.transitEnd = drone.getTransitEnd();
 		
 		this.charge = drone.getCharge();
-		this.rechargeStart = drone.getRechargeStartTime();
 		this.rechargeRate = drone.getRechargeRate();
 		
 		this.capacity = drone.getCapacity();
@@ -313,7 +304,6 @@ public class Drone implements Comparable<Drone>{
 		result = prime * result + ((passengers == null) ? 0 : passengers.hashCode());
 		temp = Double.doubleToLongBits(rechargeRate);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
-		result = prime * result + (int) (rechargeStart ^ (rechargeStart >>> 32));
 		temp = Double.doubleToLongBits(speed);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
 		result = prime * result + ((start == null) ? 0 : start.hashCode());
@@ -378,8 +368,6 @@ public class Drone implements Comparable<Drone>{
 		} else if (!passengers.equals(other.passengers))
 			return false;
 		if (Double.doubleToLongBits(rechargeRate) != Double.doubleToLongBits(other.rechargeRate))
-			return false;
-		if (rechargeStart != other.rechargeStart)
 			return false;
 		if (Double.doubleToLongBits(speed) != Double.doubleToLongBits(other.speed))
 			return false;
