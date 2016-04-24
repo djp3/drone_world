@@ -6,8 +6,17 @@ import simulator.Drone;
 import simulator.Simulator;
 
 public class MyController implements Controller {
+
+	Simulator simulator;
 	
-	protected Simulator simulator;
+	@Override
+	public void setSimulator(Simulator simulator) {
+		this.simulator = simulator;
+	}
+	
+	public Simulator getSimulator(){
+		return this.simulator;
+	}
 
 	@Override
 	public boolean isHighResolution() {
@@ -19,10 +28,7 @@ public class MyController implements Controller {
 		return 20;
 	}
 
-	@Override
-	public void setSimulator(Simulator simulator) {
-		this.simulator = simulator;
-	}
+	
 
 	@Override
 	public void droneEmbarkingStart(Drone drone) {
@@ -73,7 +79,7 @@ public class MyController implements Controller {
 
 	@Override
 	public void droneTransiting(Drone drone, double percent) {
-		System.out.println("*** Simulator told: Drone " + drone.getId() + ": In Transit " + (percent * 100) + "%");
+		System.out.println("*** Simulator told: Drone " + drone.getId() + ": In Transit " + (percent * 100) + "%"+", Charge: "+drone.getCharge()+"%");
 
 	}
 
@@ -144,7 +150,6 @@ public class MyController implements Controller {
 
 	@Override
 	public void droneIdling(Drone drone) {
-		simulator.getPlaces();
 		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Drone Idling");
 	}
 
