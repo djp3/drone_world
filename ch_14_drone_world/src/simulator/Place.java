@@ -1,6 +1,7 @@
 package simulator;
 
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 public class Place implements Comparable<Place>{
 	
@@ -41,6 +42,7 @@ public class Place implements Comparable<Place>{
 		}
 	}
 
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -77,45 +79,51 @@ public class Place implements Comparable<Place>{
 			return false;
 		return true;
 	}
+	
 
 	@Override
 	public int compareTo(Place other) {
-		if (this.equals(other)){
+		if (this == other)
 			return 0;
-		}
-		
-		if (other == null){
+		if (other == null)
 			return 1;
-		}
 		
-		if (this.getName() == null) {
-			if (other.getName() != null){
+		if (name == null) {
+			if (other.name != null)
+				return -1;
+		} else if (other.name == null){
+			return 1;
+		} else if (!name.equals(other.name))
+			return name.compareTo(other.name);
+		
+		if (position == null) {
+			if (other.position != null)
+				return -1;
+		} else if (!position.equals(other.position))
+			return position.compareTo(other.position);
+		
+		if (waitingToEmbark == null) {
+			if (other.waitingToEmbark != null)
+				return -1;
+		} else if (!waitingToEmbark.equals(other.waitingToEmbark)) {
+			ListIterator<Person> a = waitingToEmbark.listIterator();
+			ListIterator<Person> b = other.waitingToEmbark.listIterator();
+			while(a.hasNext() && b.hasNext()){
+				int c = a.next().compareTo(b.next());
+				if(c != 0){
+					return c;
+				}
+			}
+			if(a.hasNext()){
+				return 1;
+			}
+			if(b.hasNext()){
 				return -1;
 			}
-		} 
-		else if(other.getName() == null){
-			return 1;
 		}
 		
-		int c = this.getName().compareTo(other.getName());
-		if(c != 0){
-			return c;
-		}
-		else{
-			if (this.getPosition() == null) {
-				if (other.getPosition() != null){
-					return -1;
-				}
-				else{
-					return 0; //For now you can't get here because they are already found to be equal
-				}
-			}
-			else{
-				return this.getPosition().compareTo(other.getPosition());
-			}
-		}
+		return 0;
 	}
-	
 	
 }
 
