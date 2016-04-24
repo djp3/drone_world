@@ -1,6 +1,7 @@
 package visualization;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -13,7 +14,6 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
 import com.jme3.asset.TextureKey;
 import com.jme3.asset.plugins.FileLocator;
-import com.jme3.asset.plugins.ZipLocator;
 import com.jme3.effect.ParticleEmitter;
 import com.jme3.effect.ParticleMesh;
 import com.jme3.effect.shapes.EmitterPointShape;
@@ -26,27 +26,17 @@ import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
-import com.jme3.math.Matrix3f;
-import com.jme3.math.Transform;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
+import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.shadow.DirectionalLightShadowFilter;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
-import com.jme3.app.SimpleApplication;
-import com.jme3.material.Material;
-import com.jme3.renderer.Camera;
-import com.jme3.renderer.queue.RenderQueue.ShadowMode;
-import com.jme3.terrain.geomipmap.TerrainLodControl;
-import com.jme3.terrain.heightmap.AbstractHeightMap;
 import com.jme3.terrain.geomipmap.TerrainQuad;
-import com.jme3.terrain.geomipmap.lodcalc.DistanceLodCalculator;
-import com.jme3.terrain.heightmap.HillHeightMap; // for exercise 2
-import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.SkyFactory;
@@ -58,15 +48,9 @@ import simulator.Place;
 import simulator.Position;
 import simulator.Simulator;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-
 public class DroneWorld extends SimpleApplication implements AnimEventListener {
-
-	private Random random = new Random();
+	
+	private Random random = new Random(10L);
 	private Simulator simulator;
 
 	Box ground;
@@ -125,10 +109,11 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 	/* Use the main event loop to trigger repeating actions. */
 	@Override
 	public void simpleUpdate(float tpf) {
-		// make the player rotate:
-		// ground_geo.rotate(0.5f * tpf, 0.5f * tpf, 0);
+		//System.out.println("DroneWorld Person:");
 		for (Entry<Person, Spatial> personEntry : people.entrySet()) {
 			Person person = personEntry.getKey();
+			//System.out.println("\t"+Integer.toHexString(System.identityHashCode(person))+" "+person.toString());
+			
 			switch (personEntry.getKey().getState()) {
 			case WAITING: {
 				personEntry.getValue().setLocalTranslation(latLong2Transform(person.getPosition().getLatitude(),
@@ -185,9 +170,41 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 				throw new IllegalArgumentException("Unhandled Drone State: " + personEntry.getKey().getState());
 			}
 		}
+		//System.out.println("DroneWorld Places:");
+		for (Entry<Place, Spatial> placeEntry : places.entrySet()) {
+			Place place = placeEntry.getKey();
+			Spatial baseNode = placeEntry.getValue();
+			if(place.getWaitingToEmbark().size()!=0){
+				//System.out.println("\tPlace: "+place.getName());
+				for(Person p:place.getWaitingToEmbark()){
+					if(!people.keySet().contains(p)){
+						throw new RuntimeException("Someone was cloned:"+p);
+					}
+					//System.out.println("\t\tWaiting:"+Integer.toHexString(System.identityHashCode(p))+" "+p);
+				}
+			}
+			
+		}
+		
+		//System.out.println("DroneWorld Drone:");
 		for (Entry<Drone, Node> droneEntry : drones.entrySet()) {
 			Drone drone = droneEntry.getKey();
 			Node baseNode = droneEntry.getValue();
+			
+			/*
+			System.out.println("\tDrone:"+Integer.toHexString(System.identityHashCode(drone))+" "+drone.getId());
+			if((drone.getEmbarkers().size() != 0) || (drone.getPassengers().size() != 0) || (drone.getDisembarkers().size() != 0)){
+				for(Person p:drone.getEmbarkers()){
+					System.out.println("\t\tEmbark:"+Integer.toHexString(System.identityHashCode(p))+" "+p);
+				}
+				for(Person p:drone.getPassengers()){
+					System.out.println("\t\tPass:"+Integer.toHexString(System.identityHashCode(p))+" "+p);
+				}
+				for(Person p:drone.getDisembarkers()){
+					System.out.println("\t\tDis:"+Integer.toHexString(System.identityHashCode(p))+" "+p);
+				}
+			}*/
+			
 			Spatial droneNode = baseNode.getChild("drone");
 			Node particlesNode = (Node) baseNode.getChild("particles");
 			switch (droneEntry.getKey().getState()) {
@@ -441,13 +458,13 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			} else {
 				channel.setAnim("Idle3", 0.05f);
 			}
-			channel.setSpeed(random.nextFloat());
+			channel.setSpeed(random.nextFloat()*0.5f+0.5f);
 
 			guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
 			BitmapText name = new BitmapText(guiFont, false);
 			name.setSize(guiFont.getCharSet().getRenderedSize());
 			name.setText(person.getName());
-			name.setLocalTranslation(-0.5f, 1.0f, person.getName().length() / 2 * 0.2f);
+			name.setLocalTranslation(0.0f, 0.5f, person.getName().length() / 2 * 0.2f);
 			name.rotate(0f, FastMath.HALF_PI, 0f);
 			name.setLocalScale(0.01f);
 			name.setShadowMode(ShadowMode.Cast);
@@ -525,6 +542,10 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		}
 		else if (p.getState().equals(PersonState.ARRIVED)) {
 			channel.setAnim("Death1", 0.05f);
+			channel.setLoopMode(LoopMode.DontLoop);
+		}
+		else if (p.getState().equals(PersonState.IN_DRONE)) {
+			channel.setAnim("Spin", 0.05f);
 			channel.setLoopMode(LoopMode.DontLoop);
 		} else {
 			if (animName.equals("Idle2")) {
