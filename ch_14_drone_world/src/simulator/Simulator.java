@@ -4,27 +4,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
-import reference.MyController;
 import reference.MyNewController;
 import visualization.DroneWorld;
 
 public class Simulator {
 	
 	public static final int MAX_DRONES = 1;
-	public static final int MAX_PEOPLE = 6;
+	public static final int MAX_PEOPLE = 10;
 	private static final long SIMULATION_SPEED = 100;
 	private static final boolean PEOPLE_ALWAYS_BOARD_DRONE = false;
 	private static final boolean PEOPLE_ALWAYS_DISEMBARK_DRONE = false;
 	private static final int DELIVER_PERSON_SCORE = 100;
 	private static final int TRANSIT_HEIGHT = 2;
-	private static Random random = new Random(10);
+	private static Random random = new Random(10L);
 	
 	//Simulator time in milliseconds
 	private long clockTick;
@@ -119,8 +117,10 @@ public class Simulator {
 		
 		while(!quitting && !simulationEnded){
 			simulationEnded = true;
+			
 			previousTime = currentTime;
 			currentTime = System.currentTimeMillis();
+			
 			while((currentTime - previousTime) < waitTime){
 				try {
 					Thread.sleep(waitTime - (currentTime-previousTime));
@@ -128,10 +128,13 @@ public class Simulator {
 				}
 				currentTime = System.currentTimeMillis();
 			}
+			
 			clockTick += SIMULATION_SPEED;
+			
 			drawScore();
 			drawTime();
 			drawMap();
+			
 			for(Drone drone:drones){
 				switch (drone.getState()){
 					case BEGIN:{
@@ -147,9 +150,13 @@ public class Simulator {
 							
 							boolean embarkingSome = (drone.getEmbarkers().size() > 0);
 							for(Person person:drone.getEmbarkers()){
-								drone.getEmbarkers().remove(person);
+								if(!drone.getEmbarkers().remove(person)){
+									throw new RuntimeException("Whey didn't the person get on board?");
+								}
 								person.setState(PersonState.IN_DRONE);
-								drone.getPassengers().add(person);
+								if(!drone.getPassengers().add(person)){
+									throw new RuntimeException("Whey didn't the person get become a passenger?");
+								}
 							}
 							
 							if(embarkingSome){
@@ -192,7 +199,10 @@ public class Simulator {
 										drone.setEmbarkingStart(clockTick);
 										for(int i = 0; i < nextEmbarkGroupSize;i++){
 											Person loadMe = waiting.remove();
-											drone.getStart().getWaitingToEmbark().remove(loadMe);
+											//Remove them from the place
+											if(!drone.getStart().getWaitingToEmbark().remove(loadMe)){
+												throw new RuntimeException("Why didn't the person embark?");
+											}
 											loadMe.setState(PersonState.EMBARKING);
 											drone.getEmbarkers().add(loadMe);
 										}
@@ -220,32 +230,74 @@ public class Simulator {
 					break;
 					case IN_TRANSIT:{
 						simulationEnded = false;
-						double metersToGoal = DistanceCalculator.distance(drone.getStart().getPosition().getLatitude(),drone.getStart().getPosition().getLongitude(),drone.getDestination().getPosition().getLatitude(),drone.getDestination().getPosition().getLongitude());
+						//How far the drone has to go from it's current position to it's destination
+						double metersToGoal = DistanceCalculator.distance(drone.getPosition().getLatitude(),drone.getPosition().getLongitude(),drone.getDestination().getPosition().getLatitude(),drone.getDestination().getPosition().getLongitude());
+						//How far the drone had to go from it's original destination at launch to it's current destination (It's destination might have changed)
+						double metersForTrip = DistanceCalculator.distance(drone.getStart().getPosition().getLatitude(),drone.getStart().getPosition().getLongitude(),drone.getDestination().getPosition().getLatitude(),drone.getDestination().getPosition().getLongitude());
 						if(metersToGoal <= 0){
 							metersToGoal = 1;
 						}
 						double speed = drone.getSpeed();
+						
+						//How long it should take for the drone to get to the destination
 						double totalTimeInSeconds = metersToGoal/speed;
 						double totalTimeInMilliSeconds = totalTimeInSeconds *1000;
 					
+						//Time since the drone started this transit (it may have been redirected enroute)
 						double start = drone.getTransitStart();
 						double duration = clockTick - start;
-						double percentage = duration/totalTimeInMilliSeconds;
-						Position a = drone.getStart().getPosition();
-						Position b = drone.getDestination().getPosition();
-						double latitude = (b.getLatitude()-a.getLatitude())*percentage+a.getLatitude();
-						double longitude = (b.getLongitude()-a.getLongitude())*percentage+a.getLongitude();
-						double height = (b.getHeight()-a.getHeight())*percentage+a.getHeight() + TRANSIT_HEIGHT;
-						drone.getPosition().setLatitude(latitude);
-						drone.getPosition().setLongitude(longitude);
-						drone.getPosition().setHeight(height);
-						if(percentage >= 1.0){
+						
+						//Move the drone forward 
+						double metersPerTick = speed *(SIMULATION_SPEED /1000.0);
+						
+						//Deduct charge
+						double charge = drone.getCharge();
+						//Percent per meter
+						double dischargeRate = 0.0002;
+						charge = charge - (metersPerTick*dischargeRate); 
+						if(charge < 0.0 ){
+							charge = 0.0;
+						}
+						drone.setCharge(charge);
+						
+						// What percentage of the distance to goal was covered in the last simulation tick
+						double percentage = metersPerTick/metersToGoal;
+						
+						//Close enough to call it an arrival
+						if(metersPerTick >= metersToGoal){
+							drone.getPosition().setLatitude(drone.getDestination().getPosition().getLatitude());
+							drone.getPosition().setLongitude(drone.getDestination().getPosition().getLongitude());
+							drone.getPosition().setHeight(drone.getDestination().getPosition().getHeight());
+							
+							//Arrival
 							drone.setTransitEnd(clockTick+drone.getDescentionTime());
-							drone.setCharge(0.0);
 							controller.droneTransitingEnd(new Drone(drone));
 							drone.setState(DroneState.DESCENDING);
 							controller.droneDescendingStart(new Drone(drone));
 						}
+						else{
+							Position a = drone.getPosition();
+							Position b = drone.getDestination().getPosition();
+							double latitude = (b.getLatitude()-a.getLatitude())*percentage+a.getLatitude();
+							double longitude = (b.getLongitude()-a.getLongitude())*percentage+a.getLongitude();
+							double height = (b.getHeight()-a.getHeight())*percentage+ TRANSIT_HEIGHT;
+						
+							drone.getPosition().setLatitude(latitude);
+							drone.getPosition().setLongitude(longitude);
+							drone.getPosition().setHeight(height);
+						}
+						if(drone.getEmbarkers().size() != 0){
+							throw new IllegalStateException("Simulator Error:There shouldn't be anyone embarking if we are in transit");
+						}
+						if(drone.getDisembarkers().size() != 0){
+							throw new IllegalStateException("Simulator Error:There shouldn't be anyone disembarking if we are in transit");
+						}
+						for(Person p: drone.getPassengers()){
+							p.setPosition(drone.getPosition());
+						}
+						
+						/* Call back to controller */
+						controller.droneTransiting(new Drone(drone), 1.0-(metersToGoal/metersForTrip));
 					}
 					break;
 					case DESCENDING:{
@@ -299,7 +351,27 @@ public class Simulator {
 								else{
 									for(int i =0; i< nextDisembarkGroupSize; i++){
 										Person person = waiting.remove();
-										drone.getPassengers().remove(person);
+										/*
+										Person p = drone.getPassengers().iterator().next();
+										System.out.println(p.toString());
+											System.out.println("\t\t"+p.hashCode());
+										System.out.println(person.toString());
+											System.out.println("\t\t"+person.hashCode());
+										if(person.equals(p)){
+											System.out.println("They are equal");
+										}
+										else{
+											System.out.println("They are not equal");
+										}
+										Set<Person> passengers = drone.getPassengers();
+										for(Person p2: passengers){
+											System.out.println("\t"+p2.toString());
+											System.out.println("\t\t"+p2.hashCode());
+										}
+										*/
+										if(!drone.getPassengers().remove(person)){
+											throw new RuntimeException("Why didn't the person get removed?");
+										}
 										person.setState(PersonState.DISEMBARKING);
 										drone.getDisembarkers().add(person);
 									}
@@ -312,34 +384,47 @@ public class Simulator {
 					break;
 					case RECHARGING:{
 						simulationEnded = false;
-						long duration = clockTick - drone.getRechargeStartTime();
-						double percent = duration/drone.getRechargeRate();
-						if(percent > 1.0){
-							percent = 1.0;
-							drone.setCharge(percent);
+						
+						//If the controller has told the drone to leave
+						if(!drone.getStart().equals(drone.getDestination())){
 							controller.droneDoneRecharging(new Drone(drone));
-							drone.setState(DroneState.IDLING);
+							drone.setState(DroneState.BEGIN);
 						}
 						else{
-							boolean alert = false;
-							double[] breaks = {0.3,0.6,0.9,1.0};
-							for(int i = 0; i < breaks.length; i++){
-								if((drone.getCharge() < breaks[i]) && (percent >= breaks[i])){
-									alert = true;
-								}
+							double chargeDelta = (SIMULATION_SPEED/1000.0) * drone.getRechargeRate() ;
+							if(drone.getCharge()+ chargeDelta > 1.0){
+								drone.setCharge(1.0);
+								controller.droneDoneRecharging(new Drone(drone));
+								drone.setState(DroneState.IDLING);
 							}
-							drone.setCharge(percent);
-							if(alert){
-								controller.droneRecharging(new Drone(drone),percent);
+							else{
+								boolean alert = false;
+								double[] breaks = {0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0};
+								for(int i = 0; i < breaks.length; i++){
+									if((drone.getCharge() < breaks[i]) && ((drone.getCharge()+chargeDelta) >= breaks[i])){
+										alert = true;
+									}
+								}
+								drone.setCharge(drone.getCharge()+chargeDelta);
+								if(alert){
+									controller.droneRecharging(new Drone(drone),drone.getCharge());
+								}
 							}
 						}
 					}
 					break;
 					case IDLING:{
 						simulationEnded = false;
-						controller.droneIdling(new Drone(drone));
+						
+						for(Person p: drone.getPassengers()){
+							p.setState(PersonState.IN_DRONE);
+						}
+						
 						if(!drone.getStart().equals(drone.getDestination())){
 							drone.setState(DroneState.BEGIN);
+						}
+						else{
+							controller.droneIdling(new Drone(drone));
 						}
 					}
 					break;
@@ -351,20 +436,10 @@ public class Simulator {
 	}
 
 
-
-
-	private void droneDisembarkingGroupStart(Drone drone) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-
 	private void droneStartRecharging(Drone drone) {
 		controller.droneDisembarkingEnd(new Drone(drone));
 		drone.setState(DroneState.RECHARGING);
 		controller.droneRechargingStart(new Drone(drone));
-		drone.setRechargeStartTime(clockTick);
 	}
 
 
@@ -393,6 +468,10 @@ public class Simulator {
 		return this.controller.isHighResolution();
 	}
 	
+	/**
+	 * Returns a copy of all the places in the simulation
+	 * @return
+	 */
 	public TreeSet<Place> getPlaces(){
 		TreeSet<Place> ret = new TreeSet<Place>();
 		if(places != null){
@@ -403,11 +482,29 @@ public class Simulator {
 		return ret;
 	};
 	
+	/**
+	 * Returns a copy of all the drones in the simulation
+	 * @return
+	 */
 	public TreeSet<Drone> getDrones(){
 		TreeSet<Drone> ret = new TreeSet<Drone>();
 		if(drones != null){
 			for(Drone d: drones){
 				ret.add(new Drone(d));
+			}
+		}
+		return ret;
+	};
+	
+	/**
+	 * Returns a copy of all the people in the simulation
+	 * @return
+	 */
+	public TreeSet<Person> getPeople(){
+		TreeSet<Person> ret = new TreeSet<Person>();
+		if(people != null){
+			for(Person p: people){
+				ret.add(new Person(p));
 			}
 		}
 		return ret;
@@ -473,8 +570,7 @@ public class Simulator {
 			int first = random.nextInt(randomizeFirst.size());
 			int last = random.nextInt(randomizeLast.size());
 			
-			Person person = new Person(""+i,randomizeFirst.get(first)+" "+randomizeLast.get(last),randomizePlaces.get(start).getName(),randomizePlaces.get(start).getPosition(),randomizePlaces.get(end).getName());
-			person.setState(PersonState.WAITING);
+			Person person = new Person(""+i,randomizeFirst.get(first)+" "+randomizeLast.get(last),randomizePlaces.get(start).getName(),randomizePlaces.get(start).getPosition(),randomizePlaces.get(end).getName(),PersonState.WAITING);
 			randomizePlaces.get(start).getWaitingToEmbark().add(person);
 			ret.add(person);
 		}
@@ -494,11 +590,32 @@ public class Simulator {
 	
 	//These are the things that the controller is supposed to be able to call
 	
+	/**
+	 * MyController derivative classes call this function to send a drone to a new destination
+	 * @param drone
+	 * @param place
+	 */
 	public void redirectDrone(Drone drone, Place place) {
+		redirectDrone(drone,place.getName());
+	}
+	
+	/**
+	 * Convenience method to refer to a place by a string
+	 */
+	public void redirectDrone(Drone drone, String place) {
+		boolean success = false;
 		for(Drone d:drones){
 			if(d.getId().equals(drone.getId())){
-				d.setDestination(place);
+				for(Place p: places){
+					if(p.getName().equals(place)){
+						d.setDestination(p);
+						success = true;
+					}
+				}
 			}
+		}
+		if(!success){
+			throw new IllegalArgumentException("Unable to find a drone with id:"+drone.getId()+" and/or a place called:"+place);
 		}
 	}
 
