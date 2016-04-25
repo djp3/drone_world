@@ -432,6 +432,17 @@ public class Simulator {
 						throw new IllegalArgumentException("Unhandled Drone State: "+drone.getState());
 				}
 			}
+			//Check to see if all passengers are delivered
+			boolean allDone = true;
+			for(Person p: people){
+				if(!p.getState().equals(PersonState.ARRIVED)){
+					allDone = false;
+				}
+			}
+			if(allDone){
+				simulationEnded = true;
+				System.out.println("Simulation ended with all passengers delivered at time "+clockTick);
+			}
 		}
 	}
 
