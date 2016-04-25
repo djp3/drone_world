@@ -572,7 +572,13 @@ public class Simulator {
 		Set<Person> ret = new TreeSet<Person>();
 		
 		for(int i = 0; i < MAX_PEOPLE ; i++){
-			Collections.shuffle(randomizePlaces);
+			//Shuffling manually to make sure that we only use my random number generator for consistency
+			for(int j = 0 ; j < randomizePlaces.size(); j++){
+				int swapIndex = random.nextInt(randomizePlaces.size());
+				Place foo = randomizePlaces.get(j);
+				randomizePlaces.set(j,randomizePlaces.get(swapIndex));
+				randomizePlaces.set(swapIndex,foo);
+			}
 			int start = random.nextInt(randomizePlaces.size());
 			int end = random.nextInt(randomizePlaces.size());
 			while((start == end) &&(randomizePlaces.size() > 1)){
