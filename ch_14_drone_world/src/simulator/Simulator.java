@@ -521,6 +521,12 @@ public class Simulator {
 		return ret;
 	};
 	
+	
+
+	public long getClockTick() {
+		return clockTick;
+	}
+
 
 	private static Set<Place> loadPlaces() {
 		Set<Place> ret = new TreeSet<Place>();
