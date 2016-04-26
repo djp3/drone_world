@@ -209,6 +209,7 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			Node particlesNode = (Node) baseNode.getChild("particles");
 			switch (droneEntry.getKey().getState()) {
 			case BEGIN: {
+				particlesNode.detachAllChildren();
 
 			}
 				break;
@@ -272,12 +273,12 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 				// point
 				electricity.setShape(new EmitterPointShape(Vector3f.ZERO));
 				electricity.setMaterial(mat_red);
-				electricity.setParticlesPerSec(1f);
+				electricity.setParticlesPerSec(5f);
 				electricity.setImagesX(2);
 				electricity.setImagesY(2); // 2x2 texture animation
-				electricity.setStartColor(new ColorRGBA(0.2f, 0f, 1f, 0.1f));
+				electricity.setStartColor(new ColorRGBA(0.2f, 0f, 1f, 0.8f));
 				electricity.setEndColor(new ColorRGBA(0f, 0f, 1f, 0.3f));
-				electricity.getParticleInfluencer().setInitialVelocity(new Vector3f(0f, 0.0f, 0f));
+				electricity.getParticleInfluencer().setInitialVelocity(new Vector3f(0f, 0.5f, 0f));
 				electricity.setFaceNormal(Vector3f.UNIT_Y);
 				electricity.setRotateSpeed(1.0f);
 				electricity.setStartSize(0.3f);
@@ -292,8 +293,8 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			}
 				break;
 			case IDLING: {
-				particlesNode.detachAllChildren();
 				droneNode.rotate(0, 0.1f * tpf, 0);
+				particlesNode.detachAllChildren();
 			}
 				break;
 			default:
