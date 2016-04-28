@@ -6,6 +6,8 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.Savable;
 
+import simulator.enums.PersonState;
+
 public class Person implements Comparable<Person>, Savable{
 	
 	String id;
@@ -17,24 +19,50 @@ public class Person implements Comparable<Person>, Savable{
 	//The current position of the Person that is used to render them
 	Position position;
 	PersonState state;
+	//When the Person began and ended their trip
+	Long startTransitTime;
+	Long endTransitTime;
+	
+	// The company that picked up this person
+	String deliveryCompany;
 	
 
 	public String getId() {
 		return id;
 	}
 
+	void setId(String id) {
+		this.id = id;
+	}
+	
+
 	public String getName() {
 		return name;
 	}
 
+	void setName(String name) {
+		this.name = name;
+	}
+	
+
 	public String getDestination() {
 		return destination;
 	}
+
+	void setDestination(String destination) {
+		this.destination = destination;
+	}
+	
 	
 	public String getStart() {
 		return start;
 	}
+
+	void setStart(String start) {
+		this.start = start;
+	}
 	
+
 	void setPosition(Position position){
 		this.position = position;
 	}
@@ -43,12 +71,39 @@ public class Person implements Comparable<Person>, Savable{
 		return new Position(position);
 	}
 	
+	
+	public PersonState getState() {
+		return state;
+	}
+
 	void setState(PersonState newState){
 		this.state = newState;
 	}
 	
-	public PersonState getState() {
-		return state;
+
+	public Long getStartTransitTime() {
+		return startTransitTime;
+	}
+
+	
+	void setStartTransitTime(Long startTransitTime) {
+		this.startTransitTime = startTransitTime;
+	}
+
+	public Long getEndTransitTime() {
+		return endTransitTime;
+	}
+
+	void setEndTransitTime(Long endTransitTime) {
+		this.endTransitTime = endTransitTime;
+	}
+
+	public String getDeliveryCompany() {
+		return deliveryCompany;
+	}
+
+	void setDeliveryCompany(String deliveryCompany) {
+		this.deliveryCompany = deliveryCompany;
 	}
 
 	public Person(String id,String name, String start,Position currentLocation,String destination,PersonState state) {
@@ -58,30 +113,37 @@ public class Person implements Comparable<Person>, Savable{
 		this.position = new Position(currentLocation);
 		this.destination = destination;
 		this.state = state;
+		this.startTransitTime = 0L;
+		this.endTransitTime = 0L;
+		this.deliveryCompany = null;
 	}
 	
 	public Person(Person person){
-		this.id = person.getId();
-		this.name = person.getName();
-		this.start = person.getStart();
-		this.position = new Position(person.getPosition());
-		this.destination = person.getDestination();
-		this.state = person.getState();
+		this.setId(person.getId());
+		this.setName(person.getName());
+		this.setStart(person.getStart());
+		this.setPosition(new Position(person.getPosition()));
+		this.setDestination(person.getDestination());
+		this.setState(person.getState());
+		this.setDeliveryCompany(person.getDeliveryCompany());
+		this.setStartTransitTime(person.getStartTransitTime());
+		this.setEndTransitTime(person.getEndTransitTime());
 	}
 
 	
 
-
-	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + ((deliveryCompany == null) ? 0 : deliveryCompany.hashCode());
 		result = prime * result + ((destination == null) ? 0 : destination.hashCode());
+		result = prime * result + ((endTransitTime == null) ? 0 : endTransitTime.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((position == null) ? 0 : position.hashCode());
 		result = prime * result + ((start == null) ? 0 : start.hashCode());
+		result = prime * result + ((startTransitTime == null) ? 0 : startTransitTime.hashCode());
 		result = prime * result + ((state == null) ? 0 : state.hashCode());
 		return result;
 	}
@@ -95,10 +157,20 @@ public class Person implements Comparable<Person>, Savable{
 		if (!(obj instanceof Person))
 			return false;
 		Person other = (Person) obj;
+		if (deliveryCompany == null) {
+			if (other.deliveryCompany != null)
+				return false;
+		} else if (!deliveryCompany.equals(other.deliveryCompany))
+			return false;
 		if (destination == null) {
 			if (other.destination != null)
 				return false;
 		} else if (!destination.equals(other.destination))
+			return false;
+		if (endTransitTime == null) {
+			if (other.endTransitTime != null)
+				return false;
+		} else if (!endTransitTime.equals(other.endTransitTime))
 			return false;
 		if (id == null) {
 			if (other.id != null)
@@ -119,6 +191,11 @@ public class Person implements Comparable<Person>, Savable{
 			if (other.start != null)
 				return false;
 		} else if (!start.equals(other.start))
+			return false;
+		if (startTransitTime == null) {
+			if (other.startTransitTime != null)
+				return false;
+		} else if (!startTransitTime.equals(other.startTransitTime))
 			return false;
 		if (state != other.state)
 			return false;
@@ -162,8 +239,26 @@ public class Person implements Comparable<Person>, Savable{
 		} else if (!start.equals(other.start))
 			return start.compareTo(other.start);
 		
+		if (deliveryCompany == null) {
+			if (other.deliveryCompany != null)
+				return 1;
+		} else if (!deliveryCompany.equals(other.deliveryCompany))
+			return deliveryCompany.compareTo(other.deliveryCompany);
+		
 		if (state != other.state)
 			return state.compareTo(other.state);
+		
+		if (startTransitTime == null) {
+			if (other.startTransitTime != null)
+				return 1;
+		} else if (!startTransitTime.equals(other.startTransitTime))
+			return Long.compare(startTransitTime,other.startTransitTime);
+		
+		if (endTransitTime == null) {
+			if (other.endTransitTime != null)
+				return 1;
+		} else if (!endTransitTime.equals(other.endTransitTime))
+			return Long.compare(endTransitTime,other.endTransitTime);
 		
 		return 0;
 	}
@@ -176,6 +271,9 @@ public class Person implements Comparable<Person>, Savable{
 		out.append("destination: "+destination+",");
 		out.append("position: "+position.toString()+",");
 		out.append("state: "+state.toString()+",");
+		out.append("delivery company: "+deliveryCompany+",");
+		out.append("start transit time : "+startTransitTime+",");
+		out.append("end transit time : "+endTransitTime);
 		return out.toString();
 	}
 
