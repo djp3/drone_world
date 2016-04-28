@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import com.jme3.animation.AnimChannel;
 import com.jme3.animation.AnimControl;
@@ -17,6 +19,7 @@ import com.jme3.asset.plugins.FileLocator;
 import com.jme3.effect.ParticleEmitter;
 import com.jme3.effect.ParticleMesh;
 import com.jme3.effect.shapes.EmitterPointShape;
+import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.input.ChaseCamera;
 import com.jme3.input.KeyInput;
@@ -36,19 +39,26 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.shadow.DirectionalLightShadowFilter;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
-import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.SkyFactory;
 
 import simulator.Drone;
+import simulator.Pair;
 import simulator.Person;
-import simulator.PersonState;
 import simulator.Place;
 import simulator.Position;
 import simulator.Simulator;
+import simulator.enums.PersonState;
 
+/**
+ * The visualization for the simulator
+ * @author djp3
+ *
+ */
 public class DroneWorld extends SimpleApplication implements AnimEventListener {
+	
+	private boolean doneWithInit = false;
 	
 	private Random random = new Random(10L);
 	private Simulator simulator;
@@ -90,6 +100,7 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		if (drones == null) {
 			throw new IllegalArgumentException("\"drones\" can't be null");
 		}
+		
 		this.drones = new HashMap<Drone, Node>();
 		for (Drone drone : drones) {
 			this.drones.put(drone, null);
@@ -104,210 +115,14 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		super(initialStates);
 	}
 
-	protected Node player;
-
-	/* Use the main event loop to trigger repeating actions. */
-	@Override
-	public void simpleUpdate(float tpf) {
-		//System.out.println("DroneWorld Person:");
-		for (Entry<Person, Spatial> personEntry : people.entrySet()) {
-			Person person = personEntry.getKey();
-			//System.out.println("\t"+Integer.toHexString(System.identityHashCode(person))+" "+person.toString());
-			
-			switch (personEntry.getKey().getState()) {
-			case WAITING: {
-				personEntry.getValue().setLocalTranslation(latLong2Transform(person.getPosition().getLatitude(),
-						person.getPosition().getLongitude(), person.getPosition().getHeight()));
-			}
-				break;
-			case EMBARKING: {
-				for (Entry<Drone, Node> droneEntry : drones.entrySet()) {
-					Drone drone = droneEntry.getKey();
-					for (Person p : drone.getEmbarkers()) {
-						if (personEntry.getKey().equals(p)) {
-							personEntry.getValue()
-									.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
-											drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
-						}
-					}
-				}
-
-			}
-				break;
-			case IN_DRONE: {
-				for (Entry<Drone, Node> droneEntry : drones.entrySet()) {
-					Drone drone = droneEntry.getKey();
-					for (Person p : drone.getPassengers()) {
-						if (personEntry.getKey().equals(p)) {
-							personEntry.getValue()
-									.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
-											drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
-						}
-					}
-				}
-
-			}
-				break;
-			case DISEMBARKING: {
-				for (Entry<Drone, Node> droneEntry : drones.entrySet()) {
-					Drone drone = droneEntry.getKey();
-					for (Person p : drone.getDisembarkers()) {
-						if (personEntry.getKey().equals(p)) {
-							personEntry.getValue()
-									.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
-											drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
-						}
-					}
-				}
-			}
-				break;
-			case ARRIVED: {
-				personEntry.getValue().setLocalTranslation(latLong2Transform(person.getPosition().getLatitude(),
-						person.getPosition().getLongitude(), person.getPosition().getHeight()));
-			}
-				break;
-			default:
-				throw new IllegalArgumentException("Unhandled Drone State: " + personEntry.getKey().getState());
-			}
-		}
-		//System.out.println("DroneWorld Places:");
-		for (Entry<Place, Spatial> placeEntry : places.entrySet()) {
-			Place place = placeEntry.getKey();
-			Spatial baseNode = placeEntry.getValue();
-			if(place.getWaitingToEmbark().size()!=0){
-				//System.out.println("\tPlace: "+place.getName());
-				for(Person p:place.getWaitingToEmbark()){
-					if(!people.keySet().contains(p)){
-						throw new RuntimeException("Someone was cloned:"+p);
-					}
-					//System.out.println("\t\tWaiting:"+Integer.toHexString(System.identityHashCode(p))+" "+p);
-				}
-			}
-			
-		}
-		
-		//System.out.println("DroneWorld Drone:");
-		for (Entry<Drone, Node> droneEntry : drones.entrySet()) {
-			Drone drone = droneEntry.getKey();
-			Node baseNode = droneEntry.getValue();
-			
-			/*
-			System.out.println("\tDrone:"+Integer.toHexString(System.identityHashCode(drone))+" "+drone.getId());
-			if((drone.getEmbarkers().size() != 0) || (drone.getPassengers().size() != 0) || (drone.getDisembarkers().size() != 0)){
-				for(Person p:drone.getEmbarkers()){
-					System.out.println("\t\tEmbark:"+Integer.toHexString(System.identityHashCode(p))+" "+p);
-				}
-				for(Person p:drone.getPassengers()){
-					System.out.println("\t\tPass:"+Integer.toHexString(System.identityHashCode(p))+" "+p);
-				}
-				for(Person p:drone.getDisembarkers()){
-					System.out.println("\t\tDis:"+Integer.toHexString(System.identityHashCode(p))+" "+p);
-				}
-			}*/
-			
-			Spatial droneNode = baseNode.getChild("drone");
-			Node particlesNode = (Node) baseNode.getChild("particles");
-			switch (droneEntry.getKey().getState()) {
-			case BEGIN: {
-				particlesNode.detachAllChildren();
-
-			}
-				break;
-			case EMBARKING: {
-
-			}
-				break;
-			case ASCENDING: {
-
-				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
-						drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
-
-				ParticleEmitter fire = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 20);
-				Material mat_red = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
-				mat_red.setTexture("Texture", assetManager.loadTexture("Effects/Explosion/flame.png"));
-				// point
-				fire.setShape(new EmitterPointShape(Vector3f.ZERO));
-				fire.setMaterial(mat_red);
-				fire.setParticlesPerSec(0);
-				fire.setImagesX(2);
-				fire.setImagesY(2); // 2x2 texture animation
-				fire.setStartColor(new ColorRGBA(1.0f, 0f, 0f, 0.4f));
-				fire.setEndColor(new ColorRGBA(1f, 1f, 0f, 0.1f));
-				fire.getParticleInfluencer().setInitialVelocity(new Vector3f(0f, -0.4f, 0f));
-				// fire.setFaceNormal(Vector3f.UNIT_Y);
-				fire.setRotateSpeed(1.0f);
-				fire.setStartSize(0.05f);
-				fire.setEndSize(0.01f);
-				fire.setGravity(0, 0.0f, 0);
-				fire.setLowLife(0.2f);
-				fire.setHighLife(1.0f);
-				fire.getParticleInfluencer().setVelocityVariation(0.1f);
-				fire.setLocalTranslation(0, 0.2f, 0);
-
-				// Match it to the drone
-				particlesNode.attachChild(fire);
-				fire.emitAllParticles();
-
-			}
-				break;
-			case IN_TRANSIT: {
-				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
-						drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
-				baseNode.rotate(0,0.5f*tpf,0);
-				particlesNode.detachAllChildren();
-			}
-				break;
-			case DESCENDING: {
-				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
-						drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
-			}
-				break;
-			case DISEMBARKING: {
-
-			}
-				break;
-			case RECHARGING: {
-				ParticleEmitter electricity = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 1);
-				Material mat_red = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
-				mat_red.setTexture("Texture", assetManager.loadTexture("Effects/Explosion/flash.png"));
-				// point
-				electricity.setShape(new EmitterPointShape(Vector3f.ZERO));
-				electricity.setMaterial(mat_red);
-				electricity.setParticlesPerSec(5f);
-				electricity.setImagesX(2);
-				electricity.setImagesY(2); // 2x2 texture animation
-				electricity.setStartColor(new ColorRGBA(0.2f, 0f, 1f, 0.8f));
-				electricity.setEndColor(new ColorRGBA(0f, 0f, 1f, 0.3f));
-				electricity.getParticleInfluencer().setInitialVelocity(new Vector3f(0f, 0.5f, 0f));
-				electricity.setFaceNormal(Vector3f.UNIT_Y);
-				electricity.setRotateSpeed(1.0f);
-				electricity.setStartSize(0.3f);
-				electricity.setEndSize(0.4f);
-				electricity.setGravity(0, -0.1f, 0);
-				electricity.setLowLife(0.2f);
-				electricity.setHighLife(2.0f);
-				electricity.getParticleInfluencer().setVelocityVariation(1);
-
-				particlesNode.attachChild(electricity);
-
-			}
-				break;
-			case IDLING: {
-				droneNode.rotate(0, 0.1f * tpf, 0);
-				particlesNode.detachAllChildren();
-			}
-				break;
-			default:
-				throw new IllegalArgumentException("Unhandled Drone State: " + droneEntry.getKey().getState());
-			}
-
-		}
-	}
-
-	private TerrainQuad terrain;
-	Material mat_terrain;
-	private boolean doneWithInit = false;
-
+	//Head's up display items
+	private BitmapText hudWaitingText;
+	private Geometry hudWaitingGeom;
+	private TreeMap<String, Pair<BitmapText, Geometry>> hudCompanyDelivery;
+	private TreeMap<String, Pair<BitmapText, Geometry>> hudCompanyFlying;
+	private BitmapFont consoleFont;
+	
+	
 	/** Initialize the materials used in this scene. */
 	public void initMaterials() {
 		ground_mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -318,6 +133,7 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		ground_mat.setTexture("ColorMap", tex3);
 	}
 
+	@SuppressWarnings("deprecation")
 	private void initGround() {
 		ground = new Box(10f, 0.1f, 10f);
 		ground.scaleTextureCoordinates(new Vector2f(1, 1));
@@ -325,16 +141,14 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		ground_geo.setMaterial(ground_mat);
 		ground_geo.setLocalTranslation(0, -0.1f, 0);
 		ground_geo.setShadowMode(ShadowMode.Receive);
-		this.rootNode.attachChild(ground_geo);
+		rootNode.attachChild(ground_geo);
 		
-		rootNode.attachChild(SkyFactory.createSky(
-	            assetManager, "Textures/Sky/Bright/FullskiesBlueClear03.dds", false));
-
+		rootNode.attachChild(SkyFactory.createSky( assetManager, "Textures/Sky/Bright/FullskiesBlueClear03.dds", false));
 	}
 
 	private void initBase() {
 		canonical_place = assetManager.loadModel("assets/house.blend");
-		canonical_place.scale(0.02f);
+		canonical_place.scale(0.015f);
 		canonical_place.setShadowMode(ShadowMode.Cast);
 	}
 
@@ -346,12 +160,8 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			Geometry geom = new Geometry("Box", b); // create cube geometry from
 													// the
 			// shape
-			Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create
-			// a
-			// simple
-			// material
-			mat.setColor("Color", ColorRGBA.Blue); // set color of material to
-													// blue
+			Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create // a // simple // material
+			mat.setColor("Color", ColorRGBA.Blue); // set color of material to // blue
 			geom.setMaterial(mat); // set the cube's material
 			canonical_drone = geom;
 			canonical_drone.setShadowMode(ShadowMode.Cast);
@@ -371,11 +181,6 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 	}
 
 	private void initLighting() {
-		// viewPort.setBackgroundColor(ColorRGBA.LightGray);
-		// DirectionalLight dl = new DirectionalLight();
-		// dl.setDirection(new Vector3f(-0.1f, -1f, -1).normalizeLocal());
-		// rootNode.addLight(dl);
-
 		DirectionalLight sun = new DirectionalLight();
 		sun.setDirection(new Vector3f(-1.0f, -1.0f, -1.0f));
 		rootNode.addLight(sun);
@@ -413,6 +218,9 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		initBase();
 		initDrone(this.simulator.isHighResolution());
 		initPerson();
+		
+		consoleFont = assetManager.loadFont("Interface/Fonts/Console.fnt");
+		guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
 
 
 		for (Entry<Place, Spatial> placeEntry : places.entrySet()) {
@@ -421,21 +229,32 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			Node baseNode = new Node();
 
 			// Display a line of text with a default font
-			guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
-			BitmapText name = new BitmapText(guiFont, false);
-			name.setSize(guiFont.getCharSet().getRenderedSize());
-			name.setText(place.getName());
-			name.setLocalTranslation(0.0f, 0.5f, place.getName().length() / 2 * 0.1f);
-			name.rotate(0f, FastMath.HALF_PI, 0f);
-			name.setLocalScale(0.01f);
-			name.setShadowMode(ShadowMode.Cast);
-			baseNode.attachChild(name);
+			BitmapText frontName = new BitmapText(guiFont, false);
+			frontName.setSize(guiFont.getCharSet().getRenderedSize());
+			frontName.setText(place.getName());
+			frontName.setLocalTranslation((place.getName().length() / 2.0f) * -0.05f ,0.55f,0.0f);
+			frontName.setLocalScale(0.01f);
+			frontName.setShadowMode(ShadowMode.Off);
+			
+			baseNode.attachChild(frontName);
+			
+			BitmapText backName = new BitmapText(guiFont, false);
+			backName.setSize(guiFont.getCharSet().getRenderedSize());
+			backName.setText(place.getName());
+			backName.setLocalTranslation((place.getName().length() / 2.0f) * 0.05f ,0.55f,0.0f);
+			backName.rotate(0f, FastMath.PI, 0f);
+			backName.setLocalScale(0.01f);
+			backName.setShadowMode(ShadowMode.Off);
+			
+			baseNode.attachChild(backName);
 
 			// Add the hut
 			Spatial base = canonical_place.clone();
 			Position position = place.getPosition();
 			baseNode.attachChild(base);
 			baseNode.setLocalTranslation(latLong2Transform(position.getLatitude(), position.getLongitude(),0f));
+			
+			baseNode.rotate(0, FastMath.TWO_PI * random.nextFloat(), 0);
 
 			rootNode.attachChild(baseNode);
 		}
@@ -445,9 +264,11 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			Node baseNode = new Node();
 
 			Spatial personNode = canonical_person.clone();
-			personNode.setUserData("name", person.getId());
+			//personNode.setUserData("name", person.getId());
 			personNode.rotate(0, FastMath.TWO_PI * random.nextFloat(), 0);
 			personNode.setUserData("person", person);
+			personNode.setLocalTranslation(random.nextFloat()*0.2f-0.1f, 0.0f,random.nextFloat()*0.2f-0.1f);
+			
 			
 			baseNode.attachChild(personNode);
 
@@ -461,21 +282,28 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			}
 			channel.setSpeed(random.nextFloat()*0.5f+0.5f);
 
-			guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
-			BitmapText name = new BitmapText(guiFont, false);
-			name.setSize(guiFont.getCharSet().getRenderedSize());
-			name.setText(person.getName());
-			name.setLocalTranslation(0.0f, 0.5f, person.getName().length() / 2 * 0.2f);
-			name.rotate(0f, FastMath.HALF_PI, 0f);
-			name.setLocalScale(0.01f);
-			name.setShadowMode(ShadowMode.Cast);
+			BitmapText frontName = new BitmapText(guiFont, false);
+			frontName.setSize(guiFont.getCharSet().getRenderedSize());
+			frontName.setText(person.getName());
+			frontName.setLocalTranslation((person.getName().length() / 2.0f) * -0.04f ,0.35f,0.0f);
+			frontName.setLocalScale(0.005f);
+			frontName.setShadowMode(ShadowMode.Off);
 
-			baseNode.attachChild(name);
+			baseNode.attachChild(frontName);
+			
+			BitmapText backName = new BitmapText(guiFont, false);
+			backName.setSize(guiFont.getCharSet().getRenderedSize());
+			backName.setText(person.getName());
+			backName.setLocalTranslation((person.getName().length() / 2.0f) * 0.04f ,0.35f,0.0f);
+			backName.rotate(0f, FastMath.PI, 0f);
+			backName.setLocalScale(0.005f);
+			backName.setShadowMode(ShadowMode.Off);
+
+			baseNode.attachChild(backName);
 
 			Position position = person.getPosition();
 
-			baseNode.setLocalTranslation(
-					jitter(0.2f, 0, 0.2f, latLong2Transform(position.getLatitude(), position.getLongitude(),0f)));
+			baseNode.setLocalTranslation( latLong2Transform(position.getLatitude(), position.getLongitude(),0f));
 
 			personEntry.setValue(baseNode);
 			rootNode.attachChild(baseNode);
@@ -497,6 +325,26 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			baseNode.attachChild(particlesNode);
 			baseNode.attachChild(droneNode);
 			
+			BitmapText frontName = new BitmapText(guiFont, false);
+			frontName.setSize(guiFont.getCharSet().getRenderedSize());
+			frontName.setText(drone.getName());
+			frontName.setLocalTranslation((drone.getName().length() / 2.0f) * -0.04f ,-0.15f,0.0f);
+			//name.rotate(0f, FastMath.HALF_PI, 0f);
+			frontName.setLocalScale(0.005f);
+			frontName.setShadowMode(ShadowMode.Off);
+
+			baseNode.attachChild(frontName);
+			
+			BitmapText backName = new BitmapText(guiFont, false);
+			backName.setSize(guiFont.getCharSet().getRenderedSize());
+			backName.setText(drone.getName());
+			backName.setLocalTranslation((drone.getName().length() / 2.0f) * 0.04f ,-0.15f,0.0f);
+			backName.rotate(0f, FastMath.PI , 0f);
+			backName.setLocalScale(0.005f);
+			backName.setShadowMode(ShadowMode.Off);
+
+			baseNode.attachChild(backName);
+			
 			baseNode.setLocalTranslation(latLong2Transform(position.getLatitude(), position.getLongitude(),position.getHeight()));
 			baseNode.rotate(0, FastMath.TWO_PI * random.nextFloat(), 0);
 			
@@ -505,9 +353,68 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			rootNode.attachChild(baseNode);
 
 		}
+		//Set up heads up display
+		setDisplayStatView(false);
+		setDisplayFps(false);
+		
+		hudWaitingText = new BitmapText(consoleFont,false);
+		hudWaitingText.setSize(consoleFont.getCharSet().getRenderedSize()*2);
+		hudWaitingText.setColor(ColorRGBA.Black);
+		hudWaitingText.setText("Ninjas in waiting");
+		hudWaitingText.setLocalTranslation(10,10+hudWaitingText.getLineHeight(),0);
+		guiNode.attachChild(hudWaitingText);
+		
+		Box hudWaitingBox = new Box(5f,10f,10f);
+		hudWaitingGeom = new Geometry("Waiting", hudWaitingBox);
+		Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create
+		mat.setColor("Color", new ColorRGBA(0.4f,0.76f,0.38f,0.8f));
+		hudWaitingGeom.setMaterial(mat); // set the cube's material
+		guiNode.attachChild(hudWaitingGeom);
+		
+		TreeSet<String> droneCompanies = new TreeSet<String>();
+		for(Drone d:drones.keySet()){
+			droneCompanies.add(d.getCompanyName());
+		}
+		
+		hudCompanyDelivery = new TreeMap<String, Pair<BitmapText,Geometry>>();
+		hudCompanyFlying = new TreeMap<String, Pair<BitmapText,Geometry>>();
+		for(String company:droneCompanies){
+			BitmapText hudCompanyDeliveryText = new BitmapText(consoleFont,false);
+			hudCompanyDeliveryText.setSize(consoleFont.getCharSet().getRenderedSize()*2);
+			hudCompanyDeliveryText.setColor(ColorRGBA.Black);
+			hudCompanyDeliveryText.setText("");
+			guiNode.attachChild(hudCompanyDeliveryText);
+			
+			Box hudCompanyDeliveryBox = new Box(5f, 10f, 10f);
+			Geometry hudCompanyDeliveryGeom = new Geometry("Waiting", hudCompanyDeliveryBox);
+			mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create
+			mat.setColor("Color", new ColorRGBA(0.4f,1.0f,0.38f,0.2f));
+			hudCompanyDeliveryGeom.setMaterial(mat); // set the cube's material
+			guiNode.attachChild(hudCompanyDeliveryGeom);
+			
+			hudCompanyDelivery.put(company,new Pair<BitmapText,Geometry>(hudCompanyDeliveryText,hudCompanyDeliveryGeom));
+			
+			BitmapText hudCompanyFlyingText = new BitmapText(consoleFont,false);
+			hudCompanyFlyingText.setSize(consoleFont.getCharSet().getRenderedSize()*2);
+			hudCompanyFlyingText.setColor(ColorRGBA.Black);
+			hudCompanyFlyingText.setText("");
+			guiNode.attachChild(hudCompanyFlyingText);
+			
+			Box hudCompanyFlyingBox = new Box(5f, 10f, 10f);
+			Geometry hudCompanyFlyingGeom = new Geometry("Waiting", hudCompanyFlyingBox);
+			mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create
+			mat.setColor("Color", new ColorRGBA(1.0f,0.4f,0.38f,0.2f));
+			hudCompanyFlyingGeom.setMaterial(mat); // set the cube's material
+			guiNode.attachChild(hudCompanyFlyingGeom);
+			
+			hudCompanyFlying.put(company,new Pair<BitmapText,Geometry>(hudCompanyFlyingText,hudCompanyFlyingGeom));
+		}
+		
+		
 		initKeys();
 		//flyCam.setMoveSpeed(5);
 		flyCam.setEnabled(false);
+		
 		// Enable a chase cam for this target (typically the player).
 		ChaseCamera chaseCam = new ChaseCamera(cam, drones.values().iterator().next(), inputManager);
 		chaseCam.setSmoothMotion(true);
@@ -521,11 +428,229 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		doneWithInit = true;
 	}
 
-	private Vector3f jitter(float x, float y, float z, Vector3f in) {
-		float xJitter = (2.0f * random.nextFloat() - 1.0f) * x;
-		float yJitter = (2.0f * random.nextFloat() - 1.0f) * y;
-		float zJitter = (2.0f * random.nextFloat() - 1.0f) * z;
-		return new Vector3f(in.getX() + xJitter, in.getY() + yJitter, in.getZ() + zJitter);
+	/* Use the main event loop to trigger repeating actions. */
+	@Override
+	public void simpleUpdate(float tpf) {
+		
+		int numNinjasWaiting = 0;
+		Map<String, Integer> droneDeliveries = new TreeMap<String,Integer>();
+		Map<String, Integer> droneFlying = new TreeMap<String,Integer>();
+		Map<String, Long> droneTotalWaitingTime = new TreeMap<String,Long>();
+		
+		for (Entry<Person, Spatial> personEntry : people.entrySet()) {
+			Person person = personEntry.getKey();
+			
+			switch (personEntry.getKey().getState()) {
+			case WAITING: {
+				numNinjasWaiting++;
+				personEntry.getValue().setLocalTranslation(latLong2Transform(person.getPosition().getLatitude(),
+						person.getPosition().getLongitude(), person.getPosition().getHeight()));
+			}
+			break;
+			case EMBARKING: {
+				for (Entry<Drone, Node> droneEntry : drones.entrySet()) {
+					Drone drone = droneEntry.getKey();
+					for (Person p : drone.getEmbarkers()) {
+						if (personEntry.getKey().equals(p)) {
+							personEntry.getValue()
+									.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
+											drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
+						}
+					}
+				}
+				droneFlying.merge(person.getDeliveryCompany(), 1, (v1, v2) -> {return v1+v2;});
+	
+			}
+			break;
+			case IN_DRONE: {
+				for (Entry<Drone, Node> droneEntry : drones.entrySet()) {
+					Drone drone = droneEntry.getKey();
+					for (Person p : drone.getPassengers()) {
+						if (personEntry.getKey().equals(p)) {
+							personEntry.getValue()
+									.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
+											drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
+						}
+					}
+				}
+				droneFlying.merge(person.getDeliveryCompany(), 1, (v1, v2) -> {return v1+v2;});
+	
+			}
+			break;
+			case DISEMBARKING: {
+				for (Entry<Drone, Node> droneEntry : drones.entrySet()) {
+					Drone drone = droneEntry.getKey();
+					for (Person p : drone.getDisembarkers()) {
+						if (personEntry.getKey().equals(p)) {
+							personEntry.getValue()
+									.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
+											drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
+						}
+					}
+				}
+				droneFlying.merge(person.getDeliveryCompany(), 1, (v1, v2) -> {return v1+v2;});
+			}
+			break;
+			case ARRIVED: {
+				personEntry.getValue().setLocalTranslation(latLong2Transform(person.getPosition().getLatitude(),
+						person.getPosition().getLongitude(), person.getPosition().getHeight()));
+				
+				droneDeliveries.merge(person.getDeliveryCompany(), 1, (v1, v2) -> {return v1+v2;});
+				droneTotalWaitingTime.merge(person.getDeliveryCompany(), person.getEndTransitTime()-person.getStartTransitTime(), (v1, v2) -> {return v1+v2;});
+			}
+			break;
+			default:
+				throw new IllegalArgumentException("Unhandled Drone State: " + personEntry.getKey().getState());
+			}
+		}
+		
+		hudWaitingGeom.setLocalScale(numNinjasWaiting, 1, 1);
+		hudWaitingGeom.setLocalTranslation(450+(numNinjasWaiting/2.0f*10.0f),10+hudWaitingText.getLineHeight()/2,0);
+		
+		int i = 0;
+		for(Entry<String, Pair<BitmapText, Geometry>> p: hudCompanyDelivery.entrySet()){
+			i++;
+			Geometry hudCompanyDeliveryGeom = p.getValue().getValue();
+			BitmapText hudCompanyDeliveryText = p.getValue().getKey();
+			Integer count = droneDeliveries.get(p.getKey());
+			if(count == null){
+				count = 0;
+			}
+			
+			Long totalWait = droneTotalWaitingTime.get(p.getKey());
+			if(totalWait == null){
+				totalWait = 0L;
+			}
+			String formattedCompany = String.format("%-20s %09d",p.getKey().subSequence(0, Math.min(p.getKey().length(),20)),(count==0)?totalWait:totalWait/count);
+			hudCompanyDeliveryText.setText(formattedCompany);
+			hudCompanyDeliveryText.setLocalTranslation(10,10+(25.0f*i)+hudCompanyDeliveryText.getLineHeight(),0);
+			
+			hudCompanyDeliveryGeom.setLocalScale(count, 1, 1);
+			float deliveredWidth = (count/2.0f*10.0f);
+			hudCompanyDeliveryGeom.setLocalTranslation(450+deliveredWidth,10+(25*i)+hudCompanyDeliveryText.getLineHeight()/2.0f,0);
+			
+			/* Now tack on the in flight bars */
+			Integer flyingCount = droneFlying.get(p.getKey()); 
+			if(flyingCount == null){
+				flyingCount = 0;
+			}
+			
+			Geometry hudCompanyFlyingGeom = hudCompanyFlying.get(p.getKey()).getValue();
+			BitmapText hudCompanyFlyingText = hudCompanyFlying.get(p.getKey()).getKey();
+			
+			hudCompanyFlyingGeom.setLocalScale(flyingCount, 1, 1);
+			hudCompanyFlyingGeom.setLocalTranslation(450+2*deliveredWidth+(flyingCount/2.0f*10.0f),10+(25*i)+hudCompanyFlyingText.getLineHeight()/2.0f,0);
+			
+		}
+		
+		
+		for (Entry<Place, Spatial> placeEntry : places.entrySet()) {
+			Place place = placeEntry.getKey();
+			//Spatial baseNode = placeEntry.getValue();
+			if(place.getWaitingToEmbark().size()!=0){
+				for(Person p:place.getWaitingToEmbark()){
+					if(!people.keySet().contains(p)){
+						throw new RuntimeException("Someone was cloned:"+p);
+					}
+				}
+			}
+			
+		}
+		
+		for (Entry<Drone, Node> droneEntry : drones.entrySet()) {
+			Drone drone = droneEntry.getKey();
+			Node baseNode = droneEntry.getValue();
+			
+			Spatial droneNode = baseNode.getChild("drone");
+			Node particlesNode = (Node) baseNode.getChild("particles");
+			switch (droneEntry.getKey().getState()) {
+			case BEGIN: {
+				particlesNode.detachAllChildren();
+			}
+			break;
+			case EMBARKING: {
+			}
+			break;
+			case ASCENDING: {
+				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
+						drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
+	
+				ParticleEmitter fire = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 20);
+				Material mat_red = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
+				mat_red.setTexture("Texture", assetManager.loadTexture("Effects/Explosion/flame.png"));
+				// point
+				fire.setShape(new EmitterPointShape(Vector3f.ZERO));
+				fire.setMaterial(mat_red);
+				fire.setParticlesPerSec(0);
+				fire.setImagesX(2);
+				fire.setImagesY(2); // 2x2 texture animation
+				fire.setStartColor(new ColorRGBA(1.0f, 0f, 0f, 0.4f));
+				fire.setEndColor(new ColorRGBA(1f, 1f, 0f, 0.1f));
+				fire.getParticleInfluencer().setInitialVelocity(new Vector3f(0f, -0.4f, 0f));
+				// fire.setFaceNormal(Vector3f.UNIT_Y);
+				fire.setRotateSpeed(1.0f);
+				fire.setStartSize(0.05f);
+				fire.setEndSize(0.01f);
+				fire.setGravity(0, 0.0f, 0);
+				fire.setLowLife(0.2f);
+				fire.setHighLife(1.0f);
+				fire.getParticleInfluencer().setVelocityVariation(0.3f);
+				fire.setLocalTranslation(0, 0.2f, 0);
+	
+				// Match it to the drone
+				particlesNode.attachChild(fire);
+				fire.emitAllParticles();
+			}
+			break;
+			case IN_TRANSIT: {
+				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
+						drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
+				baseNode.rotate(0,0.5f*tpf,0);
+				particlesNode.detachAllChildren();
+			}
+			break;
+			case DESCENDING: {
+				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
+						drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
+			}
+			break;
+			case DISEMBARKING: {
+			}
+			break;
+			case RECHARGING: {
+				ParticleEmitter electricity = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 1);
+				Material mat_red = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
+				mat_red.setTexture("Texture", assetManager.loadTexture("Effects/Explosion/flash.png"));
+				// point
+				electricity.setShape(new EmitterPointShape(Vector3f.ZERO));
+				electricity.setMaterial(mat_red);
+				electricity.setParticlesPerSec(5f);
+				electricity.setImagesX(2);
+				electricity.setImagesY(2); // 2x2 texture animation
+				electricity.setStartColor(new ColorRGBA(0.2f, 0f, 1f, 0.8f));
+				electricity.setEndColor(new ColorRGBA(0f, 0f, 1f, 0.3f));
+				electricity.getParticleInfluencer().setInitialVelocity(new Vector3f(0f, 0.5f, 0f));
+				electricity.setFaceNormal(Vector3f.UNIT_Y);
+				electricity.setRotateSpeed(1.0f);
+				electricity.setStartSize(0.3f);
+				electricity.setEndSize(0.4f);
+				electricity.setGravity(0, -0.1f, 0);
+				electricity.setLowLife(0.2f);
+				electricity.setHighLife(2.0f);
+				electricity.getParticleInfluencer().setVelocityVariation(1);
+	
+				particlesNode.attachChild(electricity);
+			}
+			break;
+			case IDLING: {
+				droneNode.rotate(0, 0.1f * tpf, 0);
+				particlesNode.detachAllChildren();
+			}
+			break;
+			default:
+				throw new IllegalArgumentException("Unhandled Drone State: " + droneEntry.getKey().getState());
+			}
+		}
 	}
 
 	private AnimChannel channel;
@@ -581,7 +706,6 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		// unused
 	}
 
-	/** Custom Keybinding: Map named actions to inputs. */
 	private void initKeys() {
 		inputManager.addMapping("Idle1", new KeyTrigger(KeyInput.KEY_1));
 		inputManager.addListener(actionListener, "Idle1");
@@ -648,13 +772,13 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 					simulator.end(e1.toString());
 				}
 			}
-		}
+		} 
 
 	}
 
 	public static void main(String[] args) {
 		DroneWorld app = new DroneWorld();
-		app.start(); // start the game
+		app.start(); 
 	}
 
 }
