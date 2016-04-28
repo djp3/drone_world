@@ -3,6 +3,10 @@ package simulator;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
+
+import simulator.enums.DroneState;
+import simulator.interfaces.DroneController;
 
 public class Drone implements Comparable<Drone>{
 	
@@ -10,12 +14,23 @@ public class Drone implements Comparable<Drone>{
 	//private static final int ONE_MINUTE = 60*ONE_SECOND;
 	//private static final int ONE_HOUR = 60*ONE_MINUTE;
 	
-	// Name to identify the drone by
+	//This is the controller that makes decisions for this drone
+	private DroneController controller;
+	
+	// Id to identify the drone by e.g., "000001"
 	private String id;
+	//This is the human identifiable name of the individual drone, e.g, "Hopper"
 	private String name;
+	//This is the name of a company that might have several Drones, e.g., "Patterson Drone Inc."
+	private String companyName;
+	
 	private Place start;
 	private Position position;
 	private Place destination;
+	
+	//The list of places that passengers are told the drone is going to - effects their boarding
+	private Set<String> manifest;
+	
 	private DroneState state;
 	
 	// Time since starting the load of the last passenger
@@ -32,9 +47,9 @@ public class Drone implements Comparable<Drone>{
 	private Set<Person> disembarkers;
 	
 	//How many milliseconds it takes to lift to cruising altitude
-	private long ascentionTime;
+	private long ascensionTime;
 	//How many milliseconds it takes to lower from to cruising altitude
-	private long descentionTime;
+	private long descensionTime;
 	
 	//Time of start of transit
 	private long transitStart;
@@ -47,11 +62,19 @@ public class Drone implements Comparable<Drone>{
 	private double rechargeRate;
 	
 	// How many passengers can this drone carry?
-	int capacity;
-	Set<Person> passengers;
+	private int capacity;
+	private Set<Person> passengers;
 	
 	// meters per second;
 	private double speed;
+	
+	public DroneController getController() {
+		return controller;
+	}
+
+	void setController(DroneController controller) {
+		this.controller = controller;
+	}
 
 	public String getId() {
 		return id;
@@ -60,13 +83,21 @@ public class Drone implements Comparable<Drone>{
 	void setId(String id) {
 		this.id = id;
 	}
-
+	
 	public String getName() {
 		return name;
 	}
 
 	void setName(String name) {
 		this.name = name;
+	}
+
+	public String getCompanyName() {
+		return companyName;
+	}
+
+	void setCompanyName(String companyName) {
+		this.companyName = companyName;
 	}
 
 	public Place getStart() {
@@ -80,6 +111,10 @@ public class Drone implements Comparable<Drone>{
 	public Position getPosition(){
 		return position;
 	}
+	
+	void setPosition(Position position){
+		this.position = position;
+	}
 
 	public Place getDestination() {
 		return destination;
@@ -87,6 +122,14 @@ public class Drone implements Comparable<Drone>{
 	
 	void setDestination(Place place){
 		destination = place;
+	}
+
+	public Set<String> getManifest() {
+		return manifest;
+	}
+
+	void setManifest(Set<String> manifest) {
+		this.manifest = manifest;
 	}
 
 	public DroneState getState(){
@@ -97,7 +140,7 @@ public class Drone implements Comparable<Drone>{
 		this.state = state;
 	}
 
-	long getEmbarkingStart() {
+	public long getEmbarkingStart() {
 		return embarkingStart;
 	}
 
@@ -105,11 +148,11 @@ public class Drone implements Comparable<Drone>{
 		this.embarkingStart= time;
 	}
 
-	int getEmbarkingDuration() {
+	public int getEmbarkingDuration() {
 		return embarkingDuration;
 	}
 
-	int getEmbarkingCapacity() {
+	public int getEmbarkingCapacity() {
 		return embarkingCapacity;
 	}
 
@@ -117,7 +160,7 @@ public class Drone implements Comparable<Drone>{
 		return embarkers;
 	}
 
-	long getDisembarkingStart() {
+	public long getDisembarkingStart() {
 		return disembarkingStart;
 	}
 
@@ -125,7 +168,7 @@ public class Drone implements Comparable<Drone>{
 		this.disembarkingStart = disembarkingStart;
 	}
 
-	int getDisembarkingDuration() {
+	public int getDisembarkingDuration() {
 		return disembarkingDuration;
 	}
 
@@ -137,15 +180,15 @@ public class Drone implements Comparable<Drone>{
 		return disembarkers;
 	}
 
-	public long getAscentionTime() {
-		return this.ascentionTime;
+	public long getAscensionTime() {
+		return this.ascensionTime;
 	}
 
-	public long getDescentionTime() {
-		return this.descentionTime;
+	public long getDescensionTime() {
+		return this.descensionTime;
 	}
 
-	long getTransitStart() {
+	public long getTransitStart() {
 		return transitStart;
 	}
 
@@ -153,7 +196,7 @@ public class Drone implements Comparable<Drone>{
 		this.transitStart = transitStart;
 	}
 
-	long getTransitEnd() {
+	public long getTransitEnd() {
 		return transitEnd;
 	}
 
@@ -193,8 +236,18 @@ public class Drone implements Comparable<Drone>{
 		return speed;
 	}
 
-	public Drone(Place start,Place destination,int capacity) {
-		this.id = "#"+System.currentTimeMillis();
+	public Drone(DroneController controller, Place start,Place destination,int capacity) {
+		
+		this.controller = controller;
+		
+		// Make up a unique id
+		this.id = UUID.randomUUID().toString();
+		
+		//Ask controller for drone and company name
+		this.name = this.controller.getNextDroneName();
+		this.companyName = this.controller.getCompanyName();
+		
+		//Set defaults
 		speed = 100.0;
 		charge = 1.0;
 		rechargeRate = 0.10;
@@ -207,12 +260,13 @@ public class Drone implements Comparable<Drone>{
 		disembarkingCapacity = 1;
 		this.disembarkers = new HashSet<Person>();
 		
-		ascentionTime = 60*ONE_SECOND;
-		descentionTime = 60*ONE_SECOND;
+		ascensionTime = 60*ONE_SECOND;
+		descensionTime = 60*ONE_SECOND;
 		
 		this.start = start;
 		this.position = start.getPosition();
 		this.destination = destination;
+		this.manifest = new TreeSet<String>();
 		
 		if(capacity < 1){
 			throw new IllegalArgumentException("Drones must be able to carry 1 or greater");
@@ -224,10 +278,21 @@ public class Drone implements Comparable<Drone>{
 	}
 	
 	public Drone(Drone drone){
-		this.id = drone.getId();
-		this.start = new Place(drone.getStart());
-		this.destination = new Place(drone.getDestination());
-		this.state = drone.getState();
+		if(drone == null){
+			throw new IllegalArgumentException("Can't copy construct null");
+		}
+		
+		this.setController(drone.getController());
+		
+		this.setId(drone.getId());
+		this.setName(drone.getName());
+		this.setCompanyName(drone.getCompanyName());
+		this.setStart(new Place(drone.getStart()));
+		this.setPosition(new Position(drone.getPosition()));
+		this.setDestination(new Place(drone.getDestination()));
+		this.setManifest(new TreeSet<String>());
+		this.getManifest().addAll(drone.getManifest());
+		this.setState(drone.getState());
 		
 		this.embarkingStart = drone.getEmbarkingStart();
 		this.embarkingDuration = drone.getEmbarkingDuration();
@@ -255,8 +320,8 @@ public class Drone implements Comparable<Drone>{
 			}
 		}
 		
-		this.ascentionTime = drone.getAscentionTime();
-		this.descentionTime = drone.getDescentionTime();
+		this.ascensionTime = drone.getAscensionTime();
+		this.descensionTime = drone.getDescensionTime();
 		
 		this.transitStart = drone.getTransitStart();
 		this.transitEnd = drone.getTransitEnd();
@@ -281,16 +346,20 @@ public class Drone implements Comparable<Drone>{
 		
 	}
 
+
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (int) (ascentionTime ^ (ascentionTime >>> 32));
+		result = prime * result + (int) (ascensionTime ^ (ascensionTime >>> 32));
 		result = prime * result + capacity;
 		long temp;
 		temp = Double.doubleToLongBits(charge);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
-		result = prime * result + (int) (descentionTime ^ (descentionTime >>> 32));
+		result = prime * result + ((companyName == null) ? 0 : companyName.hashCode());
+		result = prime * result + ((controller == null) ? 0 : controller.hashCode());
+		result = prime * result + (int) (descensionTime ^ (descensionTime >>> 32));
 		result = prime * result + ((destination == null) ? 0 : destination.hashCode());
 		result = prime * result + ((disembarkers == null) ? 0 : disembarkers.hashCode());
 		result = prime * result + disembarkingCapacity;
@@ -301,7 +370,10 @@ public class Drone implements Comparable<Drone>{
 		result = prime * result + embarkingDuration;
 		result = prime * result + (int) (embarkingStart ^ (embarkingStart >>> 32));
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((manifest == null) ? 0 : manifest.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((passengers == null) ? 0 : passengers.hashCode());
+		result = prime * result + ((position == null) ? 0 : position.hashCode());
 		temp = Double.doubleToLongBits(rechargeRate);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
 		temp = Double.doubleToLongBits(speed);
@@ -322,13 +394,23 @@ public class Drone implements Comparable<Drone>{
 		if (!(obj instanceof Drone))
 			return false;
 		Drone other = (Drone) obj;
-		if (ascentionTime != other.ascentionTime)
+		if (ascensionTime != other.ascensionTime)
 			return false;
 		if (capacity != other.capacity)
 			return false;
 		if (Double.doubleToLongBits(charge) != Double.doubleToLongBits(other.charge))
 			return false;
-		if (descentionTime != other.descentionTime)
+		if (companyName == null) {
+			if (other.companyName != null)
+				return false;
+		} else if (!companyName.equals(other.companyName))
+			return false;
+		if (controller == null) {
+			if (other.controller != null)
+				return false;
+		} else if (!controller.equals(other.controller))
+			return false;
+		if (descensionTime != other.descensionTime)
 			return false;
 		if (destination == null) {
 			if (other.destination != null)
@@ -362,10 +444,25 @@ public class Drone implements Comparable<Drone>{
 				return false;
 		} else if (!id.equals(other.id))
 			return false;
+		if (manifest == null) {
+			if (other.manifest != null)
+				return false;
+		} else if (!manifest.equals(other.manifest))
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
 		if (passengers == null) {
 			if (other.passengers != null)
 				return false;
 		} else if (!passengers.equals(other.passengers))
+			return false;
+		if (position == null) {
+			if (other.position != null)
+				return false;
+		} else if (!position.equals(other.position))
 			return false;
 		if (Double.doubleToLongBits(rechargeRate) != Double.doubleToLongBits(other.rechargeRate))
 			return false;

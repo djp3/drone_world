@@ -2,11 +2,15 @@ package simulator;
 
 import static org.junit.Assert.*;
 
+import java.util.TreeSet;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import reference.MyDroneController;
 
 public class DroneTest {
 
@@ -36,8 +40,11 @@ public class DroneTest {
 		position = new Position(15.0,25.0,0.0);
 		Place destination = new Place(name, position);
 		
-		Drone d1 = new Drone(start,destination,1);
-		Drone d2 = new Drone(d1);
+		Drone d1 = null;
+		d1 = new Drone(new MyDroneController(),start,destination,1);
+		
+		Drone d2 = null;
+		d2 = new Drone(d1);
 		
 		assertEquals(d1,d1);
 		assertTrue(d1.hashCode() == d1.hashCode());
@@ -46,9 +53,21 @@ public class DroneTest {
 		assertTrue(!d1.equals(null));
 		assertTrue(!d1.equals("String"));
 		
-		assertEquals(d1,d2);
+		assertTrue(d1.equals(d2));
 		assertTrue(d1.hashCode() == d2.hashCode());
 		
+		/* Make sure the manifest is accounted for */
+		TreeSet<String> treeSet = new TreeSet<String>();
+		treeSet.add(name);
+		d2.setManifest(treeSet);
+		assertTrue(!d1.equals(d2));
+		assertTrue(d1.hashCode() != d2.hashCode());
+		
+		treeSet = new TreeSet<String>();
+		treeSet.add(name);
+		d1.setManifest(treeSet);
+		assertTrue(d1.equals(d2));
+		assertTrue(d1.hashCode() == d2.hashCode());
 	}
 
 }
