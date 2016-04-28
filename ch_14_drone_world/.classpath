@@ -32,5 +32,6 @@
 	<classpathentry kind="lib" path="lib/denseC64.jar"/>
 	<classpathentry kind="lib" path="lib/jme3-terrain.jar"/>
 	<classpathentry kind="lib" path="lib/jme3-effects.jar"/>
+	<classpathentry kind="lib" path="lib/referenceControllers.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
