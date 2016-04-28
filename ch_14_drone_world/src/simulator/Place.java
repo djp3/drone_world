@@ -14,12 +14,25 @@ public class Place implements Comparable<Place>{
 		return name;
 	}
 
+	void setName(String name) {
+		this.name = name;
+	}
+
+
 	public Position getPosition(){
 		return new Position(position);
+	}
+	
+	void setPosition(Position position) {
+		this.position = position;
 	}
 
 	public LinkedList<Person> getWaitingToEmbark() {
 		return waitingToEmbark;
+	}
+
+	void setWaitingToEmbark(LinkedList<Person> waitingToEmbark) {
+		this.waitingToEmbark = waitingToEmbark;
 	}
 
 	public Place(String name, Position position){
@@ -34,11 +47,11 @@ public class Place implements Comparable<Place>{
 	}
 	
 	public Place(Place place){
-		this.name = place.getName();
-		this.position = new Position(place.getPosition());
-		this.waitingToEmbark = new LinkedList<Person>();
+		this.setName(place.getName());
+		this.setPosition(new Position(place.getPosition()));
+		this.setWaitingToEmbark(new LinkedList<Person>());
 		for(Person p: place.getWaitingToEmbark()){
-			this.waitingToEmbark.add(new Person(p));
+			this.getWaitingToEmbark().add(new Person(p));
 		}
 	}
 
