@@ -1,31 +1,42 @@
-
 package reference;
 
-import simulator.Controller;
 import simulator.Drone;
 import simulator.Simulator;
+import simulator.interfaces.DroneController;
 
-public class MyController implements Controller {
+/**
+ * This is the class that students should work with to create there drone controller
+ * 
+ */
+public class MyDroneController implements DroneController {
 
-	Simulator simulator;
+	// This is set by the simulator when the simulation starts so that you can get access to the places, drones, people, etc.
+	// with simulator.getX
+	Simulator simulator = null;
 	
 	@Override
 	public void setSimulator(Simulator simulator) {
 		this.simulator = simulator;
 	}
 	
-	public Simulator getSimulator(){
+	Simulator getSimulator(){
 		return this.simulator;
 	}
+	
 
 	@Override
-	public boolean isHighResolution() {
-		return true;
+	public String getNextDroneName() {
+		if((System.currentTimeMillis()%2) == 0){
+			return "Hopper The Drone";
+		}
+		else{
+			return "Borg";
+		}
 	}
 
 	@Override
-	public long simulatorSpeed() {
-		return 20;
+	public String getCompanyName() {
+		return "Vanilla Company";
 	}
 
 	
@@ -79,8 +90,7 @@ public class MyController implements Controller {
 
 	@Override
 	public void droneTransiting(Drone drone, double percent) {
-		System.out.println("*** Simulator told: Drone " + drone.getId() + ": In Transit " + (percent * 100) + "%"+", Charge: "+drone.getCharge()+"%");
-
+		System.out.println(String.format("*** Simulator told: Drone %s: In Transit %5.2f%%, Charge: %5.2f%%",drone.getId(), (percent * 100f), drone.getCharge()));
 	}
 
 	@Override
@@ -137,8 +147,7 @@ public class MyController implements Controller {
 
 	@Override
 	public void droneRecharging(Drone drone, double percent) {
-		System.out
-				.println("*** Simulator told: Drone " + drone.getId() + ": Charge at " + (percent * 100) + "%");
+		System.out.println(String.format("*** Simulator told: Drone %s: Charge at %5.2f%%",drone.getId(), + (percent * 100)));
 
 	}
 
@@ -152,6 +161,5 @@ public class MyController implements Controller {
 	public void droneIdling(Drone drone) {
 		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Drone Idling");
 	}
-
 
 }

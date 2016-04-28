@@ -1,7 +1,10 @@
-package simulator;
+package simulator.interfaces;
 
-public interface Controller {
+import simulator.Drone;
+import simulator.Simulator;
 
+public interface DroneController {
+	
 	/**
 	 * This is called by the simulator so that the Controller can have access to the people, places and drones that simulator keeps track of
 	 *  
@@ -9,19 +12,7 @@ public interface Controller {
 	 */
 	void setSimulator(Simulator simulator);
 	
-	/**
-	 * return true if you want the drone's fully rendered, which takes a little more time on start 
-	 */
-	boolean isHighResolution();
-	/**
-	 * How fast do you want the simulator to run?
-	 * 1 is real-time (1 simulator second is one real-second)
-	 * 100 is faster (as fast as possible);
-	 * 
-	 */
-	long simulatorSpeed();
-	
-	
+	/* Life cycle call backs */
 	void droneEmbarkingStart(Drone drone);
 	void droneEmbarkingAGroupStart(Drone drone);
 	void droneEmbarkingAGroupEnd(Drone drone);
@@ -51,12 +42,29 @@ public interface Controller {
 	void droneRechargingStart(Drone drone);
 	void droneRecharging(Drone drone,double percent);
 	void droneDoneRecharging(Drone drone);
-
+	
 	/**
 	 * A drone that is idling should have it's start and destination be the same and be the place where it current is
 	 * @param drone
 	 */
 	void droneIdling(Drone drone);
+	
+	/* End Lifecyle routines */
+
+	
+	
+	
+	/**
+	 * This method should return human relevant names for drones.  It can return as many or as few unique ones as desired.
+	 * @return The name of a drone, e.g., "Grumpy"
+	 */
+	String getNextDroneName();
+
+	/**
+	 * This method should return the name of the company that made this controller.  
+	 * @return The company name, e.g., "Patterson Intelligent Drone Corporation"
+	 */
+	String getCompanyName();
 
 
 
