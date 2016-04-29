@@ -3,14 +3,23 @@ package simulator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
-import reference.MyNewController;
+import reference.submission.MyController_Bethany_Le;
+import reference.submission.MyController_Bryan_Miner;
+import reference.submission.MyController_Christian_Alvo;
+import reference.submission.MyController_James_Solum;
+import reference.submission.MyController_Kyle_Hansen;
+import reference.submission.MyController_Mark_Carlson;
+import reference.submission.MyController_Matthew_Beall;
+import reference.submission.MyController_Matthew_Coffman;
+import reference.submission.MyController_Ryan_Kleinberg;
+import reference.submission.MyController_Xinyu;
+import reference.submission.sam_katie.MyController_Sam_N_Katie;
 import visualization.DroneWorld;
 
 public class Simulator {
@@ -22,7 +31,7 @@ public class Simulator {
 	private static final boolean PEOPLE_ALWAYS_DISEMBARK_DRONE = false;
 	private static final int DELIVER_PERSON_SCORE = 100;
 	private static final int TRANSIT_HEIGHT = 2;
-	private static Random random = new Random(10L);
+	private static Random random = new Random("Drone Assignment #1".hashCode());
 	
 	//Simulator time in milliseconds
 	private long clockTick;
@@ -434,14 +443,23 @@ public class Simulator {
 			}
 			//Check to see if all passengers are delivered
 			boolean allDone = true;
+			int countDelivered = 0;
 			for(Person p: people){
-				if(!p.getState().equals(PersonState.ARRIVED)){
+				if(p.getState().equals(PersonState.ARRIVED)){
+					countDelivered++;
+				}
+				else{
 					allDone = false;
 				}
 			}
 			if(allDone){
 				simulationEnded = true;
 				System.out.println("Simulation ended with all passengers delivered at time "+clockTick);
+			}
+			else{
+				if(countDelivered == 9){
+					System.out.println("This many passengers have been delivered "+countDelivered+" in this much time "+clockTick);
+				}
 			}
 		}
 	}
@@ -605,7 +623,19 @@ public class Simulator {
 		Set<Place> places = Simulator.loadPlaces();
 		Set<Drone> drones = loadDrones(places);
 		Set<Person> people = loadPeople(places);
-		Simulator simulator = new Simulator(people,places,drones,new MyNewController());
+		Simulator simulator;
+		simulator = new Simulator(people,places,drones,new MyController_Bethany_Le());
+		simulator = new Simulator(people,places,drones,new MyController_Bryan_Miner());
+		simulator = new Simulator(people,places,drones,new MyController_Christian_Alvo());
+		simulator = new Simulator(people,places,drones,new MyController_James_Solum());
+		simulator = new Simulator(people,places,drones,new MyController_Kyle_Hansen());
+		simulator = new Simulator(people,places,drones,new MyController_Mark_Carlson());
+		simulator = new Simulator(people,places,drones,new MyController_Matthew_Beall());
+		simulator = new Simulator(people,places,drones,new MyController_Matthew_Coffman());
+		simulator = new Simulator(people,places,drones,new MyController_Ryan_Kleinberg());
+		simulator = new Simulator(people,places,drones,new MyController_Sam_N_Katie());
+		simulator = new Simulator(people,places,drones,new MyController_Xinyu());
+
 		DroneWorld visualization = new DroneWorld(simulator,people,places,drones);
 		visualization.launch();
 	}
