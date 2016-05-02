@@ -114,7 +114,18 @@ public class Simulator {
 			
 			clockTick += SIMULATION_SPEED;
 			
-			for(Drone drone:drones){
+			//Shuffle drones so that different drones get random priority on each round
+			//Shuffling manually to make sure that we only use a managed random number generator for consistency
+			ArrayList<Drone> shuffledDrones = new ArrayList<Drone>();
+			shuffledDrones.addAll(drones);
+			for(int j = 0 ; j < shuffledDrones.size(); j++){
+				int swapIndex = simulationController.getRandom().nextInt(shuffledDrones.size());
+				Drone foo = shuffledDrones.get(j);
+				shuffledDrones.set(j,shuffledDrones.get(swapIndex));
+				shuffledDrones.set(swapIndex,foo);
+			}
+			
+			for(Drone drone:shuffledDrones){
 				switch (drone.getState()){
 					case BEGIN:{
 						simulationEnded = false;
