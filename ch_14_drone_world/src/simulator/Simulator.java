@@ -3,7 +3,6 @@ package simulator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -15,7 +14,6 @@ import reference.MyDroneController;
 import reference.MySimulationController;
 import reference.PromiscuousController;
 import reference.RandomDroneController;
-import reference.TestController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
@@ -624,12 +622,11 @@ public class Simulator {
 		//Generate the drones
 		Set<Drone> drones = new TreeSet<Drone>();
 		//Add each companies drones here
-		//drones.addAll(loadDrones(places,new RandomDroneController())); //Professor's Controller
-		//drones.addAll(loadDrones(places,new PromiscuousController())); //Professor's Controller
-		//drones.addAll(loadDrones(places,new GreedyController())); //Professor's Controller
+		drones.addAll(loadDrones(places,new RandomDroneController())); //Professor's Controller
+		drones.addAll(loadDrones(places,new PromiscuousController())); //Professor's Controller
+		drones.addAll(loadDrones(places,new GreedyController())); //Professor's Controller
 		
-		//drones.addAll(loadDrones(places,new MyDroneController())); //Student's Controller
-		drones.addAll(loadDrones(places,new TestController())); //Student's Controller
+		drones.addAll(loadDrones(places,new MyDroneController())); //Student's Controller
 		
 		//Generate people
 		Set<Person> people = loadPeople(simController.getRandom(),places);

@@ -19,7 +19,7 @@ public class MyDroneController implements DroneController {
 		this.simulator = simulator;
 	}
 	
-	Simulator getSimulator(){
+	protected Simulator getSimulator(){
 		return this.simulator;
 	}
 	
