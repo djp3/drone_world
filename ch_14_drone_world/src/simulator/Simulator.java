@@ -3,8 +3,12 @@ package simulator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
@@ -639,6 +643,46 @@ public class Simulator {
 		
 		//Start it up
 		visualization.launch();
+		
+		calculateWinners(people);
+	}
+
+
+
+
+	private static void calculateWinners(Set<Person> people) {
+		//Aggregate scores
+		HashMap<String, Pair<Integer,Long>> score = new HashMap<String,Pair<Integer,Long>>();
+		for(Person p: people){
+			score.merge(p.deliveryCompany,new Pair<Integer,Long>(1,p.getEndTransitTime()-p.getStartTransitTime()),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+		}
+		
+		//Figure out the highest score
+		int max = -1;
+		for(Entry<String, Pair<Integer, Long>> p:score.entrySet()){
+			if(p.getValue().getKey() > max){
+				max = p.getValue().getKey();
+			}
+		}
+		
+		//See who has the highest score
+		long minTime = Long.MAX_VALUE;
+		Map<String,Long> winners = new HashMap<String,Long>();
+		for(Entry<String, Pair<Integer, Long>> p:score.entrySet()){
+			if(p.getValue().getKey() == max){
+				if(minTime > p.getValue().getValue()){
+					minTime = p.getValue().getValue();
+				}
+				winners.put(p.getKey(),p.getValue().getValue());
+			}
+		}
+		
+		//Output everyone who is a winner
+		for(Entry<String, Long> p:winners.entrySet()){
+			if(p.getValue() == minTime){
+				System.out.println("Winner : "+p.getKey()+" delivered: "+max+" passengers in a total time of "+minTime);
+			}
+		}
 	}
 
 	
