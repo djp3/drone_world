@@ -162,4 +162,14 @@ public class MyDroneController implements DroneController {
 		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Drone Idling");
 	}
 
+	@Override
+	public void droneExploding(Drone drone) {
+		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Drone Exploding");
+	}
+
+	@Override
+	public void droneHasDied(Drone drone) {
+		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Drone Died");
+	}
+
 }
