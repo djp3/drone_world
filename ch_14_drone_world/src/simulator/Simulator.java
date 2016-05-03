@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -13,8 +12,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
+import reference.DistanceAwarePromiscuousController;
 import reference.GreedyController;
-import reference.MyDroneController;
 import reference.MySimulationController;
 import reference.PromiscuousController;
 import reference.RandomDroneController;
@@ -26,13 +25,21 @@ import visualization.DroneWorld;
 
 public class Simulator {
 	
-	public static final int MAX_DRONES_PER_CONTROLLER = 5;
-	private static final int DRONE_CAPACITY = 1;
-	public static final int MAX_PEOPLE = 100;
+	public static final int MAX_DRONES_PER_CONTROLLER = 10;
+	
+	public static final int DRONE_MAX_CAPACITY = 30;
+	private static final boolean DRONE_CAPACITY_VARIES = true;
+	private static final boolean DRONES_RUN_OUT_OF_CHARGE = true;
+	
+	public static final int MAX_PEOPLE = 1000;
+	
+	public static final int MAX_LOCATIONS = 100;
 	
 	private static final long SIMULATION_SPEED = 100;
+	
 	private static final boolean PEOPLE_ALWAYS_BOARD_DRONE = false;
 	private static final boolean PEOPLE_ALWAYS_DISEMBARK_DRONE = false;
+	
 	private static final int TRANSIT_HEIGHT = 2;
 	
 	private SimulationController simulationController;
@@ -470,7 +477,7 @@ public class Simulator {
 			//Check to see if all passengers are delivered
 			boolean allDone = true;
 			for(Person p: people){
-				if(!p.getState().equals(PersonState.ARRIVED)){
+				if(!p.getState().equals(PersonState.ARRIVED)&&(!p.getState().equals(PersonState.DEAD))){
 					allDone = false;
 				}
 			}
@@ -711,16 +718,19 @@ public class Simulator {
 		MySimulationController simController = new MySimulationController();
 		
 		//Generate the places
-		Set<Place> places = Simulator.loadPlaces();
+		Set<Place> places = Simulator.loadPlaces(simController);
 		
 		//Generate the drones
 		Set<Drone> drones = new TreeSet<Drone>();
 		//Add each companies drones here
-		drones.addAll(loadDrones(places,new RandomDroneController())); //Professor's Controller
+		drones.addAll(loadDrones(places,new DistanceAwarePromiscuousController())); //Professor's Controller
+		
 		drones.addAll(loadDrones(places,new PromiscuousController())); //Professor's Controller
 		drones.addAll(loadDrones(places,new GreedyController())); //Professor's Controller
+		drones.addAll(loadDrones(places,new RandomDroneController())); //Professor's Controller
 		
-		drones.addAll(loadDrones(places,new MyDroneController())); //Student's Controller
+		
+		//drones.addAll(loadDrones(places,new MyDroneController())); //Student's Controller
 		
 		//Generate people
 		Set<Person> people = loadPeople(simController.getRandom(),places);
