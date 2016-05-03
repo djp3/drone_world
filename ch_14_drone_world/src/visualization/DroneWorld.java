@@ -836,7 +836,12 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 	@Override
 	public void handleError(String errorMsg, Throwable t) {
 		if (simulator != null) {
-			simulator.end(errorMsg);
+			StringBuffer sb = new StringBuffer("");
+			sb.append(errorMsg+"\n");
+			for(StackTraceElement s: t.getStackTrace()){
+				sb.append(s.toString());
+			}
+			simulator.end(sb.toString());
 			simulator = null;
 		}
 		super.handleError(errorMsg, t);
