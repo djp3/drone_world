@@ -224,6 +224,24 @@ public class Simulator {
 						}
 					}
 					break;
+					case EXPLODING:{
+						simulationEnded = false;
+						
+						for(Person p: drone.getPassengers()){
+							p.setState(PersonState.DYING);
+						}
+						
+						long timeToGo = drone.getTransitEnd() - clockTick;
+						if(timeToGo > 0){
+							double percentage = timeToGo/(0.0+drone.getDescensionTime());
+							double currentHeight = percentage*TRANSIT_HEIGHT;
+							drone.getPosition().setHeight(currentHeight);
+						}
+						else{
+							drone.setState(DroneState.DYING);
+						}
+					}
+					break;
 					case IN_TRANSIT:{
 						simulationEnded = false;
 						//How far the drone has to go from it's current position to it's destination
@@ -249,51 +267,59 @@ public class Simulator {
 						//Deduct charge
 						double charge = drone.getCharge();
 						//Percent per meter
-						double dischargeRate = 0.0002;
+						double dischargeRate = drone.getDischargeRate();
 						charge = charge - (metersPerTick*dischargeRate); 
 						if(charge < 0.0 ){
 							charge = 0.0;
-						}
-						drone.setCharge(charge);
-						
-						// What percentage of the distance to goal was covered in the last simulation tick
-						double percentage = metersPerTick/metersToGoal;
-						
-						//Close enough to call it an arrival
-						if(metersPerTick >= metersToGoal){
-							drone.getPosition().setLatitude(drone.getDestination().getPosition().getLatitude());
-							drone.getPosition().setLongitude(drone.getDestination().getPosition().getLongitude());
-							drone.getPosition().setHeight(drone.getDestination().getPosition().getHeight());
-							
-							//Arrival
-							drone.setTransitEnd(clockTick+drone.getDescensionTime());
-							drone.getController().droneTransitingEnd(new Drone(drone));
-							drone.setState(DroneState.DESCENDING);
-							drone.getController().droneDescendingStart(new Drone(drone));
+							drone.setCharge(charge);
+							if(DRONES_RUN_OUT_OF_CHARGE){
+								drone.setState(DroneState.EXPLODING);
+								drone.setTransitEnd(clockTick+(drone.getDescensionTime()/2));
+								drone.getController().droneExploding(new Drone(drone));
+							}
 						}
 						else{
-							Position a = drone.getPosition();
-							Position b = drone.getDestination().getPosition();
-							double latitude = (b.getLatitude()-a.getLatitude())*percentage+a.getLatitude();
-							double longitude = (b.getLongitude()-a.getLongitude())*percentage+a.getLongitude();
-							double height = (b.getHeight()-a.getHeight())*percentage+ TRANSIT_HEIGHT;
+							drone.setCharge(charge);
 						
-							drone.getPosition().setLatitude(latitude);
-							drone.getPosition().setLongitude(longitude);
-							drone.getPosition().setHeight(height);
-						}
-						if(drone.getEmbarkers().size() != 0){
-							throw new IllegalStateException("Simulator Error:There shouldn't be anyone embarking if we are in transit");
-						}
-						if(drone.getDisembarkers().size() != 0){
-							throw new IllegalStateException("Simulator Error:There shouldn't be anyone disembarking if we are in transit");
-						}
-						for(Person p: drone.getPassengers()){
-							p.setPosition(drone.getPosition());
-						}
+							// What percentage of the distance to goal was covered in the last simulation tick
+							double percentage = metersPerTick/metersToGoal;
 						
-						/* Call back to controller */
-						drone.getController().droneTransiting(new Drone(drone), 1.0-(metersToGoal/metersForTrip));
+							//Close enough to call it an arrival
+							if(metersPerTick >= metersToGoal){
+								drone.getPosition().setLatitude(drone.getDestination().getPosition().getLatitude());
+								drone.getPosition().setLongitude(drone.getDestination().getPosition().getLongitude());
+								drone.getPosition().setHeight(drone.getDestination().getPosition().getHeight());
+							
+								//Arrival
+								drone.setTransitEnd(clockTick+drone.getDescensionTime());
+								drone.getController().droneTransitingEnd(new Drone(drone));
+								drone.setState(DroneState.DESCENDING);
+								drone.getController().droneDescendingStart(new Drone(drone));
+							}
+							else{
+								Position a = drone.getPosition();
+								Position b = drone.getDestination().getPosition();
+								double latitude = (b.getLatitude()-a.getLatitude())*percentage+a.getLatitude();
+								double longitude = (b.getLongitude()-a.getLongitude())*percentage+a.getLongitude();
+								double height = (b.getHeight()-a.getHeight())*percentage+ TRANSIT_HEIGHT;
+						
+								drone.getPosition().setLatitude(latitude);
+								drone.getPosition().setLongitude(longitude);
+								drone.getPosition().setHeight(height);
+							}
+							if(drone.getEmbarkers().size() != 0){
+								throw new IllegalStateException("Simulator Error:There shouldn't be anyone embarking if we are in transit");
+							}
+							if(drone.getDisembarkers().size() != 0){
+								throw new IllegalStateException("Simulator Error:There shouldn't be anyone disembarking if we are in transit");
+							}
+							for(Person p: drone.getPassengers()){
+								p.setPosition(drone.getPosition());
+							}
+						
+							/* Call back to controller */
+							drone.getController().droneTransiting(new Drone(drone), 1.0-(metersToGoal/metersForTrip));
+						}
 					}
 					break;
 					case DESCENDING:{
@@ -422,6 +448,19 @@ public class Simulator {
 						else{
 							drone.getController().droneIdling(new Drone(drone));
 						}
+					}
+					break;
+					case DYING:{
+						simulationEnded = false;
+						for(Person p: drone.getPassengers()){
+							p.setState(PersonState.DEAD);
+						}
+						drone.setState(DroneState.DEAD);
+					}
+					break;
+					case DEAD:{
+						//simulationEnded = false;
+						//If all drones explode the simulation is ended
 					}
 					break;
 					default:
