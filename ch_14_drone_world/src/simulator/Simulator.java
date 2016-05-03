@@ -579,7 +579,8 @@ public class Simulator {
 	/******************************************************************/
 	/* Set up the simulation */
 
-	private static Set<Place> loadPlaces() {
+	private static Set<Place> loadPlaces(SimulationController simulationController) {
+		// Start with 10 basic locations
 		Set<Place> ret = new TreeSet<Place>();
 		ret.add(new Place("Winter Hall",new Position(34.448868,-119.6629439,0)));
 		ret.add(new Place("SBCC",new Position(34.4060661,-119.69755,0)));
@@ -594,6 +595,44 @@ public class Simulator {
 		
 		ret.add(new Place("Doctor Evil's Sub",new Position(34.3979696,-119.6640514,0)));
 		ret.add(new Place("Dog Beach",new Position(34.4026544,-119.7426834,0)));
+		
+		
+		//Figure out the extents of the locations
+		double maxLat = -1.0*Double.MAX_VALUE;
+		double maxLong = -1.0*Double.MAX_VALUE;
+		double minLat = Double.MAX_VALUE;
+		double minLong = Double.MAX_VALUE;
+		for(Place p: ret){
+			if(p.getPosition().getLatitude() > maxLat){
+				maxLat = p.getPosition().getLatitude();
+			}
+			if(p.getPosition().getLatitude() < minLat){
+				minLat = p.getPosition().getLatitude();
+			}
+			if(p.getPosition().getLongitude() > maxLong){
+				maxLong = p.getPosition().getLongitude();
+			}
+			if(p.getPosition().getLongitude() < minLong){
+				minLong = p.getPosition().getLongitude();
+			}
+		}
+		
+		//Reduce the number of locations if necessary
+		while(ret.size() > MAX_LOCATIONS){
+			ret.remove(ret.iterator().next());
+		}
+		
+		//Increase the number of locations if necesary
+		while(ret.size() < MAX_LOCATIONS){
+			double lat = simulationController.getRandom().nextDouble();
+			lat *= (maxLat-minLat);
+			lat += minLat;
+			double longi = simulationController.getRandom().nextDouble();
+			longi *= (maxLong-minLong);
+			longi += minLong;
+			ret.add(new Place(""+ret.size(),new Position(lat,longi,0)));
+		}
+		
 		
 		return ret;
 	}
@@ -612,7 +651,19 @@ public class Simulator {
 		for(int i = 0; i < MAX_DRONES_PER_CONTROLLER ; i++){
 			//Start all drones at the same spot
 			Place thePlace = places.iterator().next();
-			Drone drone = new Drone(controller,thePlace,thePlace,DRONE_CAPACITY);
+			
+			Drone drone;
+			if(DRONE_CAPACITY_VARIES){
+				int capacity = MAX_DRONES_PER_CONTROLLER - i;
+				if(i > DRONE_MAX_CAPACITY){
+					i = i % (DRONE_MAX_CAPACITY-1);
+					i++;
+				}
+				drone = new Drone(controller,thePlace,thePlace,capacity);
+			}
+			else{
+				drone = new Drone(controller,thePlace,thePlace,DRONE_MAX_CAPACITY);
+			}
 			drone.setState(DroneState.IDLING);
 			ret.add(drone);
 		}
