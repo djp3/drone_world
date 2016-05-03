@@ -31,6 +31,17 @@ public interface DroneController {
 	void droneTransiting(Drone drone,double percent);
 	void droneTransitingEnd(Drone drone);
 	
+	/** 
+	 * The drone has run out of charge mid flight and is exploding
+	 * @param drone
+	 */
+	void droneExploding(Drone drone);
+	/**
+	 * This drone has crashed and is no longer in service
+	 * @param drone
+	 */
+	void droneHasDied(Drone drone);
+	
 	void droneDescendingStart(Drone drone);
 	void droneDescendingEnd(Drone drone);
 	
