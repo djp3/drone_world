@@ -742,14 +742,52 @@ public class Simulator {
 
 	private static void calculateWinners(Set<Person> people) {
 		//Aggregate scores
-		HashMap<String, Pair<Integer,Long>> score = new HashMap<String,Pair<Integer,Long>>();
+		HashMap<String, Pair<Integer,Long>> living = new HashMap<String,Pair<Integer,Long>>();
+		HashMap<String, Pair<Integer,Long>> dead = new HashMap<String,Pair<Integer,Long>>();
+		HashMap<String, Pair<Integer,Long>> total = new HashMap<String,Pair<Integer,Long>>();
 		for(Person p: people){
-			score.merge(p.deliveryCompany,new Pair<Integer,Long>(1,p.getEndTransitTime()-p.getStartTransitTime()),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+			if(p.getState().equals(PersonState.ARRIVED)){
+				living.merge(p.deliveryCompany,new Pair<Integer,Long>(1,p.getEndTransitTime()-p.getStartTransitTime()),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+				total.merge(p.deliveryCompany,new Pair<Integer,Long>(1,p.getEndTransitTime()-p.getStartTransitTime()),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+			}
+			if(p.getState().equals(PersonState.DEAD)){
+				dead.merge(p.deliveryCompany,new Pair<Integer,Long>(-1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+				total.merge(p.deliveryCompany,new Pair<Integer,Long>(-1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+			}
+		}
+		//Output all results
+		System.out.println("Results:");
+		for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
+			int livingNum;
+			if(living.size() > 0){
+				if(living.get(p.getKey()) != null){
+					livingNum = living.get(p.getKey()).getKey();
+				}
+				else{
+					livingNum = 0;
+				}
+			}
+			else{
+				livingNum = 0;
+			}
+			int deadNum;
+			if(dead.size() > 0 ){
+				if(dead.get(p.getKey())!= null){
+					deadNum = (-1*dead.get(p.getKey()).getKey());
+				}
+				else{	
+					deadNum = 0;
+				}
+			}
+			else{
+				deadNum = 0;
+			}
+			System.out.println("\t"+p.getKey()+" delivered "+livingNum+" passengers in a total time of "+p.getValue().getValue()+ " and killed "+deadNum);
 		}
 		
 		//Figure out the highest score
-		int max = -1;
-		for(Entry<String, Pair<Integer, Long>> p:score.entrySet()){
+		int max = Integer.MIN_VALUE;
+		for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
 			if(p.getValue().getKey() > max){
 				max = p.getValue().getKey();
 			}
@@ -758,7 +796,7 @@ public class Simulator {
 		//See who has the highest score
 		long minTime = Long.MAX_VALUE;
 		Map<String,Long> winners = new HashMap<String,Long>();
-		for(Entry<String, Pair<Integer, Long>> p:score.entrySet()){
+		for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
 			if(p.getValue().getKey() == max){
 				if(minTime > p.getValue().getValue()){
 					minTime = p.getValue().getValue();
@@ -770,7 +808,31 @@ public class Simulator {
 		//Output everyone who is a winner
 		for(Entry<String, Long> p:winners.entrySet()){
 			if(p.getValue() == minTime){
-				System.out.println("Winner : "+p.getKey()+" delivered: "+max+" passengers in a total time of "+minTime);
+				int livingNum;
+				if(living.size() > 0){
+					if(living.get(p.getKey()) != null){
+						livingNum = living.get(p.getKey()).getKey();
+					}
+					else{
+						livingNum = 0;
+					}
+				}
+				else{
+					livingNum = 0;
+				}
+				int deadNum;
+				if(dead.size() > 0 ){
+					if(dead.get(p.getKey())!= null){
+						deadNum = (-1*dead.get(p.getKey()).getKey());
+					}
+					else{	
+						deadNum = 0;
+					}
+				}
+				else{
+					deadNum = 0;
+				}
+				System.out.println("Winner : "+p.getKey()+" delivered "+livingNum+" passengers in a total time of "+minTime+ " and killed "+deadNum);
 			}
 		}
 	}
