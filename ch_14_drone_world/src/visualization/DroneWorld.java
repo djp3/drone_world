@@ -2,9 +2,11 @@ package visualization;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -18,6 +20,7 @@ import com.jme3.asset.TextureKey;
 import com.jme3.asset.plugins.FileLocator;
 import com.jme3.effect.ParticleEmitter;
 import com.jme3.effect.ParticleMesh;
+import com.jme3.effect.ParticleMesh.Type;
 import com.jme3.effect.shapes.EmitterPointShape;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
@@ -44,6 +47,7 @@ import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.SkyFactory;
 
 import simulator.Drone;
+import simulator.Explosion;
 import simulator.Pair;
 import simulator.Person;
 import simulator.Place;
@@ -120,7 +124,12 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 	private Geometry hudWaitingGeom;
 	private TreeMap<String, Pair<BitmapText, Geometry>> hudCompanyDelivery;
 	private TreeMap<String, Pair<BitmapText, Geometry>> hudCompanyFlying;
+	private TreeMap<String, Pair<BitmapText, Geometry>> hudCompanyDead;
 	private BitmapFont consoleFont;
+
+	// A set of all the drones that have exploded to ensure animations are played only once
+	private Set<String> explodingDrones = new HashSet<String>();
+	private Set<String> smokingDrones = new HashSet<String>();
 	
 	
 	/** Initialize the materials used in this scene. */
@@ -378,6 +387,7 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		
 		hudCompanyDelivery = new TreeMap<String, Pair<BitmapText,Geometry>>();
 		hudCompanyFlying = new TreeMap<String, Pair<BitmapText,Geometry>>();
+		hudCompanyDead = new TreeMap<String, Pair<BitmapText,Geometry>>();
 		for(String company:droneCompanies){
 			BitmapText hudCompanyDeliveryText = new BitmapText(consoleFont,false);
 			hudCompanyDeliveryText.setSize(consoleFont.getCharSet().getRenderedSize()*2);
@@ -408,6 +418,21 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			guiNode.attachChild(hudCompanyFlyingGeom);
 			
 			hudCompanyFlying.put(company,new Pair<BitmapText,Geometry>(hudCompanyFlyingText,hudCompanyFlyingGeom));
+			
+			BitmapText hudCompanyDeadText = new BitmapText(consoleFont,false);
+			hudCompanyDeadText.setSize(consoleFont.getCharSet().getRenderedSize()*2);
+			hudCompanyDeadText.setColor(ColorRGBA.Black);
+			hudCompanyDeadText.setText("");
+			guiNode.attachChild(hudCompanyDeadText);
+			
+			Box hudCompanyDeadBox = new Box(5f, 10f, 10f);
+			Geometry hudCompanyDeadGeom = new Geometry("Waiting", hudCompanyDeadBox);
+			mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create
+			mat.setColor("Color", new ColorRGBA(0.0f,0.0f,0.0f,0.2f));
+			hudCompanyDeadGeom.setMaterial(mat); // set the cube's material
+			guiNode.attachChild(hudCompanyDeadGeom);
+			
+			hudCompanyDead.put(company,new Pair<BitmapText,Geometry>(hudCompanyDeadText,hudCompanyDeadGeom));
 		}
 		
 		
@@ -435,7 +460,10 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		int numNinjasWaiting = 0;
 		Map<String, Integer> droneDeliveries = new TreeMap<String,Integer>();
 		Map<String, Integer> droneFlying = new TreeMap<String,Integer>();
+		Map<String, Integer> droneDeaths = new TreeMap<String,Integer>();
 		Map<String, Long> droneTotalWaitingTime = new TreeMap<String,Long>();
+		
+		Explosion.drawExplosions(tpf, speed);
 		
 		for (Entry<Person, Spatial> personEntry : people.entrySet()) {
 			Person person = personEntry.getKey();
@@ -499,6 +527,18 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 				droneTotalWaitingTime.merge(person.getDeliveryCompany(), person.getEndTransitTime()-person.getStartTransitTime(), (v1, v2) -> {return v1+v2;});
 			}
 			break;
+			case DYING: {
+				personEntry.getValue().setLocalTranslation(latLong2Transform(person.getPosition().getLatitude(),
+						person.getPosition().getLongitude(), person.getPosition().getHeight()));
+			}
+			break;
+			case DEAD: {
+				personEntry.getValue().setLocalTranslation(latLong2Transform(person.getPosition().getLatitude(),
+						person.getPosition().getLongitude(), person.getPosition().getHeight()));
+				
+				droneDeaths.merge(person.getDeliveryCompany(), 1, (v1, v2) -> {return v1+v2;});
+			}
+			break;
 			default:
 				throw new IllegalArgumentException("Unhandled Drone State: " + personEntry.getKey().getState());
 			}
@@ -539,7 +579,21 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			BitmapText hudCompanyFlyingText = hudCompanyFlying.get(p.getKey()).getKey();
 			
 			hudCompanyFlyingGeom.setLocalScale(flyingCount, 1, 1);
-			hudCompanyFlyingGeom.setLocalTranslation(450+2*deliveredWidth+(flyingCount/2.0f*10.0f),10+(25*i)+hudCompanyFlyingText.getLineHeight()/2.0f,0);
+			float flyingWidth = (flyingCount/2.0f*10.0f);
+			hudCompanyFlyingGeom.setLocalTranslation(450+2*deliveredWidth+flyingWidth,10+(25*i)+hudCompanyFlyingText.getLineHeight()/2.0f,0);
+			
+			/* Now tack on the death bars */
+			Integer deathCount = droneDeaths.get(p.getKey()); 
+			if(deathCount == null){
+				deathCount = 0;
+			}
+			
+			Geometry hudCompanyDeathGeom = hudCompanyDead.get(p.getKey()).getValue();
+			BitmapText hudCompanyDeathText = hudCompanyDead.get(p.getKey()).getKey();
+			
+			hudCompanyDeathGeom.setLocalScale(deathCount, 1, 1);
+			float deadWidth = deathCount/2.0f*10.0f;
+			hudCompanyDeathGeom.setLocalTranslation(450+2*deliveredWidth+2*flyingWidth+deadWidth,10+(25*i)+hudCompanyDeathText.getLineHeight()/2.0f,0);
 			
 		}
 		
@@ -600,6 +654,47 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 				// Match it to the drone
 				particlesNode.attachChild(fire);
 				fire.emitAllParticles();
+			}
+			break;
+			case EXPLODING: {
+				
+				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
+						drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
+	
+				if(!explodingDrones.contains(drone.getName())){
+					Explosion.boom(particlesNode, new Explosion(renderManager,assetManager));
+					explodingDrones.add(drone.getName());
+				}
+			}
+			break;
+			case DYING:
+			case DEAD: {
+				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
+						drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
+				
+				if(!smokingDrones.contains(drone.getName())){
+					smokingDrones.add(drone.getName());
+						
+					ParticleEmitter emit = new ParticleEmitter("Emitter", Type.Triangle, 300);
+					emit.setParticlesPerSec(20);
+				    emit.setGravity(0, 0, 0);
+				    emit.setVelocityVariation(0.1f);
+			        emit.setLowLife(1);
+			        emit.setHighLife(3);
+			        emit.setInitialVelocity(new Vector3f(0, .5f, 0));
+				    emit.setImagesX(15);
+				    Material mat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
+				    mat.setTexture("Texture", assetManager.loadTexture("Effects/Smoke/Smoke.png"));
+				    emit.setMaterial(mat);
+				    emit.setStartSize(0.01f);
+				    emit.setEndSize(0.2f);
+				    emit.setStartColor(new ColorRGBA(0.0f, 0f, 0f, 0.4f));
+					emit.setEndColor(new ColorRGBA(0.1f, 0.1f, 0.1f, 1.0f));
+			        
+					// Match it to the drone
+					particlesNode.attachChild(emit);
+					emit.emitAllParticles();
+				}
 			}
 			break;
 			case IN_TRANSIT: {
@@ -673,6 +768,12 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		else if (p.getState().equals(PersonState.IN_DRONE)) {
 			channel.setAnim("Spin", 0.05f);
 			channel.setLoopMode(LoopMode.DontLoop);
+		}
+		else if (p.getState().equals(PersonState.DYING)) {
+			channel.setAnim("Death2", 0.05f);
+			channel.setLoopMode(LoopMode.DontLoop);
+		}
+		else if (p.getState().equals(PersonState.DEAD)) {
 		} else {
 			if (animName.equals("Idle2")) {
 				channel.setAnim("Idle1", 0.05f);
@@ -744,9 +845,9 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 
 	@Override
 	public void destroy() {
-		if (simulator != null) {
-			simulator.end(null);
-			simulator = null;
+		if (this.simulator != null) {
+			this.simulator.end("Simulator ended from the visualization destroy call");
+			this.simulator = null;
 		}
 		super.destroy();
 	}
@@ -760,20 +861,19 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 				} catch (InterruptedException e) {
 				}
 			}
-			if (simulator != null) {
-				simulator.start();
+			if (this.simulator != null) {
+				this.simulator.start();
 			}
-		} catch (RuntimeException e1) {
+		}
+		finally{
 			try {
 				this.stop();
-			} catch (RuntimeException e2) {
-			} finally {
-				if (simulator != null) {
-					simulator.end(e1.toString());
-				}
+			} catch (RuntimeException e) {
+			}
+			if (this.simulator != null) {
+				this.simulator.end("Simulator ended from visualization launch");
 			}
 		} 
-
 	}
 
 	public static void main(String[] args) {
