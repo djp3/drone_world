@@ -61,6 +61,9 @@ public class Drone implements Comparable<Drone>{
 	// Percentage of charged gained per second while recharging
 	private double rechargeRate;
 	
+	// Percentage of charge lost per meter
+	private double dischargeRate;
+	
 	// How many passengers can this drone carry?
 	private int capacity;
 	private Set<Person> passengers;
@@ -219,6 +222,14 @@ public class Drone implements Comparable<Drone>{
 	void setRechargeRate(double rechargeRate) {
 		this.rechargeRate = rechargeRate;
 	}
+	
+	public double getDischargeRate() {
+		return dischargeRate;
+	}
+
+	void setDischargeRate(double dischargeRate) {
+		this.dischargeRate = dischargeRate;
+	}
 
 	public int getCapacity() {
 		return capacity;
@@ -251,6 +262,7 @@ public class Drone implements Comparable<Drone>{
 		speed = 100.0;
 		charge = 1.0;
 		rechargeRate = 0.10;
+		dischargeRate = 0.0002;
 		
 		embarkingDuration= 20*ONE_SECOND;
 		embarkingCapacity = 1;
@@ -326,8 +338,9 @@ public class Drone implements Comparable<Drone>{
 		this.transitStart = drone.getTransitStart();
 		this.transitEnd = drone.getTransitEnd();
 		
-		this.charge = drone.getCharge();
-		this.rechargeRate = drone.getRechargeRate();
+		this.setCharge(drone.getCharge());
+		this.setRechargeRate(drone.getRechargeRate());
+		this.setDischargeRate(drone.getDischargeRate());
 		
 		this.capacity = drone.getCapacity();
 		
@@ -348,6 +361,7 @@ public class Drone implements Comparable<Drone>{
 
 
 
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -361,6 +375,8 @@ public class Drone implements Comparable<Drone>{
 		result = prime * result + ((controller == null) ? 0 : controller.hashCode());
 		result = prime * result + (int) (descensionTime ^ (descensionTime >>> 32));
 		result = prime * result + ((destination == null) ? 0 : destination.hashCode());
+		temp = Double.doubleToLongBits(dischargeRate);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
 		result = prime * result + ((disembarkers == null) ? 0 : disembarkers.hashCode());
 		result = prime * result + disembarkingCapacity;
 		result = prime * result + disembarkingDuration;
@@ -416,6 +432,8 @@ public class Drone implements Comparable<Drone>{
 			if (other.destination != null)
 				return false;
 		} else if (!destination.equals(other.destination))
+			return false;
+		if (Double.doubleToLongBits(dischargeRate) != Double.doubleToLongBits(other.dischargeRate))
 			return false;
 		if (disembarkers == null) {
 			if (other.disembarkers != null)
