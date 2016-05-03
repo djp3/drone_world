@@ -288,14 +288,19 @@ public class Simulator {
 						else{
 							drone.setCharge(charge);
 						
-							// What percentage of the distance to goal was covered in the last simulation tick
-							double percentage = metersPerTick/metersToGoal;
+							//What percentage of the way there are we?
+							double percentage = 1.0 - ((metersToGoal-metersPerTick)/metersForTrip);
+							if(percentage > 1.0){
+								//This could happen if the drone was rerouted in transit to a further destination
+								percentage = 1.0; 
+								
+							}
 						
 							//Close enough to call it an arrival
 							if(metersPerTick >= metersToGoal){
 								drone.getPosition().setLatitude(drone.getDestination().getPosition().getLatitude());
 								drone.getPosition().setLongitude(drone.getDestination().getPosition().getLongitude());
-								drone.getPosition().setHeight(drone.getDestination().getPosition().getHeight());
+								drone.getPosition().setHeight(TRANSIT_HEIGHT+drone.getDestination().getPosition().getHeight());
 							
 								//Arrival
 								drone.setTransitEnd(clockTick+drone.getDescensionTime());
@@ -304,11 +309,13 @@ public class Simulator {
 								drone.getController().droneDescendingStart(new Drone(drone));
 							}
 							else{
-								Position a = drone.getPosition();
+								// This is going to screw up if a drone is rerouted in transit because it needs to interpolate between the drone's
+								// current position and the destination, not the drone's starting point
+								Position a = drone.getStart().getPosition();
 								Position b = drone.getDestination().getPosition();
 								double latitude = (b.getLatitude()-a.getLatitude())*percentage+a.getLatitude();
 								double longitude = (b.getLongitude()-a.getLongitude())*percentage+a.getLongitude();
-								double height = (b.getHeight()-a.getHeight())*percentage+ TRANSIT_HEIGHT;
+								double height = (b.getHeight()-a.getHeight())*percentage+a.getHeight() + TRANSIT_HEIGHT;
 						
 								drone.getPosition().setLatitude(latitude);
 								drone.getPosition().setLongitude(longitude);
@@ -842,7 +849,7 @@ public class Simulator {
 				else{
 					deadNum = 0;
 				}
-				System.out.println("Winner : "+p.getKey()+" delivered "+livingNum+" passengers in a total time of "+minTime+ " and killed "+deadNum);
+				System.out.println("Winner: "+p.getKey()+" delivered "+livingNum+" passengers in a total time of "+minTime+ " and killed "+deadNum);
 			}
 		}
 	}
