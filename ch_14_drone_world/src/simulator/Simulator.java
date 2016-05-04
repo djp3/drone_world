@@ -12,7 +12,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
-import reference.DistanceAwarePromiscuousController;
 import reference.GreedyController;
 import reference.MySimulationController;
 import reference.PromiscuousController;
@@ -21,19 +20,28 @@ import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
 import simulator.interfaces.SimulationController;
+import submissions.Controller_Bethany_Le;
+import submissions.Controller_Bryan_Miner;
+import submissions.Controller_Christian_Alvo;
+import submissions.Controller_Devon_Wear;
+import submissions.Controller_James_Solum;
+import submissions.Controller_Kyle_Hansen;
+import submissions.Controller_Matthew_Coffman;
+import submissions.Controller_Ryan_Kleinberg;
+import submissions.dc_heroes_controller.Controller_Sam_n_Katie;
 import visualization.DroneWorld;
 
 public class Simulator {
 	
-	public static final int MAX_DRONES_PER_CONTROLLER = 10;
+	public static final int MAX_DRONES_PER_CONTROLLER = 5;
 	
-	public static final int DRONE_MAX_CAPACITY = 30;
-	private static final boolean DRONE_CAPACITY_VARIES = true;
-	private static final boolean DRONES_RUN_OUT_OF_CHARGE = true;
+	public static final int DRONE_MAX_CAPACITY = 1;
+	private static final boolean DRONE_CAPACITY_VARIES = false;
+	private static final boolean DRONES_RUN_OUT_OF_CHARGE = false;
 	
-	public static final int MAX_PEOPLE = 1000;
+	public static final int MAX_PEOPLE = 100;
 	
-	public static final int MAX_LOCATIONS = 100;
+	public static final int MAX_LOCATIONS = 10;
 	
 	private static final long SIMULATION_SPEED = 100;
 	
@@ -721,6 +729,9 @@ public class Simulator {
 	}
 
 	public static void main(String[] args) throws InstantiationException, IllegalAccessException {
+		
+		
+		
 		//Make a simulation controller
 		MySimulationController simController = new MySimulationController();
 		
@@ -730,13 +741,21 @@ public class Simulator {
 		//Generate the drones
 		Set<Drone> drones = new TreeSet<Drone>();
 		//Add each companies drones here
-		drones.addAll(loadDrones(places,new DistanceAwarePromiscuousController())); //Professor's Controller
+		//drones.addAll(loadDrones(places,new DistanceAwarePromiscuousController())); //Professor's Controller
 		
 		drones.addAll(loadDrones(places,new PromiscuousController())); //Professor's Controller
 		drones.addAll(loadDrones(places,new GreedyController())); //Professor's Controller
 		drones.addAll(loadDrones(places,new RandomDroneController())); //Professor's Controller
 		
-		
+		drones.addAll(loadDrones(places,new Controller_Sam_n_Katie()));
+		drones.addAll(loadDrones(places,new Controller_Bethany_Le()));
+		drones.addAll(loadDrones(places,new Controller_Bryan_Miner()));
+		drones.addAll(loadDrones(places,new Controller_Christian_Alvo()));
+		drones.addAll(loadDrones(places,new Controller_Devon_Wear()));
+		drones.addAll(loadDrones(places,new Controller_James_Solum()));
+		drones.addAll(loadDrones(places,new Controller_Kyle_Hansen()));
+		drones.addAll(loadDrones(places,new Controller_Matthew_Coffman()));
+		drones.addAll(loadDrones(places,new Controller_Ryan_Kleinberg()));
 		//drones.addAll(loadDrones(places,new MyDroneController())); //Student's Controller
 		
 		//Generate people
@@ -752,6 +771,11 @@ public class Simulator {
 		visualization.launch();
 		
 		calculateWinners(people);
+		
+		
+		
+		
+		
 	}
 
 
