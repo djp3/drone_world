@@ -258,7 +258,13 @@ public class Drone implements Comparable<Drone>{
 		
 		//Ask controller for drone and company name
 		this.name = this.controller.getNextDroneName();
+		if(this.name == null){
+			throw new RuntimeException("Controller: \""+this.controller.getClass()+"\" returned null to getNextDroneName call");
+		}
 		this.companyName = this.controller.getCompanyName();
+		if(this.companyName == null){
+			throw new RuntimeException("Controller: \""+this.controller.getClass()+"\" returned null to getCompanyName call");
+		}
 		
 		//Set defaults
 		speed = 100.0;
@@ -524,5 +530,6 @@ public class Drone implements Comparable<Drone>{
 		
 		return(this.getId().compareTo(other.getId()));
 	}
+
 
 }
