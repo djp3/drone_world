@@ -858,27 +858,17 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 	}
 
 	public void launch() {
-		try {
-			this.start();
-			while(!doneWithInit){
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-				}
-			}
-			if (this.simulator != null) {
-				this.simulator.start();
+		
+		this.start();
+		while(!doneWithInit){
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
 			}
 		}
-		finally{
-			try {
-				this.stop();
-			} catch (RuntimeException e) {
-			}
-			if (this.simulator != null) {
-				this.simulator.end("Simulator ended from visualization launch");
-			}
-		} 
+		if (this.simulator != null) {
+			this.simulator.start();
+		}
 	}
 
 	public static void main(String[] args) {

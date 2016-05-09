@@ -821,9 +821,8 @@ public class Simulator {
 		
 		calculateWinners(people);
 		
-		
-		
-		
+		//Shut it down
+		visualization.stop(true);
 		
 	}
 
