@@ -71,6 +71,7 @@ public class Drone implements Comparable<Drone>{
 	// meters per second;
 	private double speed;
 	
+	
 	public DroneController getController() {
 		return controller;
 	}
@@ -246,6 +247,11 @@ public class Drone implements Comparable<Drone>{
 	public double getSpeed(){
 		return speed;
 	}
+	
+	void setSpeed(double speed) {
+		this.speed = speed;
+	}
+	
 
 	public Drone(DroneController controller, Place start,Place destination,int capacity) {
 		
@@ -354,9 +360,7 @@ public class Drone implements Comparable<Drone>{
 			}
 		}
 		
-		this.speed = drone.getSpeed();
-		
-		
+		this.setSpeed(drone.getSpeed());
 	}
 
 
