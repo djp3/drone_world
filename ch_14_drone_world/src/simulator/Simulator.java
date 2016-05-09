@@ -116,9 +116,21 @@ public class Simulator {
 		}
 		long waitTime = SIMULATION_SPEED/factor;
 		
+		//Tell the drones we are starting
+		{
+			//Shuffle drones so that different drones get random priority on each round
+			//Shuffling manually to make sure that we only use a managed random number generator for consistency
+			ArrayList<Drone> shuffledDrones = new ArrayList<Drone>();
+			shuffledDrones.addAll(drones);
+			for(int j = 0 ; j < shuffledDrones.size(); j++){
+				Drone d = shuffledDrones.get(j);
+				d.getController().droneSimulationStart(d);
+			}
+		}
+		
 		//The main loop
-		while(!quitting && !simulationEnded){
-			simulationEnded = true;
+		while(!isQuitting() && !isSimulationEnded()){
+			setSimulationEnded(true);//If it hasn't ended then it needs to be unset
 			
 			previousTime = currentTime;
 			currentTime = System.currentTimeMillis();
@@ -497,18 +509,34 @@ public class Simulator {
 				}
 			}
 			if(allDone){
-				simulationEnded = true;
+				setSimulationEnded(true);
 				System.out.println("Simulation ended with all passengers delivered at time "+clockTick);
 			}
 		}
+		
+		//Tell the drones we are ending
+		{
+			//Shuffle drones so that different drones get random priority on each round
+			//Shuffling manually to make sure that we only use a managed random number generator for consistency
+			ArrayList<Drone> shuffledDrones = new ArrayList<Drone>();
+			shuffledDrones.addAll(drones);
+			for(int j = 0 ; j < shuffledDrones.size(); j++){
+				Drone d = shuffledDrones.get(j);
+				d.getController().droneSimulationEnd(d);
+			}
+		}
 	}
+
+
 	
 	public void end(String reason){
 		System.out.println("Simulation ending");
 		if(reason != null){
 			System.out.println("\t"+reason);
 		}
-		quitting = true;
+		
+		setQuitting(true);
+		setSimulationEnded(true);
 	}
 
 

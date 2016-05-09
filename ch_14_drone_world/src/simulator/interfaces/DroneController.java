@@ -5,12 +5,20 @@ import simulator.Simulator;
 
 public interface DroneController {
 	
+	
+	
 	/**
 	 * This is called by the simulator so that the Controller can have access to the people, places and drones that simulator keeps track of
 	 *  
 	 * @param simulator
 	 */
 	void setSimulator(Simulator simulator);
+	
+	/* Simulator Life cycle call backs */
+	//The simulator is about to start simulating drone, d
+	void droneSimulationStart(Drone d);
+	//The simulator is has ended simulating drone, d
+	void droneSimulationEnd(Drone d);
 	
 	/* Life cycle call backs */
 	void droneEmbarkingStart(Drone drone);

@@ -39,7 +39,15 @@ public class MyDroneController implements DroneController {
 		return "Vanilla Company";
 	}
 
-	
+	@Override
+	public void droneSimulationStart(Drone drone) {
+		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Simulation Starting");
+	}
+
+	@Override
+	public void droneSimulationEnd(Drone drone) {
+		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Simulation Starting");
+	}
 
 	@Override
 	public void droneEmbarkingStart(Drone drone) {
