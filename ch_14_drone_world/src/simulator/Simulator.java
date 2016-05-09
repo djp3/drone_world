@@ -59,10 +59,13 @@ public class Simulator {
 	private Set<Drone> drones;
 	private Set<Person> people;
 	private Set<Place> places;
+
 	
 	//Flags to end the simulation
 	private boolean simulationEnded;
 	private boolean quitting;
+
+	static final int ONE_SECOND = 1000;
 
 	public Simulator(SimulationController simulationController,Collection<Person> people,Collection<Place> places,Collection<Drone> drones){
 		

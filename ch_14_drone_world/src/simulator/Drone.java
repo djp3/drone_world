@@ -264,16 +264,16 @@ public class Drone implements Comparable<Drone>{
 		rechargeRate = 0.10;
 		dischargeRate = 0.0002;
 		
-		embarkingDuration= 20*ONE_SECOND;
+		embarkingDuration= 20*Simulator.ONE_SECOND;
 		embarkingCapacity = 1;
 		this.embarkers = new HashSet<Person>();
 		
-		disembarkingDuration = 20*ONE_SECOND;
+		disembarkingDuration = 20*Simulator.ONE_SECOND;
 		disembarkingCapacity = 1;
 		this.disembarkers = new HashSet<Person>();
 		
-		ascensionTime = 60*ONE_SECOND;
-		descensionTime = 60*ONE_SECOND;
+		ascensionTime = 60*Simulator.ONE_SECOND;
+		descensionTime = 60*Simulator.ONE_SECOND;
 		
 		this.start = start;
 		this.position = start.getPosition();
