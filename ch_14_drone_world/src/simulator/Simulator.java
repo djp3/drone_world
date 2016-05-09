@@ -37,7 +37,7 @@ public class Simulator {
 	
 	public static final int DRONE_MAX_CAPACITY = 1;
 	private static final boolean DRONE_CAPACITY_VARIES = false;
-	private static final boolean DRONES_RUN_OUT_OF_CHARGE = false;
+	private static boolean DRONES_RUN_OUT_OF_CHARGE = false;
 	
 	public static final int MAX_PEOPLE = 100;
 	
@@ -301,16 +301,15 @@ public class Simulator {
 						charge = charge - (metersPerTick*dischargeRate); 
 						if(charge < 0.0 ){
 							charge = 0.0;
-							drone.setCharge(charge);
-							if(DRONES_RUN_OUT_OF_CHARGE){
-								drone.setState(DroneState.EXPLODING);
-								drone.setTransitEnd(clockTick+(drone.getDescensionTime()/2));
-								drone.getController().droneExploding(new Drone(drone));
-							}
+						}
+						drone.setCharge(charge);
+						
+						if((charge <= 0.0 )&&(DRONES_RUN_OUT_OF_CHARGE)){
+							drone.setState(DroneState.EXPLODING);
+							drone.setTransitEnd(clockTick+(drone.getDescensionTime()/2));
+							drone.getController().droneExploding(new Drone(drone));
 						}
 						else{
-							drone.setCharge(charge);
-						
 							//What percentage of the way there are we?
 							double percentage = 1.0 - ((metersToGoal-metersPerTick)/metersForTrip);
 							if(percentage > 1.0){
@@ -504,6 +503,7 @@ public class Simulator {
 						throw new IllegalArgumentException("Unhandled Drone State: "+drone.getState());
 				}
 			}
+			
 			//Check to see if all passengers are delivered
 			boolean allDone = true;
 			for(Person p: people){
@@ -781,9 +781,6 @@ public class Simulator {
 	}
 
 	public static void main(String[] args) throws InstantiationException, IllegalAccessException {
-		
-		
-		
 		//Make a simulation controller
 		MySimulationController simController = new MySimulationController();
 		
