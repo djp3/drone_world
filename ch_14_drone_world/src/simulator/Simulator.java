@@ -99,8 +99,8 @@ public class Simulator {
 
 
 	public void start(){
-		quitting = false;
-		simulationEnded = false;
+		setQuitting(false);
+		setSimulationEnded(false);
 		
 		clockTick = -SIMULATION_SPEED;
 		long previousTime;
@@ -159,13 +159,13 @@ public class Simulator {
 			for(Drone drone:shuffledDrones){
 				switch (drone.getState()){
 					case BEGIN:{
-						simulationEnded = false;
+						setSimulationEnded(false);
 						drone.getController().droneEmbarkingStart(new Drone(drone));
 						drone.setState(DroneState.EMBARKING);
 					}
 					break;
 					case EMBARKING:{
-						simulationEnded = false;
+						setSimulationEnded(false);
 						//Check to see if the passengers have had enough time to get onboard 
 						if((clockTick - drone.getEmbarkingStart()) > drone.getEmbarkingDuration()){
 							
@@ -237,7 +237,7 @@ public class Simulator {
 					}
 					break;
 					case ASCENDING:{
-						simulationEnded = false;
+						setSimulationEnded(false);
 						long timeToGo = drone.getTransitStart() - clockTick;
 						if(timeToGo > 0){
 							double percentage = timeToGo/(0.0+drone.getAscensionTime());
@@ -252,7 +252,7 @@ public class Simulator {
 					}
 					break;
 					case EXPLODING:{
-						simulationEnded = false;
+						setSimulationEnded(false);
 						
 						for(Person p: drone.getPassengers()){
 							p.setState(PersonState.DYING);
@@ -270,7 +270,7 @@ public class Simulator {
 					}
 					break;
 					case IN_TRANSIT:{
-						simulationEnded = false;
+						setSimulationEnded(false);
 						//How far the drone has to go from it's current position to it's destination
 						double metersToGoal = DistanceCalculator.distance(drone.getPosition().getLatitude(),drone.getPosition().getLongitude(),drone.getDestination().getPosition().getLatitude(),drone.getDestination().getPosition().getLongitude());
 						//How far the drone had to go from it's original destination at launch to it's current destination (It's destination might have changed)
@@ -357,7 +357,7 @@ public class Simulator {
 					}
 					break;
 					case DESCENDING:{
-						simulationEnded = false;
+						setSimulationEnded(false);
 						long timeToGo = drone.getTransitEnd() - clockTick;
 						if(timeToGo > 0){
 							double percentage = timeToGo/(0.0+drone.getDescensionTime());
@@ -370,7 +370,7 @@ public class Simulator {
 					}
 					break;
 					case DISEMBARKING:{
-						simulationEnded = false;
+						setSimulationEnded(false);
 						//If we are done with the last set of disembarkers
 						if((clockTick - drone.getDisembarkingStart()) > drone.getDisembarkingDuration()){
 							boolean disembarkingSome = (drone.getDisembarkers().size() > 0);
@@ -439,7 +439,7 @@ public class Simulator {
 					}
 					break;
 					case RECHARGING:{
-						simulationEnded = false;
+						setSimulationEnded(false);
 						
 						//If the controller has told the drone to leave
 						if(!drone.getStart().equals(drone.getDestination())){
@@ -470,7 +470,7 @@ public class Simulator {
 					}
 					break;
 					case IDLING:{
-						simulationEnded = false;
+						setSimulationEnded(false);
 						
 						for(Person p: drone.getPassengers()){
 							p.setState(PersonState.IN_DRONE);
@@ -485,7 +485,7 @@ public class Simulator {
 					}
 					break;
 					case DYING:{
-						simulationEnded = false;
+						setSimulationEnded(false);
 						for(Person p: drone.getPassengers()){
 							p.setState(PersonState.DEAD);
 						}
@@ -625,6 +625,27 @@ public class Simulator {
 	public SimulationController getSimulationController(){
 		return this.simulationController;
 	}
+	
+	
+	public boolean isSimulationEnded() {
+		return simulationEnded;
+	}
+
+	void setSimulationEnded(boolean simulationEnded) {
+		this.simulationEnded = simulationEnded;
+	}
+
+	public boolean isQuitting() {
+		return quitting;
+	}
+
+
+	void setQuitting(boolean quitting) {
+		this.quitting = quitting;
+	}
+
+
+
 
 	/******************************************************************/
 	/* Set up the simulation */
