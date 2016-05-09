@@ -219,6 +219,10 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 
 	@Override
 	public void simpleInitApp() {
+		
+		if(simulator.isQuitting() || simulator.isSimulationEnded()){
+			return;
+		}
 
 		assetManager.registerLocator("", FileLocator.class);
 		initLighting();
