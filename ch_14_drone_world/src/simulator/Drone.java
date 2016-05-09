@@ -10,10 +10,6 @@ import simulator.interfaces.DroneController;
 
 public class Drone implements Comparable<Drone>{
 	
-	private static final int ONE_SECOND = 1000;
-	//private static final int ONE_MINUTE = 60*ONE_SECOND;
-	//private static final int ONE_HOUR = 60*ONE_MINUTE;
-	
 	//This is the controller that makes decisions for this drone
 	private DroneController controller;
 	
