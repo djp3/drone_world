@@ -20,6 +20,9 @@ public interface DroneController {
 	//The simulator is has ended simulating drone, d
 	void droneSimulationEnd(Drone d);
 	
+	//The simulator calls this if the drone controller timed out on some call
+	void droneBehavingBadly(Drone d);
+	
 	/* Life cycle call backs */
 	void droneEmbarkingStart(Drone drone);
 	void droneEmbarkingAGroupStart(Drone drone);

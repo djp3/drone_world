@@ -48,6 +48,12 @@ public class MyDroneController implements DroneController {
 	public void droneSimulationEnd(Drone drone) {
 		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Simulation Starting");
 	}
+	
+
+	@Override
+	public void droneBehavingBadly(Drone drone) {
+		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Drone Behaving Badly");
+	}
 
 	@Override
 	public void droneEmbarkingStart(Drone drone) {
@@ -179,5 +185,6 @@ public class MyDroneController implements DroneController {
 	public void droneHasDied(Drone drone) {
 		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Drone Died");
 	}
+
 
 }
