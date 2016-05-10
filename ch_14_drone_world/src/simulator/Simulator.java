@@ -3,6 +3,7 @@ package simulator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,6 +30,7 @@ import submissions.Controller_Kyle_Hansen;
 import submissions.Controller_Matthew_Coffman;
 import submissions.Controller_Ryan_Kleinberg;
 import submissions.dc_heroes_controller.Controller_Sam_n_Katie;
+import submissions.skidanov.Controller_Skidanov;
 import visualization.DroneWorld;
 
 public class Simulator {
@@ -64,6 +66,9 @@ public class Simulator {
 	//Flags to end the simulation
 	private boolean simulationEnded;
 	private boolean quitting;
+
+	//How many simulation loops in which drones have not been busy
+	private int notBusyCount=0;
 
 	static final int ONE_SECOND = 1000;
 
@@ -126,8 +131,12 @@ public class Simulator {
 			ArrayList<Drone> shuffledDrones = new ArrayList<Drone>();
 			shuffledDrones.addAll(drones);
 			for(int j = 0 ; j < shuffledDrones.size(); j++){
-				Drone d = shuffledDrones.get(j);
-				d.getController().droneSimulationStart(d);
+				Drone drone = shuffledDrones.get(j);
+				Drone cloneDrone = new Drone(drone);
+				drone.getController().droneSimulationStart(cloneDrone);
+				if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+					drone.quarantine();
+				}
 			}
 		}
 		
@@ -160,11 +169,17 @@ public class Simulator {
 			}
 			
 			for(Drone drone:shuffledDrones){
+				Drone cloneDrone = new Drone(drone);
 				switch (drone.getState()){
 					case BEGIN:{
 						setSimulationEnded(false);
-						drone.getController().droneEmbarkingStart(new Drone(drone));
-						drone.setState(DroneState.EMBARKING);
+						drone.getController().droneEmbarkingStart(cloneDrone);
+						if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+							drone.quarantine();
+						}
+						else{
+							drone.setState(DroneState.EMBARKING);
+						}
 					}
 					break;
 					case EMBARKING:{
@@ -184,7 +199,10 @@ public class Simulator {
 							}
 							
 							if(embarkingSome){
-								drone.getController().droneEmbarkingAGroupEnd(new Drone(drone));
+								drone.getController().droneEmbarkingAGroupEnd(cloneDrone);
+								if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+									drone.quarantine();
+								}
 							}
 							
 							// If the drone is full then it takes off
@@ -232,7 +250,10 @@ public class Simulator {
 											loadMe.setState(PersonState.EMBARKING);
 											drone.getEmbarkers().add(loadMe);
 										}
-										drone.getController().droneEmbarkingAGroupStart(new Drone(drone));
+										drone.getController().droneEmbarkingAGroupStart(cloneDrone);
+										if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+											drone.quarantine();
+										}
 									}
 								}
 							}
@@ -248,9 +269,18 @@ public class Simulator {
 							drone.getPosition().setHeight(currentHeight);
 						}
 						else{
-							drone.getController().droneAscendingEnd(new Drone(drone));
-							drone.setState(DroneState.IN_TRANSIT);
-							drone.getController().droneTransitingStart(new Drone(drone));
+							drone.getController().droneAscendingEnd(cloneDrone);
+							if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+								drone.quarantine();
+							}
+							else{
+								drone.setState(DroneState.IN_TRANSIT);
+								cloneDrone = new Drone(drone);
+								drone.getController().droneTransitingStart(cloneDrone);
+								if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+									drone.quarantine();
+								}
+							}
 						}
 					}
 					break;
@@ -307,7 +337,10 @@ public class Simulator {
 						if((charge <= 0.0 )&&(DRONES_RUN_OUT_OF_CHARGE)){
 							drone.setState(DroneState.EXPLODING);
 							drone.setTransitEnd(clockTick+(drone.getDescensionTime()/2));
-							drone.getController().droneExploding(new Drone(drone));
+							drone.getController().droneExploding(cloneDrone);
+							if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+								drone.quarantine();
+							}
 						}
 						else{
 							//What percentage of the way there are we?
@@ -326,9 +359,18 @@ public class Simulator {
 							
 								//Arrival
 								drone.setTransitEnd(clockTick+drone.getDescensionTime());
-								drone.getController().droneTransitingEnd(new Drone(drone));
-								drone.setState(DroneState.DESCENDING);
-								drone.getController().droneDescendingStart(new Drone(drone));
+								drone.getController().droneTransitingEnd(cloneDrone);
+								if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+									drone.quarantine();
+								}
+								else{
+									drone.setState(DroneState.DESCENDING);
+									cloneDrone = new Drone(drone);
+									drone.getController().droneDescendingStart(cloneDrone);
+									if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+										drone.quarantine();
+									}
+								}
 							}
 							else{
 								// This is going to screw up if a drone is rerouted in transit because it needs to interpolate between the drone's
@@ -354,7 +396,10 @@ public class Simulator {
 							}
 						
 							/* Call back to controller */
-							drone.getController().droneTransiting(new Drone(drone), 1.0-(metersToGoal/metersForTrip));
+							drone.getController().droneTransiting(cloneDrone, 1.0-(metersToGoal/metersForTrip));
+							if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+								drone.quarantine();
+							}
 						}
 					}
 					break;
@@ -385,7 +430,10 @@ public class Simulator {
 								//drone.getDestination().getWaitingToEmbark().add(person);
 							}
 							if(disembarkingSome){
-								drone.getController().droneDisembarkingGroupEnd(new Drone(drone));
+								drone.getController().droneDisembarkingGroupEnd(cloneDrone);
+								if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+									drone.quarantine();
+								}
 							}
 							//Find all the people who still want to disembark
 							LinkedList<Person> waiting = new LinkedList<Person>();
@@ -433,7 +481,10 @@ public class Simulator {
 										person.setState(PersonState.DISEMBARKING);
 										drone.getDisembarkers().add(person);
 									}
-									drone.getController().droneDisembarkingGroupStart(new Drone(drone));
+									drone.getController().droneDisembarkingGroupStart(cloneDrone);
+									if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+										drone.quarantine();
+									}
 									drone.setDisembarkingStart(clockTick);
 								}
 							}
@@ -445,15 +496,25 @@ public class Simulator {
 						
 						//If the controller has told the drone to leave
 						if(!drone.getStart().equals(drone.getDestination())){
-							drone.getController().droneDoneRecharging(new Drone(drone));
-							drone.setState(DroneState.BEGIN);
+							drone.getController().droneDoneRecharging(cloneDrone);
+							if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+								drone.quarantine();
+							}
+							else{
+								drone.setState(DroneState.BEGIN);
+							}
 						}
 						else{
 							double chargeDelta = (SIMULATION_SPEED/1000.0) * drone.getRechargeRate() ;
 							if(drone.getCharge()+ chargeDelta > 1.0){
 								drone.setCharge(1.0);
-								drone.getController().droneDoneRecharging(new Drone(drone));
-								drone.setState(DroneState.IDLING);
+								drone.getController().droneDoneRecharging(cloneDrone);
+								if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+									drone.quarantine();
+								}
+								else{
+									drone.setState(DroneState.IDLING);
+								}
 							}
 							else{
 								boolean alert = false;
@@ -465,7 +526,10 @@ public class Simulator {
 								}
 								drone.setCharge(drone.getCharge()+chargeDelta);
 								if(alert){
-									drone.getController().droneRecharging(new Drone(drone),drone.getCharge());
+									drone.getController().droneRecharging(cloneDrone,drone.getCharge());
+									if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+										drone.quarantine();
+									}
 								}
 							}
 						}
@@ -482,7 +546,10 @@ public class Simulator {
 							drone.setState(DroneState.BEGIN);
 						}
 						else{
-							drone.getController().droneIdling(new Drone(drone));
+							drone.getController().droneIdling(cloneDrone);
+							if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+								drone.quarantine();
+							}
 						}
 					}
 					break;
@@ -499,6 +566,14 @@ public class Simulator {
 						//If all drones explode the simulation is ended
 					}
 					break;
+					case QUARANTINED:{
+						//simulationEnded = false;
+						//If all drones are quarantined by the simulator, the simulation is ended
+					}
+					break;
+					case IGNORED:{
+					}
+					break;
 					default:
 						throw new IllegalArgumentException("Unhandled Drone State: "+drone.getState());
 				}
@@ -506,14 +581,71 @@ public class Simulator {
 			
 			//Check to see if all passengers are delivered
 			boolean allDone = true;
+			boolean someWaiting = false;
 			for(Person p: people){
-				if(!p.getState().equals(PersonState.ARRIVED)&&(!p.getState().equals(PersonState.DEAD))){
+				if((!p.getState().equals(PersonState.ARRIVED))&&(!p.getState().equals(PersonState.DEAD)) && (!p.getState().equals(PersonState.QUARANTINED))){
 					allDone = false;
+				}
+				if(!someWaiting && p.getState().equals(PersonState.WAITING)){
+					someWaiting = true;
 				}
 			}
 			if(allDone){
 				setSimulationEnded(true);
 				System.out.println("Simulation ended with all passengers delivered at time "+clockTick);
+			}
+			
+			//If there is no one waiting ignore the drones that aren't carrying passengers
+			for(Drone d: drones){
+				if(!someWaiting){
+					if(d.getEmbarkers().size() == 0){
+						if(d.getPassengers().size() == 0){
+							if(d.getDisembarkers().size() == 0){
+								d.setState(DroneState.IGNORED);
+							}
+						}
+					}
+				}
+			}
+			
+			//Check to see if the drones are making progress
+			boolean dronesBusy = false;
+			for(Drone d: drones){
+				if(d.getState() != DroneState.IDLING){
+					if(d.getState() != DroneState.DEAD){
+						if(d.getState() != DroneState.QUARANTINED){
+							if(d.getState() != DroneState.IGNORED){
+								dronesBusy= true;
+							}
+						}
+					}
+				}
+			}
+			//If not quarantine one
+			if(dronesBusy){
+				notBusyCount = 0;
+			}
+			else{
+				notBusyCount++;
+			}
+			if(notBusyCount > 1){
+				notBusyCount = 0;
+				//Shuffle drones so that different drones get random priority on each round
+				//Shuffling manually to make sure that we only use a managed random number generator for consistency
+				ArrayList<Drone> shuffledDrones2 = new ArrayList<Drone>();
+				shuffledDrones2.addAll(drones);
+				for(int j = 0 ; j < shuffledDrones2.size(); j++){
+					int swapIndex = simulationController.getRandom().nextInt(shuffledDrones2.size());
+					Drone foo = shuffledDrones2.get(j);
+					shuffledDrones2.set(j,shuffledDrones2.get(swapIndex));
+					shuffledDrones2.set(swapIndex,foo);
+				}
+				for(Drone d: shuffledDrones2){
+					if(d.getState().equals(DroneState.IDLING)){
+						d.quarantine();
+						break;
+					}
+				}
 			}
 		}
 		
@@ -524,8 +656,18 @@ public class Simulator {
 			ArrayList<Drone> shuffledDrones = new ArrayList<Drone>();
 			shuffledDrones.addAll(drones);
 			for(int j = 0 ; j < shuffledDrones.size(); j++){
+				int swapIndex = simulationController.getRandom().nextInt(shuffledDrones.size());
+				Drone foo = shuffledDrones.get(j);
+				shuffledDrones.set(j,shuffledDrones.get(swapIndex));
+				shuffledDrones.set(swapIndex,foo);
+			}
+			for(int j = 0 ; j < shuffledDrones.size(); j++){
 				Drone d = shuffledDrones.get(j);
-				d.getController().droneSimulationEnd(d);
+				Drone cloneDrone = new Drone(d);
+				d.getController().droneSimulationEnd(cloneDrone);
+				if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+					d.quarantine();
+				}
 			}
 		}
 	}
@@ -544,27 +686,63 @@ public class Simulator {
 
 
 	private void droneStartRecharging(Drone drone) {
-		drone.getController().droneDisembarkingEnd(new Drone(drone));
-		drone.setState(DroneState.RECHARGING);
-		drone.getController().droneRechargingStart(new Drone(drone));
+		Drone cloneDrone = new Drone(drone);
+		drone.getController().droneDisembarkingEnd(cloneDrone);
+		if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+			drone.quarantine();
+		}
+		else{
+			drone.setState(DroneState.RECHARGING);
+			cloneDrone = new Drone(drone);
+			drone.getController().droneRechargingStart(cloneDrone);
+			if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+				drone.quarantine();
+			}
+		}
 	}
 
 
 
 	private void droneTakeOff(Drone drone){
-		drone.getController().droneEmbarkingEnd(new Drone(drone));
-		drone.setState(DroneState.ASCENDING);
-		drone.getController().droneAscendingStart(new Drone(drone));
-		drone.setTransitStart(clockTick+drone.getAscensionTime());
+		Drone cloneDrone = new Drone(drone);
+		drone.getController().droneEmbarkingEnd(cloneDrone);
+		if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+			drone.quarantine();
+		}
+		else{
+			drone.setState(DroneState.ASCENDING);
+			
+			cloneDrone = new Drone(drone);
+			drone.getController().droneAscendingStart(cloneDrone);
+			if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+				drone.quarantine();
+			}
+			else{
+				drone.setTransitStart(clockTick+drone.getAscensionTime());
+			}
+		}
 	}
 	
 	private void droneLand(Drone drone) {
-		drone.getController().droneDescendingEnd(new Drone(drone));
-		drone.setStart(drone.getDestination());
-		drone.setState(DroneState.DISEMBARKING);
-		drone.getController().droneDisembarkingStart(new Drone(drone));
-		//Make sure that disembarking starts by setting the last disembark time to before the simulation started
-		drone.setDisembarkingStart(-drone.getDisembarkingDuration());
+		Drone cloneDrone = new Drone(drone);
+		drone.getController().droneDescendingEnd(cloneDrone);
+		if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+			drone.quarantine();
+		}
+		else{
+			drone.setStart(drone.getDestination());
+			drone.setState(DroneState.DISEMBARKING);
+			
+			cloneDrone = new Drone(drone);
+			drone.getController().droneDisembarkingStart(cloneDrone);
+			if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+				drone.quarantine();
+			}
+			else{
+				//Make sure that disembarking starts by setting the last disembark time to before the simulation started
+				drone.setDisembarkingStart(-drone.getDisembarkingDuration());
+			}
+		}
 	}
 	
 	public boolean isHighResolution(){
@@ -792,19 +970,20 @@ public class Simulator {
 		//Add each companies drones here
 		//drones.addAll(loadDrones(places,new DistanceAwarePromiscuousController())); //Professor's Controller
 		
-		drones.addAll(loadDrones(places,new PromiscuousController())); //Professor's Controller
-		drones.addAll(loadDrones(places,new GreedyController())); //Professor's Controller
-		drones.addAll(loadDrones(places,new RandomDroneController())); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousController()))); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyController()))); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController()))); //Professor's Controller
 		
-		drones.addAll(loadDrones(places,new Controller_Sam_n_Katie()));
-		drones.addAll(loadDrones(places,new Controller_Bethany_Le()));
-		drones.addAll(loadDrones(places,new Controller_Bryan_Miner()));
-		drones.addAll(loadDrones(places,new Controller_Christian_Alvo()));
-		drones.addAll(loadDrones(places,new Controller_Devon_Wear()));
-		drones.addAll(loadDrones(places,new Controller_James_Solum()));
-		drones.addAll(loadDrones(places,new Controller_Kyle_Hansen()));
-		drones.addAll(loadDrones(places,new Controller_Matthew_Coffman()));
-		drones.addAll(loadDrones(places,new Controller_Ryan_Kleinberg()));
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Sam_n_Katie())));
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Bethany_Le())));
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Bryan_Miner())));
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Christian_Alvo())));
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Devon_Wear())));
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Skidanov())));
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_James_Solum())));
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Kyle_Hansen())));
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Matthew_Coffman())));
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Ryan_Kleinberg())));
 		//drones.addAll(loadDrones(places,new MyDroneController())); //Student's Controller
 		
 		//Generate people
@@ -819,7 +998,7 @@ public class Simulator {
 		//Start it up
 		visualization.launch();
 		
-		calculateWinners(people);
+		calculateWinners(people,drones);
 		
 		//Shut it down
 		visualization.stop(true);
@@ -829,99 +1008,125 @@ public class Simulator {
 
 
 
-	private static void calculateWinners(Set<Person> people) {
+	private static void calculateWinners(Set<Person> people,Set<Drone> drones) {
 		//Aggregate scores
-		HashMap<String, Pair<Integer,Long>> living = new HashMap<String,Pair<Integer,Long>>();
+		HashMap<String, Pair<Integer,Long>> delivered = new HashMap<String,Pair<Integer,Long>>();
 		HashMap<String, Pair<Integer,Long>> dead = new HashMap<String,Pair<Integer,Long>>();
+		HashMap<String, Pair<Integer,Long>> quarantined = new HashMap<String,Pair<Integer,Long>>();
 		HashMap<String, Pair<Integer,Long>> total = new HashMap<String,Pair<Integer,Long>>();
 		for(Person p: people){
 			if(p.getState().equals(PersonState.ARRIVED)){
-				living.merge(p.deliveryCompany,new Pair<Integer,Long>(1,p.getEndTransitTime()-p.getStartTransitTime()),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+				delivered.merge(p.deliveryCompany,new Pair<Integer,Long>(1,p.getEndTransitTime()-p.getStartTransitTime()),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
 				total.merge(p.deliveryCompany,new Pair<Integer,Long>(1,p.getEndTransitTime()-p.getStartTransitTime()),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+			}
+			if(p.getState().equals(PersonState.QUARANTINED)){
+				quarantined.merge(p.deliveryCompany,new Pair<Integer,Long>(-1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+				total.merge(p.deliveryCompany,new Pair<Integer,Long>(-1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
 			}
 			if(p.getState().equals(PersonState.DEAD)){
 				dead.merge(p.deliveryCompany,new Pair<Integer,Long>(-1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
 				total.merge(p.deliveryCompany,new Pair<Integer,Long>(-1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
 			}
 		}
+		
 		//Output all results
-		System.out.println("Results:");
+		System.out.println("All Results:");
 		for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
-			int livingNum;
-			if(living.size() > 0){
-				if(living.get(p.getKey()) != null){
-					livingNum = living.get(p.getKey()).getKey();
-				}
-				else{
-					livingNum = 0;
+			int deliveredNum = 0;
+			if(delivered.size() > 0){
+				if(delivered.get(p.getKey()) != null){
+					deliveredNum += delivered.get(p.getKey()).getKey();
 				}
 			}
-			else{
-				livingNum = 0;
+			
+			int quarantinedNum = 0;
+			if(quarantined.size() > 0 ){
+				if(quarantined.get(p.getKey())!= null){
+					quarantinedNum += (-1*quarantined.get(p.getKey()).getKey());
+				}
 			}
-			int deadNum;
+			
+			int deadNum = 0;
 			if(dead.size() > 0 ){
 				if(dead.get(p.getKey())!= null){
-					deadNum = (-1*dead.get(p.getKey()).getKey());
-				}
-				else{	
-					deadNum = 0;
+					deadNum += (-1*dead.get(p.getKey()).getKey());
 				}
 			}
-			else{
-				deadNum = 0;
-			}
-			System.out.println("\t"+p.getKey()+" delivered "+livingNum+" passengers in a total time of "+p.getValue().getValue()+ " and killed "+deadNum);
+			
+			System.out.println("\t"+p.getKey()+" delivered "+deliveredNum+" passengers in a total time of "+p.getValue().getValue()+ ", killed "+deadNum+", quarantined "+quarantinedNum);
 		}
 		
-		//Figure out the highest score
-		int max = Integer.MIN_VALUE;
-		for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
-			if(p.getValue().getKey() > max){
-				max = p.getValue().getKey();
-			}
-		}
+		System.out.println("\nOrdered Results:");
+		while(total.size() > 0){
 		
-		//See who has the highest score
-		long minTime = Long.MAX_VALUE;
-		Map<String,Long> winners = new HashMap<String,Long>();
-		for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
-			if(p.getValue().getKey() == max){
-				if(minTime > p.getValue().getValue()){
-					minTime = p.getValue().getValue();
+			//Figure out the highest score
+			int max = Integer.MIN_VALUE;
+			for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
+				if(p.getValue().getKey() > max){
+					max = p.getValue().getKey();
 				}
-				winners.put(p.getKey(),p.getValue().getValue());
 			}
-		}
-		
-		//Output everyone who is a winner
-		for(Entry<String, Long> p:winners.entrySet()){
-			if(p.getValue() == minTime){
-				int livingNum;
-				if(living.size() > 0){
-					if(living.get(p.getKey()) != null){
-						livingNum = living.get(p.getKey()).getKey();
-					}
-					else{
-						livingNum = 0;
+			long minTime = Long.MAX_VALUE;
+			for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
+				if(p.getValue().getKey() == max){
+					if(minTime > p.getValue().getValue()){
+						minTime = p.getValue().getValue();
 					}
 				}
-				else{
-					livingNum = 0;
+			}
+			
+			//See who has the highest score
+			Map<String,Long> winners = new HashMap<String,Long>();
+			for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
+				if((p.getValue().getKey() == max) && (minTime == p.getValue().getValue())){
+					winners.put(p.getKey(),p.getValue().getValue());
 				}
-				int deadNum;
+			}
+			
+		
+			//Output everyone who is a winner
+			for(Entry<String, Long> p:winners.entrySet()){
+				int deliveredNum = 0;
+				if(delivered.size() > 0){
+					if(delivered.get(p.getKey()) != null){
+						deliveredNum = delivered.get(p.getKey()).getKey();
+					}
+				}
+				
+				int quarantinedNum = 0;
+				if(quarantined.size() > 0 ){
+					if(quarantined.get(p.getKey())!= null){
+						quarantinedNum += (-1*quarantined.get(p.getKey()).getKey());
+					}
+				}
+				
+				int deadNum = 0;
 				if(dead.size() > 0 ){
 					if(dead.get(p.getKey())!= null){
 						deadNum = (-1*dead.get(p.getKey()).getKey());
 					}
-					else{	
-						deadNum = 0;
-					}
 				}
-				else{
-					deadNum = 0;
-				}
-				System.out.println("Winner: "+p.getKey()+" delivered "+livingNum+" passengers in a total time of "+minTime+ " and killed "+deadNum);
+				
+				System.out.println("\t"+p.getKey()+" delivered "+deliveredNum+" passengers in a total time of "+minTime+ ", killed "+deadNum+", quarantined "+quarantinedNum);
+			}
+			
+			for(Entry<String, Long> x: winners.entrySet()){
+				total.remove(x.getKey());
+			}
+		}
+		
+		// Announced if any drones were quarantined
+		HashMap<String, Integer> quarantinedCompanies = new HashMap<String,Integer>();
+		for(Drone d:drones){
+			if(d.getState().equals(DroneState.QUARANTINED)){
+				quarantinedCompanies.merge(d.getCompanyName(),1,(v1,v2) ->{return (v1+v2);});
+			}
+		}
+		
+		if(quarantinedCompanies.size()> 0){
+			System.out.println("\nCompanies with Quarantined Drones:");
+			for(Entry<String, Integer> x: quarantinedCompanies.entrySet()){
+				System.out.println("\t"+x.getKey()+" with "+x.getValue()+" quarantined drones");
 			}
 		}
 	}
