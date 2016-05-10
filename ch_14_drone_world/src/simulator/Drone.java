@@ -6,6 +6,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import simulator.enums.DroneState;
+import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
 
 public class Drone implements Comparable<Drone>{
@@ -28,6 +29,7 @@ public class Drone implements Comparable<Drone>{
 	private Set<String> manifest;
 	
 	private DroneState state;
+	
 	
 	// Time since starting the load of the last passenger
 	private long embarkingStart;
@@ -246,6 +248,14 @@ public class Drone implements Comparable<Drone>{
 	
 	void setSpeed(double speed) {
 		this.speed = speed;
+	}
+	
+	void quarantine(){
+		System.out.println("Drone quarantined. "+this.getCompanyName()+" "+this.getName());
+		setState(DroneState.QUARANTINED);
+		for(Person p:this.getPassengers()){
+			p.setState(PersonState.QUARANTINED);
+		}
 	}
 	
 
