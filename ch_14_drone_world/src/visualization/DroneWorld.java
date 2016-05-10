@@ -130,6 +130,7 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 	// A set of all the drones that have exploded to ensure animations are played only once
 	private Set<String> explodingDrones = new HashSet<String>();
 	private Set<String> smokingDrones = new HashSet<String>();
+	private Set<String> quarantinedDrones = new HashSet<String>();
 	
 	
 	/** Initialize the materials used in this scene. */
@@ -536,6 +537,7 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 						person.getPosition().getLongitude(), person.getPosition().getHeight()));
 			}
 			break;
+			case QUARANTINED:
 			case DEAD: {
 				personEntry.getValue().setLocalTranslation(latLong2Transform(person.getPosition().getLatitude(),
 						person.getPosition().getLongitude(), person.getPosition().getHeight()));
@@ -671,6 +673,38 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 				}
 			}
 			break;
+			case QUARANTINED: {
+				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
+						drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
+				
+				if(!quarantinedDrones.contains(drone.getName())){
+					quarantinedDrones.add(drone.getName());
+					
+					ParticleEmitter electricity = new ParticleEmitter("Emitter", ParticleMesh.Type.Triangle, 50);
+					Material mat_red = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
+					mat_red.setTexture("Texture", assetManager.loadTexture("Effects/Explosion/flash.png"));
+					// point
+					electricity.setShape(new EmitterPointShape(Vector3f.ZERO));
+					electricity.setMaterial(mat_red);
+					electricity.setParticlesPerSec(5f);
+					electricity.setImagesX(2);
+					electricity.setImagesY(2); // 2x2 texture animation
+					electricity.setStartColor(new ColorRGBA(0.2f, 0.2f, 0f, 0.8f));
+					electricity.setEndColor(new ColorRGBA(1.0f, 1.0f, 0f, 0.3f));
+					electricity.getParticleInfluencer().setInitialVelocity(new Vector3f(0f, 0.5f, 0f));
+					electricity.setFaceNormal(Vector3f.UNIT_Y);
+					electricity.setRotateSpeed(1.0f);
+					electricity.setStartSize(0.3f);
+					electricity.setEndSize(0.4f);
+					electricity.setGravity(0, -0.1f, 0);
+					electricity.setLowLife(0.2f);
+					electricity.setHighLife(2.0f);
+					electricity.getParticleInfluencer().setVelocityVariation(1);
+		
+					particlesNode.attachChild(electricity);
+				}
+			}
+			break;
 			case DYING:
 			case DEAD: {
 				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
@@ -743,6 +777,11 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 			break;
 			case IDLING: {
 				droneNode.rotate(0, 0.1f * tpf, 0);
+				particlesNode.detachAllChildren();
+			}
+			break;
+			case IGNORED: {
+				droneNode.rotate(0.1f*tpf, 0.1f * tpf, 0.1f*tpf);
 				particlesNode.detachAllChildren();
 			}
 			break;
