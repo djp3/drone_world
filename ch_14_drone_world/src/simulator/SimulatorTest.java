@@ -18,7 +18,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import reference.MyDroneController;
+import reference.DroneControllerSkeleton;
 import reference.MySimulationController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
@@ -163,7 +163,7 @@ public class SimulatorTest {
 	}
 
 	// Create a class to test the drones
-	static class TestManifest_DroneController extends MyDroneController {
+	static class TestManifest_DroneController extends DroneControllerSkeleton {
 		
 		Map<String,Drone> passengerIdleProcessed = Collections.synchronizedMap(new TreeMap<String,Drone>());
 		Map<String,Drone> passengerPickups = Collections.synchronizedMap(new TreeMap<String,Drone>());

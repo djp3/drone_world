@@ -8,22 +8,23 @@ import simulator.interfaces.DroneController;
  * This is the class that students should work with to create there drone controller
  * 
  */
-public class MyDroneController implements DroneController {
+public class DroneControllerSkeleton implements DroneController {
 
 	// This is set by the simulator when the simulation starts so that you can get access to the places, drones, people, etc.
 	// with simulator.getX
 	Simulator simulator = null;
 	
+	// Students probably don't want to change this
 	@Override
 	public void setSimulator(Simulator simulator) {
 		this.simulator = simulator;
 	}
 	
+	// Students probably don't want to change this
 	protected Simulator getSimulator(){
 		return this.simulator;
 	}
 	
-
 	@Override
 	public String getNextDroneName() {
 		if((System.currentTimeMillis()%2) == 0){
@@ -46,7 +47,7 @@ public class MyDroneController implements DroneController {
 
 	@Override
 	public void droneSimulationEnd(Drone drone) {
-		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Simulation Starting");
+		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Simulation Ending");
 	}
 	
 
@@ -104,7 +105,7 @@ public class MyDroneController implements DroneController {
 
 	@Override
 	public void droneTransiting(Drone drone, double percent) {
-		System.out.println(String.format("*** Simulator told: Drone %s: In Transit %5.2f%%, Charge: %5.2f%%",drone.getId(), (percent * 100f), drone.getCharge()));
+		System.out.println(String.format("*** Simulator told: Drone %s: In Transit %5.2f%%, Charge: %5.2f%%",drone.getId(), (percent * 100f), 100f*drone.getCharge()));
 	}
 
 	@Override

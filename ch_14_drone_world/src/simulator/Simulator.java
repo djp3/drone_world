@@ -3,7 +3,6 @@ package simulator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,35 +12,23 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
-import reference.GreedyController;
 import reference.MySimulationController;
-import reference.PromiscuousController;
 import reference.RandomDroneController;
+import reference.StudentDroneController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
 import simulator.interfaces.SimulationController;
-import submissions.Controller_Bethany_Le;
-import submissions.Controller_Bryan_Miner;
-import submissions.Controller_Christian_Alvo;
-import submissions.Controller_Devon_Wear;
-import submissions.Controller_James_Solum;
-import submissions.Controller_Kyle_Hansen;
-import submissions.Controller_Matthew_Coffman;
-import submissions.Controller_Ryan_Kleinberg;
-import submissions.dc_heroes_controller.Controller_Sam_n_Katie;
-import submissions.skidanov.Controller_Skidanov;
-import visualization.DroneWorld;
+import visualization.Visualizer;
 
 public class Simulator {
-	
-	public static final int MAX_DRONES_PER_CONTROLLER = 5;
-	
+	public static final int MAX_DRONES_PER_CONTROLLER = 1;
 	public static final int DRONE_MAX_CAPACITY = 1;
+	
 	private static final boolean DRONE_CAPACITY_VARIES = false;
 	private static boolean DRONES_RUN_OUT_OF_CHARGE = false;
 	
-	public static final int MAX_PEOPLE = 100;
+	public static final int MAX_PEOPLE = 10;
 	
 	public static final int MAX_LOCATIONS = 10;
 	
@@ -107,6 +94,7 @@ public class Simulator {
 
 
 	public void start(){
+		
 		setQuitting(false);
 		setSimulationEnded(false);
 		
@@ -190,11 +178,11 @@ public class Simulator {
 							boolean embarkingSome = (drone.getEmbarkers().size() > 0);
 							for(Person person:drone.getEmbarkers()){
 								if(!drone.getEmbarkers().remove(person)){
-									throw new RuntimeException("Whey didn't the person get on board?");
+									throw new RuntimeException("Why didn't the person get on board?");
 								}
 								person.setState(PersonState.IN_DRONE);
 								if(!drone.getPassengers().add(person)){
-									throw new RuntimeException("Whey didn't the person get become a passenger?");
+									throw new RuntimeException("Why didn't the person get become a passenger?");
 								}
 							}
 							
@@ -457,24 +445,6 @@ public class Simulator {
 								else{
 									for(int i =0; i< nextDisembarkGroupSize; i++){
 										Person person = waiting.remove();
-										/*
-										Person p = drone.getPassengers().iterator().next();
-										System.out.println(p.toString());
-											System.out.println("\t\t"+p.hashCode());
-										System.out.println(person.toString());
-											System.out.println("\t\t"+person.hashCode());
-										if(person.equals(p)){
-											System.out.println("They are equal");
-										}
-										else{
-											System.out.println("They are not equal");
-										}
-										Set<Person> passengers = drone.getPassengers();
-										for(Person p2: passengers){
-											System.out.println("\t"+p2.toString());
-											System.out.println("\t\t"+p2.hashCode());
-										}
-										*/
 										if(!drone.getPassengers().remove(person)){
 											throw new RuntimeException("Why didn't the person get removed?");
 										}
@@ -628,7 +598,10 @@ public class Simulator {
 			else{
 				notBusyCount++;
 			}
-			if(notBusyCount > 1){
+			//We are checking for 10 so that 9 calls to a drone's idling call back must result in no action
+			//  (The random drone controller would occasionally break this when it was 2 by choosing the same destination
+			//  as the current location)
+			if(notBusyCount > 10){  
 				notBusyCount = 0;
 				//Shuffle drones so that different drones get random priority on each round
 				//Shuffling manually to make sure that we only use a managed random number generator for consistency
@@ -842,11 +815,17 @@ public class Simulator {
 		ret.add(new Place("Reservoir", new Position(34.4537095,-119.7277611,0)));
 		
 		ret.add(new Place("Trader Joe's",new Position(34.4392777,-119.7293757,0)));
-		ret.add(new Place("Water Tower",new Position(34.4677583,-119.7480575,0)));
+		ret.add(new Place("Canyon Park",new Position(34.457205,-119.781077,0)));
+		ret.add(new Place("Green Houses",new Position(34.461478,-119.788307,0)));
+		ret.add(new Place("In-N-Out",new Position(34.442533,-119.790726,0)));
+		ret.add(new Place("McDonald's",new Position(34.441046,-119.753056,0)));
+		ret.add(new Place("Courthouse",new Position(34.424117,-119.701909,0)));
+		ret.add(new Place("Princess Cruise",new Position(34.396725,-119.683566,0)));
 		ret.add(new Place("Mother Stearn's Candy",new Position(34.4097893,-119.6855427,0)));
 		
-		ret.add(new Place("Doctor Evil's Sub",new Position(34.3979696,-119.6640514,0)));
+		ret.add(new Place("Doctor Evil's Sub",new Position(34.395299,-119.658715,0)));
 		ret.add(new Place("Dog Beach",new Position(34.4026544,-119.7426834,0)));
+		ret.add(new Place("Beach Cabana",new Position(34.412831,-119.775672,0)));
 		
 		
 		//Figure out the extents of the locations
@@ -967,24 +946,10 @@ public class Simulator {
 		
 		//Generate the drones
 		Set<Drone> drones = new TreeSet<Drone>();
+		
 		//Add each companies drones here
-		//drones.addAll(loadDrones(places,new DistanceAwarePromiscuousController())); //Professor's Controller
-		
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousController()))); //Professor's Controller
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyController()))); //Professor's Controller
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController()))); //Professor's Controller
-		
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Sam_n_Katie())));
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Bethany_Le())));
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Bryan_Miner())));
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Christian_Alvo())));
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Devon_Wear())));
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Skidanov())));
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_James_Solum())));
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Kyle_Hansen())));
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Matthew_Coffman())));
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Controller_Ryan_Kleinberg())));
-		//drones.addAll(loadDrones(places,new MyDroneController())); //Student's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new StudentDroneController(),simController.shouldQuarantineDrones()))); //Student's Controller
 		
 		//Generate people
 		Set<Person> people = loadPeople(simController.getRandom(),places);
@@ -993,7 +958,7 @@ public class Simulator {
 		Simulator simulator = new Simulator(simController,people,places,drones);
 		
 		//Attach simulation to a visualizer
-		DroneWorld visualization = new DroneWorld(simulator,people,places,drones);
+		Visualizer visualization = new Visualizer(simulator,people,places,drones);
 		
 		//Start it up
 		visualization.launch();

@@ -17,20 +17,6 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/jme3-core.jar"/>
-	<classpathentry kind="lib" path="lib/jme3-desktop.jar"/>
-	<classpathentry kind="lib" path="lib/jme3-lwjgl.jar"/>
-	<classpathentry kind="lib" path="lib/lwjgl.jar"/>
-	<classpathentry kind="lib" path="lib/jme3-plugins.jar"/>
-	<classpathentry kind="lib" path="lib/jme3-blender.jar"/>
-	<classpathentry kind="lib" path="lib/jme3-jogg.jar"/>
-	<classpathentry kind="lib" path="lib/j-ogg-all.jar"/>
-	<classpathentry kind="lib" path="lib/jme3-testdata.jar"/>
-	<classpathentry kind="lib" path="lib/simple.jar"/>
-	<classpathentry kind="lib" path="lib/core.jar"/>
-	<classpathentry kind="lib" path="lib/dense64.jar"/>
-	<classpathentry kind="lib" path="lib/denseC64.jar"/>
-	<classpathentry kind="lib" path="lib/jme3-terrain.jar"/>
-	<classpathentry kind="lib" path="lib/jme3-effects.jar"/>
+	<classpathentry kind="lib" path="lib/jme3-testdata-3.1.0-stable.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

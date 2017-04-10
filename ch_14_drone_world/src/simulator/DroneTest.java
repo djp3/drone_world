@@ -10,7 +10,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import reference.MyDroneController;
+import reference.DroneControllerSkeleton;
 
 public class DroneTest {
 
@@ -41,7 +41,7 @@ public class DroneTest {
 		Place destination = new Place(name, position);
 		
 		Drone d1 = null;
-		d1 = new Drone(new MyDroneController(),start,destination,1);
+		d1 = new Drone(new DroneControllerSkeleton(),start,destination,1);
 		
 		Drone d2 = null;
 		d2 = new Drone(d1);

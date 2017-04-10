@@ -17,10 +17,6 @@ import java.util.function.Supplier;
 import simulator.interfaces.DroneController;
 import simulator.safety.Command;
 
-/**
- * This is the class that students should work with to create there drone controller
- * 
- */
 public class DroneControllerSafetyWrapper implements DroneController {
 	
 	// The initial amount of time a controller can take on a call
@@ -40,7 +36,6 @@ public class DroneControllerSafetyWrapper implements DroneController {
 	}
 	
 	
-	
 	// The controller that this class is wrapping
 	private DroneController wrapped = null;
 	
@@ -50,6 +45,9 @@ public class DroneControllerSafetyWrapper implements DroneController {
 	// Each timeout is initially it is set to 10 seconds. 
 	// If a call doesn't return then it's timeout decreases, if it does it is reset
 	private Map<String, Integer> behaviorManagement;
+	
+	// If true, then this wrapper does it's work and quarantines a drone that takes too long
+	private boolean shouldQuarantine;
 	
 	
 	/**
@@ -102,9 +100,10 @@ public class DroneControllerSafetyWrapper implements DroneController {
 		this.wrapped = wrapped;
 	}
 
-	public DroneControllerSafetyWrapper(DroneController wrapMe){
+	public DroneControllerSafetyWrapper(DroneController wrapMe,boolean shouldQuarantine){
 		this.setWrapped(wrapMe);
 		this.behaviorManagement = new HashMap<String, Integer>();
+		this.shouldQuarantine = shouldQuarantine;
 	}
 	
 
@@ -113,7 +112,7 @@ public class DroneControllerSafetyWrapper implements DroneController {
 	 * @param method, the method to call safely
 	 */
 	private void safeControllerCall(String methodName, Command method) {
-		safeControllerCall(methodName, null,null,true,(Drone d,Void v) -> {method.execute();});
+		safeControllerCall(methodName, null,null,this.shouldQuarantine,(Drone d,Void v) -> {method.execute();});
 	}
 	
 	/**
@@ -122,7 +121,7 @@ public class DroneControllerSafetyWrapper implements DroneController {
 	 * @return
 	 */
 	private <R> R safeControllerCall(String methodName, Supplier<R> method){
-		return safeControllerCall(methodName, null,null,true,(Drone d, Void v) -> {return method.get();});
+		return safeControllerCall(methodName, null,null,this.shouldQuarantine,(Drone d, Void v) -> {return method.get();});
 	}
 	
 	
@@ -132,7 +131,7 @@ public class DroneControllerSafetyWrapper implements DroneController {
 	 * @param method, the method to call safely
 	 */
 	private void safeControllerCall(String methodName,Drone drone,Consumer<Drone> method) {
-		safeControllerCall(methodName,drone,null,true,(Drone d,Object o) -> {method.accept(d); return null;});
+		safeControllerCall(methodName,drone,null,this.shouldQuarantine,(Drone d,Object o) -> {method.accept(d); return null;});
 	}
 	
 	/**

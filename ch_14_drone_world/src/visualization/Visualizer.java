@@ -60,9 +60,7 @@ import simulator.enums.PersonState;
  * @author djp3
  *
  */
-public class DroneWorld extends SimpleApplication implements AnimEventListener {
-	
-	private boolean doneWithInit = false;
+public class Visualizer extends SimpleApplication implements AnimEventListener {
 	
 	private Random random = new Random(10L);
 	private Simulator simulator;
@@ -79,7 +77,21 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 	private Map<Place,Spatial> places;
 	private Map<Drone, Node> drones;
 
-	public DroneWorld(Simulator simulator, Collection<Person> people, Collection<Place> places, Collection<Drone> drones) {
+	private boolean _doneWithInit = false;
+	private Object _doneWithInitLock = new Object();
+	private void setDoneWithInit(boolean newValue){
+		synchronized(_doneWithInitLock){
+			_doneWithInit = newValue;
+		}
+	}
+
+	private boolean getDoneWithInit(){
+		synchronized(_doneWithInitLock){
+			return _doneWithInit;
+		}
+	}
+
+	public Visualizer(Simulator simulator, Collection<Person> people, Collection<Place> places, Collection<Drone> drones) {
 		if (simulator == null) {
 			throw new IllegalArgumentException("\"simulator\" can't be null");
 		}
@@ -111,11 +123,11 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		}
 	}
 
-	public DroneWorld() {
+	public Visualizer() {
 		this((Simulator) null, null, null, null);
 	}
 
-	public DroneWorld(AppState... initialStates) {
+	public Visualizer(AppState... initialStates) {
 		super(initialStates);
 	}
 
@@ -136,7 +148,7 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 	/** Initialize the materials used in this scene. */
 	public void initMaterials() {
 		ground_mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-		TextureKey key3 = new TextureKey("assets/ground.jpg");
+		TextureKey key3 = new TextureKey("assets/map.jpg");
 		key3.setGenerateMips(true);
 		Texture tex3 = assetManager.loadTexture(key3);
 		tex3.setWrap(WrapMode.EdgeClamp);
@@ -145,7 +157,7 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 
 	@SuppressWarnings("deprecation")
 	private void initGround() {
-		ground = new Box(10f, 0.1f, 10f);
+		ground = new Box(10f, 0.1f, 16.019f);
 		ground.scaleTextureCoordinates(new Vector2f(1, 1));
 		ground_geo = new Geometry("Ground", ground);
 		ground_geo.setMaterial(ground_mat);
@@ -210,11 +222,11 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 	}
 
 	private Vector3f latLong2Transform(double latitude, double longitude,double height) {
-		double scalex = 240.0;
-		float x = (float) ((34.448868 - latitude) * scalex - 4.01);
+		double scalex = 275.0; 
+		float x = (float) ((34.448868 - latitude) * scalex - 5.51);
 
-		double scalez = 200.0;
-		float z = (float) ((-119.6629439 - longitude) * scalez - 7.7);
+		double scalez = 218.0; 
+		float z = (float) ((-119.6629439 - longitude) * scalez - 11.9);
 		return new Vector3f(x, (float) height, z);
 	}
 
@@ -455,7 +467,7 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 		chaseCam.setMaxVerticalRotation(FastMath.PI);
 		chaseCam.setMinVerticalRotation(-1.0f*FastMath.PI);
 		
-		doneWithInit = true;
+		setDoneWithInit(true);
 	}
 
 	/* Use the main event loop to trigger repeating actions. */
@@ -902,20 +914,25 @@ public class DroneWorld extends SimpleApplication implements AnimEventListener {
 
 	public void launch() {
 		
+		//Start the jMonkeyEngine SimpleApplication
 		this.start();
-		while(!doneWithInit){
+		
+		//Wait for the initialization to end in a different thread
+		while(!getDoneWithInit()){
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
 			}
 		}
+		
+		//Launch the simulator
 		if (this.simulator != null) {
 			this.simulator.start();
 		}
 	}
 
 	public static void main(String[] args) {
-		DroneWorld app = new DroneWorld();
+		Visualizer app = new Visualizer();
 		app.start(); 
 	}
 

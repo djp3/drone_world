@@ -26,5 +26,11 @@ public interface SimulationController {
 	 * 
 	 */
 	long simulatorSpeed();
+	
+	/**
+	 *  This returns true if the simulator should quarantine drones for responding to slowly.
+	 *  This is set to true for the test simulation, but for debugging it's helpful to set it to false
+	 */
+	public boolean shouldQuarantineDrones();
 
 }

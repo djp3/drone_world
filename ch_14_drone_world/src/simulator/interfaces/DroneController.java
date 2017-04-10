@@ -6,27 +6,61 @@ import simulator.Simulator;
 public interface DroneController {
 	
 	
-	
 	/**
-	 * This is called by the simulator so that the Controller can have access to the people, places and drones that simulator keeps track of
+	 * This is called by the simulator so that the Controller
+	 * can have access to the people, places and drones that simulator keeps track of.
 	 *  
 	 * @param simulator
 	 */
 	void setSimulator(Simulator simulator);
 	
+	/**
+	 * This method should return human relevant names for drones.  It can return as many or as few unique ones as desired.
+	 * @return The name of a drone, e.g., "Grumpy"
+	 */
+	String getNextDroneName();
+
+	/**
+	 * This method should return the name of the company that made this controller.  
+	 * @return The company name, e.g., "Patterson Intelligent Drone Corporation"
+	 */
+	String getCompanyName();
+
+	
+	
+	/***********************************/
 	/* Simulator Life cycle call backs */
-	//The simulator is about to start simulating drone, d
+	
+	/**
+	 * The simulator is about to start simulating drone, d
+	 * @param d
+	 */
 	void droneSimulationStart(Drone d);
-	//The simulator is has ended simulating drone, d
+	
+	/**
+	 * The simulator is has ended simulating drone, d
+	 * @param d
+	 */
 	void droneSimulationEnd(Drone d);
 	
-	//The simulator calls this if the drone controller timed out on some call
+	/**
+	 * The simulator calls this if the drone controller timed out on some call and is being quarantined
+	 * @param d
+	 */
 	void droneBehavingBadly(Drone d);
+	/***********************************/
 	
-	/* Life cycle call backs */
+	
+	/***********************************/
+	/* Drone Life cycle call backs */
+	
+	// This is called when a drone starts embarking at all
 	void droneEmbarkingStart(Drone drone);
+	// This is called before each batch of people starts embarking 
 	void droneEmbarkingAGroupStart(Drone drone);
+	// This is called before each batch of people finishes embarking 
 	void droneEmbarkingAGroupEnd(Drone drone);
+	// This is called when embarking is completely done
 	void droneEmbarkingEnd(Drone drone);
 	
 	void droneAscendingStart(Drone drone);
@@ -66,29 +100,12 @@ public interface DroneController {
 	void droneDoneRecharging(Drone drone);
 	
 	/**
-	 * A drone that is idling should have it's start and destination be the same and be the place where it current is
+	 * A drone that is idling should have it's start and destination be the same which is also the 
+	 * place where it current is
 	 * @param drone
 	 */
 	void droneIdling(Drone drone);
 	
 	/* End Lifecyle routines */
-
-	
-	
-	
-	/**
-	 * This method should return human relevant names for drones.  It can return as many or as few unique ones as desired.
-	 * @return The name of a drone, e.g., "Grumpy"
-	 */
-	String getNextDroneName();
-
-	/**
-	 * This method should return the name of the company that made this controller.  
-	 * @return The company name, e.g., "Patterson Intelligent Drone Corporation"
-	 */
-	String getCompanyName();
-
-
-
 
 }
