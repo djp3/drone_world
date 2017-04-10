@@ -14,7 +14,7 @@ import java.util.TreeSet;
 
 import reference.MySimulationController;
 import reference.RandomDroneController;
-import reference.StudentDroneController;
+import reference.MyDroneController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
@@ -949,7 +949,7 @@ public class Simulator {
 		
 		//Add each companies drones here
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new StudentDroneController(),simController.shouldQuarantineDrones()))); //Student's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones()))); //Student's Controller
 		
 		//Generate people
 		Set<Person> people = loadPeople(simController.getRandom(),places);
