@@ -1,8 +1,10 @@
 package visualization;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -32,6 +34,8 @@ import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
+import com.jme3.math.Matrix3f;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
@@ -46,6 +50,10 @@ import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.SkyFactory;
 
+import reference.DistanceAwarePromiscuousController;
+import reference.GreedyController;
+import reference.PromiscuousController;
+import reference.RandomDroneController;
 import simulator.Drone;
 import simulator.Explosion;
 import simulator.Pair;
@@ -71,7 +79,8 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 
 	private Spatial canonical_place;
 	private Spatial canonical_person;
-	private Spatial canonical_drone;
+	
+	private List<Spatial> canonical_drones; //The first one is for the student drones, the rest are the professors competitors
 
 	private Map<Person,Spatial> people;
 	private Map<Place,Spatial> places;
@@ -175,24 +184,72 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	}
 
 	private void initDrone(boolean isHighResolution) {
-		boolean bluebox = !isHighResolution;
+		boolean box = !isHighResolution;
+		canonical_drones = new ArrayList<Spatial>();
 
-		if (bluebox) {
-			Box b = new Box(0.1f, 0.1f, 0.1f); // create cube shape
-			Geometry geom = new Geometry("Box", b); // create cube geometry from
-													// the
-			// shape
-			Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create // a // simple // material
-			mat.setColor("Color", ColorRGBA.Blue); // set color of material to // blue
-			geom.setMaterial(mat); // set the cube's material
-			canonical_drone = geom;
-			canonical_drone.setShadowMode(ShadowMode.Cast);
+		if (box) {
+			List<ColorRGBA> colors = new ArrayList<ColorRGBA>();
+			colors.add(ColorRGBA.Blue);
+			colors.add(ColorRGBA.Green);
+			colors.add(ColorRGBA.Magenta);
+			colors.add(ColorRGBA.Red);
+			colors.add(ColorRGBA.Cyan);
+			colors.add(ColorRGBA.Yellow);
+			colors.add(ColorRGBA.Pink);
+			for(ColorRGBA color: colors){
+				Box b = new Box(0.1f, 0.1f, 0.1f); // create cube shape
+				Geometry geom = new Geometry("Box", b); // create cube geometry from the shape
+				Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create // a // simple // material
+				mat.setColor("Color", color);
+				geom.setMaterial(mat); // set the cube's material
+				Spatial drone = geom;
+				drone.setLocalTranslation(0f, 0.1f, 0f);
+				drone.setShadowMode(ShadowMode.Cast);
+				canonical_drones.add(drone);
+			}
 		} else {
-			canonical_drone = assetManager.loadModel("assets/Quandtum_SAP-1_v2_0.blend");
-			canonical_drone.scale(0.1f);
-			canonical_drone.setLocalTranslation(0f, 0f, 0f);
+			assetManager.registerLocator("assets/Quandtum_SAP-1/", FileLocator.class);
+			Spatial drone = assetManager.loadModel("Quandtum_SAP-1_v2_0.blend");
+			assetManager.unregisterLocator("assets/Quandtum_SAP-1/", FileLocator.class);
+			drone.scale(0.1f);
+			drone.setLocalTranslation(0f, 0f, 0f);
+			drone.setShadowMode(ShadowMode.Cast);
+			canonical_drones.add(drone);
+			
+			System.out.println("This program uses a model from XhyldazhK at http://www.blendswap.com/blends/view/76328");
+			assetManager.registerLocator("assets/nauyaca/", FileLocator.class);
+			drone = assetManager.loadModel("spaceship01.blend");
+			assetManager.unregisterLocator("assets/nauyaca/", FileLocator.class);
+			drone.scale(0.02f);
+			drone.setLocalTranslation(0f, 0.33f, 0f);
+			Quaternion q1 = new Quaternion().fromAngleNormalAxis(FastMath.HALF_PI,Vector3f.UNIT_X);
+			drone.setLocalRotation(q1);
+			drone.setShadowMode(ShadowMode.Cast);
+			canonical_drones.add(drone);
+			
+			assetManager.registerLocator("assets/simple", FileLocator.class);
+			drone = assetManager.loadModel("Spaceship_Request.blend");
+			assetManager.unregisterLocator("assets/simple", FileLocator.class);
+			drone.scale(0.04f);
+			drone.setLocalTranslation(0f, 0.2f, 0f);
+			q1 = new Quaternion().fromAngleNormalAxis(FastMath.PI,Vector3f.UNIT_Y);
+			drone.setLocalRotation(q1);
+			drone.setShadowMode(ShadowMode.Cast);
+			canonical_drones.add(drone);
+			
+			System.out.println("This program uses a model from granthus at http://www.blendswap.com/blends/view/42451");
+						
+			assetManager.registerLocator("assets/42451_Orion_Rising", FileLocator.class);
+			drone = assetManager.loadModel("OrionRising01.blend");
+			assetManager.unregisterLocator("assets/42451_Orion_Rising", FileLocator.class);
+			drone.scale(0.04f);
+			drone.setLocalTranslation(0f, 0.2f, 0f);
+			q1 = new Quaternion().fromAngleNormalAxis(FastMath.PI,Vector3f.UNIT_Y);
+			drone.setLocalRotation(q1);
+			drone.setShadowMode(ShadowMode.Cast);
+			canonical_drones.add(drone);
+			
 		}
-		canonical_drone.setShadowMode(ShadowMode.Cast);
 	}
 
 	private void initPerson() {
@@ -340,7 +397,25 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			Drone drone = droneEntry.getKey();
 			Position position = drone.getStart().getPosition();
 
-			Spatial droneNode = canonical_drone.clone();
+			Spatial droneNode;
+			int size = canonical_drones.size();
+			int index = 0; //Assume the drone is a student drone (draw drone 0)
+			if(size > 1){  //If there are more drones available draw a different one for professor's drones
+				if(droneEntry.getKey().getCompanyName().equals(RandomDroneController.companyName)){
+					index = 0;
+					index = (index % (size-1)) +1; //Make the professor's drone be one with index greater than 0
+				} else if(droneEntry.getKey().getCompanyName().equals(GreedyController.companyName)){
+					index = 1;
+					index = (index % (size-1)) +1; //Make the professor's drone be one with index greater than 0
+				} else if(droneEntry.getKey().getCompanyName().equals(PromiscuousController.companyName)){
+					index = 2;
+					index = (index % (size-1)) +1; //Make the professor's drone be one with index greater than 0
+				} else if(droneEntry.getKey().getCompanyName().equals(DistanceAwarePromiscuousController.companyName)){
+					index = 3;
+					index = (index % (size-1)) +1; //Make the professor's drone be one with index greater than 0
+				}
+			}
+			droneNode = canonical_drones.get(index).clone();
 			droneNode.setName("drone");
 			
 			Node particlesNode = new Node();

@@ -11,7 +11,7 @@ public class MySimulationController implements SimulationController {
 	static private final boolean SAME_RANDOM_NUMBERS_EACH_TIME=true;
 	
 	//True if you want to render the drones (longer to start up)
-	static private final boolean HIGH_RESOLUTION=true;
+	static private final boolean HIGH_RESOLUTION = true;
 	
 	//1 for real-time
 	//100 (max) to run the simulator as fast as possible

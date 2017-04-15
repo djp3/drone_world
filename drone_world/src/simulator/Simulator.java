@@ -12,9 +12,11 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
-import reference.MySimulationController;
-import reference.RandomDroneController;
+import reference.GreedyController;
 import reference.MyDroneController;
+import reference.MySimulationController;
+import reference.PromiscuousController;
+import reference.RandomDroneController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
@@ -22,13 +24,13 @@ import simulator.interfaces.SimulationController;
 import visualization.Visualizer;
 
 public class Simulator {
-	public static final int MAX_DRONES_PER_CONTROLLER = 1;
+	public static final int MAX_DRONES_PER_CONTROLLER = 5;
 	public static final int DRONE_MAX_CAPACITY = 1;
 	
 	private static final boolean DRONE_CAPACITY_VARIES = false;
 	private static boolean DRONES_RUN_OUT_OF_CHARGE = false;
 	
-	public static final int MAX_PEOPLE = 10;
+	public static final int MAX_PEOPLE = 100;
 	
 	public static final int MAX_LOCATIONS = 10;
 	
@@ -906,10 +908,10 @@ public class Simulator {
 		ArrayList<Place> randomizePlaces = new ArrayList<Place>();
 		randomizePlaces.addAll(places);
 		
-		String[] namesFirst = {"Matthew", "Bethany", "Christian" , "Parker", "Jonathan" , "David", "Samuel" , "Jared", "Ryan", "Kyle", "Kathryn", "Devon", "Xinyu", "Bryan" , "Mark", "James" };
+		String[] namesFirst = { "Jason", "Reilly", "Emma", "Kalie", "Hannah", "Rebecca", "Kevin", "Sophia", "David", "Tanner", "Mo", "Ryley", "Dante", "Sam", "Maya", "Dempsey", "Ben", "Heather", "M'kya", "Kaylee" };
 		List<String> randomizeFirst = Arrays.asList(namesFirst);
 		
-		String[] namesLast = { "Miller", "Le", "Alvo", "Leach", "Skidanov", "Spindler", "McCollum",	 "Wilkens",	 "Kleinberg",	 "Beall", "Hansen", "Mohrhoff",	 "Wear", "Coffman",	 "Yu", "Miner", "Carlson","Solum"};
+		String[] namesLast = { "Campbell", "Cole", "Donelson", "Drown", "Fisk", "Frink", "Gao", "Gigliotti", "Kyle", "Leslie", "Mahjoub", "Oroku", "Polesselli", "Reep", "Rouillard", "Salazar", "Thomas", "Totten", "Williams", "Yoon" };
 		List<String> randomizeLast = Arrays.asList(namesLast);
 		
 		Set<Person> ret = new TreeSet<Person>();
@@ -948,6 +950,8 @@ public class Simulator {
 		Set<Drone> drones = new TreeSet<Drone>();
 		
 		//Add each companies drones here
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyController(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones()))); //Student's Controller
 		
