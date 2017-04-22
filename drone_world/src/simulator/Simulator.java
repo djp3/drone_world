@@ -12,6 +12,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
+import reference.DistanceAwarePromiscuousController;
 import reference.GreedyController;
 import reference.MyDroneController;
 import reference.MySimulationController;
@@ -25,14 +26,14 @@ import visualization.Visualizer;
 
 public class Simulator {
 	public static final int MAX_DRONES_PER_CONTROLLER = 5;
-	public static final int DRONE_MAX_CAPACITY = 1;
+	public static final int DRONE_MAX_CAPACITY = 10;
 	
-	private static final boolean DRONE_CAPACITY_VARIES = false;
-	private static boolean DRONES_RUN_OUT_OF_CHARGE = false;
+	private static final boolean DRONE_CAPACITY_VARIES = true;
+	private static boolean DRONES_RUN_OUT_OF_CHARGE = true;
 	
-	public static final int MAX_PEOPLE = 100;
+	public static final int MAX_PEOPLE = 1000;
 	
-	public static final int MAX_LOCATIONS = 10;
+	public static final int MAX_LOCATIONS = 100;
 	
 	private static final long SIMULATION_SPEED = 100;
 	
@@ -950,6 +951,7 @@ public class Simulator {
 		Set<Drone> drones = new TreeSet<Drone>();
 		
 		//Add each companies drones here
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new DistanceAwarePromiscuousController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
