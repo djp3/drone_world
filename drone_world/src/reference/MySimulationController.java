@@ -22,6 +22,11 @@ public class MySimulationController implements SimulationController {
 	static private final boolean QUARANTINE_DRONES= false;
 	
 	
+	//Stop the simulation after this many clock ticks in case the drones aren't making
+	//any progress
+	static private final int SIMULATION_END_TIME= 20_000_000;
+	
+	
 	// A global source of randomness
 	public static final Random random;
 	static{
@@ -51,5 +56,11 @@ public class MySimulationController implements SimulationController {
 	public boolean shouldQuarantineDrones(){
 		return QUARANTINE_DRONES;
 	}
+	
+	@Override
+	public long getSimulationEndTime() {
+		return SIMULATION_END_TIME;
+	}
+	
 
 }

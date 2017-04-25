@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -12,12 +13,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
-import reference.DistanceAwarePromiscuousController;
-import reference.GreedyController;
-import reference.MyDroneController;
-import reference.MySimulationController;
-import reference.PromiscuousController;
-import reference.RandomDroneController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
@@ -25,7 +20,7 @@ import simulator.interfaces.SimulationController;
 import visualization.Visualizer;
 
 public class Simulator {
-	public static final int MAX_DRONES_PER_CONTROLLER = 5;
+	public static final int MAX_DRONES_PER_CONTROLLER = 10;
 	public static final int DRONE_MAX_CAPACITY = 10;
 	
 	private static final boolean DRONE_CAPACITY_VARIES = true;
@@ -623,6 +618,12 @@ public class Simulator {
 					}
 				}
 			}
+			
+			/* Put an end to our misery */
+			if(getClockTick() > getSimulationController().getSimulationEndTime()){
+				setSimulationEnded(true);
+				System.out.println("Out of time");
+			}
 		}
 		
 		//Tell the drones we are ending
@@ -969,7 +970,7 @@ public class Simulator {
 		//Start it up
 		visualization.launch();
 		
-		calculateWinners(people,drones);
+		calculateWinners(people,drones, simulator.getClockTick());
 		
 		//Shut it down
 		visualization.stop(true);
@@ -979,13 +980,17 @@ public class Simulator {
 
 
 
-	private static void calculateWinners(Set<Person> people,Set<Drone> drones) {
+	private static void calculateWinners(Set<Person> people,Set<Drone> drones, Long timeElapsed) {
 		//Aggregate scores
+		Set<Person> waiting = new HashSet<Person>();
 		HashMap<String, Pair<Integer,Long>> delivered = new HashMap<String,Pair<Integer,Long>>();
 		HashMap<String, Pair<Integer,Long>> dead = new HashMap<String,Pair<Integer,Long>>();
 		HashMap<String, Pair<Integer,Long>> quarantined = new HashMap<String,Pair<Integer,Long>>();
 		HashMap<String, Pair<Integer,Long>> total = new HashMap<String,Pair<Integer,Long>>();
 		for(Person p: people){
+			if(p.getState().equals(PersonState.WAITING)){
+				waiting.add(p);
+			}
 			if(p.getState().equals(PersonState.ARRIVED)){
 				delivered.merge(p.deliveryCompany,new Pair<Integer,Long>(1,p.getEndTransitTime()-p.getStartTransitTime()),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
 				total.merge(p.deliveryCompany,new Pair<Integer,Long>(1,p.getEndTransitTime()-p.getStartTransitTime()),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
@@ -1002,6 +1007,13 @@ public class Simulator {
 		
 		//Output all results
 		System.out.println("All Results:");
+		System.out.println("\t Time elapsed:"+timeElapsed);
+		if(waiting.size() == 0){
+			System.out.println("\tAll passengers delivered");
+		}
+		else{
+			System.out.println("\t"+waiting.size()+" passengers never picked up");
+		}
 		for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
 			int deliveredNum = 0;
 			if(delivered.size() > 0){
