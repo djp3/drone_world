@@ -18,6 +18,5 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/jme3-testdata-3.1.0-stable.jar"/>
-	<classpathentry kind="lib" path="lib/referenceControllers.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
