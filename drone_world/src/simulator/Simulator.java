@@ -13,6 +13,12 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
+import reference.DistanceAwarePromiscuousController;
+import reference.GreedyController;
+import reference.MyDroneController;
+import reference.MySimulationController;
+import reference.PromiscuousController;
+import reference.RandomDroneController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
