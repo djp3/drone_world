@@ -15,6 +15,7 @@ import java.util.TreeSet;
 
 import reference.MyDroneController;
 import reference.MySimulationController;
+import reference.RandomDroneController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
@@ -912,10 +913,10 @@ public class Simulator {
 		ArrayList<Place> randomizePlaces = new ArrayList<Place>();
 		randomizePlaces.addAll(places);
 		
-		String[] namesFirst = {"Matthew", "Bethany", "Christian" , "Parker", "Jonathan" , "David", "Samuel" , "Jared", "Ryan", "Kyle", "Kathryn", "Devon", "Xinyu", "Bryan" , "Mark", "James" };
+		String[] namesFirst = { "Jason", "Reilly", "Emma", "Kalie", "Hannah", "Rebecca", "Kevin", "Sophia", "David", "Tanner", "Mo", "Ryley", "Dante", "Sam", "Maya", "Dempsey", "Ben", "Heather", "M'kya", "Kaylee" };
 		List<String> randomizeFirst = Arrays.asList(namesFirst);
 		
-		String[] namesLast = { "Miller", "Le", "Alvo", "Leach", "Skidanov", "Spindler", "McCollum",	 "Wilkens",	 "Kleinberg",	 "Beall", "Hansen", "Mohrhoff",	 "Wear", "Coffman",	 "Yu", "Miner", "Carlson","Solum"};
+		String[] namesLast = { "Campbell", "Cole", "Donelson", "Drown", "Fisk", "Frink", "Gao", "Gigliotti", "Kyle", "Leslie", "Mahjoub", "Oroku", "Polesselli", "Reep", "Rouillard", "Salazar", "Thomas", "Totten", "Williams", "Yoon" };
 		List<String> randomizeLast = Arrays.asList(namesLast);
 		
 		Set<Person> ret = new TreeSet<Person>();
@@ -954,7 +955,7 @@ public class Simulator {
 		Set<Drone> drones = new TreeSet<Drone>();
 		
 		//Add each companies drones here
-		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones()))); //Student's Controller
 		
 		//Generate people
