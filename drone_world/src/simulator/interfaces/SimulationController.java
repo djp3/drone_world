@@ -33,4 +33,13 @@ public interface SimulationController {
 	 */
 	public boolean shouldQuarantineDrones();
 
+
+
+	/**
+	 * 
+	 * @return The number of clock ticks at which the simulation should be ended regardless of
+	 * any outstanding deliveries
+	 */
+	long getSimulationEndTime();
+
 }
