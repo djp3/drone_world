@@ -12,7 +12,7 @@ public class DroneControllerSkeleton implements DroneController {
 
 	// This is set by the simulator when the simulation starts so that you can get access to the places, drones, people, etc.
 	// with simulator.getX
-	Simulator simulator = null;
+	private Simulator simulator = null;
 	
 	// Students probably don't want to change this
 	@Override

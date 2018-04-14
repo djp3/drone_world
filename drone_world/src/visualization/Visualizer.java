@@ -34,7 +34,6 @@ import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
-import com.jme3.math.Matrix3f;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -50,10 +49,10 @@ import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.SkyFactory;
 
-import reference.DistanceAwarePromiscuousController;
-import reference.GreedyController;
-import reference.PromiscuousController;
-import reference.RandomDroneController;
+import robodrones.DistanceAwarePromiscuousDroneController;
+import robodrones.GreedyDroneController;
+import robodrones.PromiscuousDroneController;
+import robodrones.RandomDroneController;
 import simulator.Drone;
 import simulator.Explosion;
 import simulator.Pair;
@@ -61,6 +60,7 @@ import simulator.Person;
 import simulator.Place;
 import simulator.Position;
 import simulator.Simulator;
+import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 
 /**
@@ -85,6 +85,9 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	private Map<Person,Spatial> people;
 	private Map<Place,Spatial> places;
 	private Map<Drone, Node> drones;
+	
+	private ChaseCamera chaseCam = null;
+	private Integer droneToChase = 0;
 
 	private boolean _doneWithInit = false;
 	private Object _doneWithInitLock = new Object();
@@ -152,6 +155,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	private Set<String> explodingDrones = new HashSet<String>();
 	private Set<String> smokingDrones = new HashSet<String>();
 	private Set<String> quarantinedDrones = new HashSet<String>();
+	private float countThing  = 0.0f;
 	
 	
 	/** Initialize the materials used in this scene. */
@@ -301,8 +305,10 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		initBase();
 		initDrone(this.simulator.isHighResolution());
 		initPerson();
+		initializeHUDMargins();
 		
-		consoleFont = assetManager.loadFont("Interface/Fonts/Console.fnt");
+		consoleFont = assetManager.loadFont("assets/Consolas.fnt");
+		//consoleFont = assetManager.loadFont("Interface/Fonts/Console.fnt");
 		guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
 
 
@@ -404,13 +410,13 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 				if(droneEntry.getKey().getCompanyName().equals(RandomDroneController.companyName)){
 					index = 0;
 					index = (index % (size-1)) +1; //Make the professor's drone be one with index greater than 0
-				} else if(droneEntry.getKey().getCompanyName().equals(GreedyController.companyName)){
+				} else if(droneEntry.getKey().getCompanyName().equals(GreedyDroneController.companyName)){
 					index = 1;
 					index = (index % (size-1)) +1; //Make the professor's drone be one with index greater than 0
-				} else if(droneEntry.getKey().getCompanyName().equals(PromiscuousController.companyName)){
+				} else if(droneEntry.getKey().getCompanyName().equals(PromiscuousDroneController.companyName)){
 					index = 2;
 					index = (index % (size-1)) +1; //Make the professor's drone be one with index greater than 0
-				} else if(droneEntry.getKey().getCompanyName().equals(DistanceAwarePromiscuousController.companyName)){
+				} else if(droneEntry.getKey().getCompanyName().equals(DistanceAwarePromiscuousDroneController.companyName)){
 					index = 3;
 					index = (index % (size-1)) +1; //Make the professor's drone be one with index greater than 0
 				}
@@ -459,13 +465,12 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		setDisplayFps(false);
 		
 		hudWaitingText = new BitmapText(consoleFont,false);
-		hudWaitingText.setSize(consoleFont.getCharSet().getRenderedSize()*2);
-		hudWaitingText.setColor(ColorRGBA.Black);
+		hudWaitingText.setSize(consoleFont.getCharSet().getRenderedSize());
+		hudWaitingText.setColor(ColorRGBA.White);
 		hudWaitingText.setText("Ninjas in waiting");
-		hudWaitingText.setLocalTranslation(10,10+hudWaitingText.getLineHeight(),0);
 		guiNode.attachChild(hudWaitingText);
 		
-		Box hudWaitingBox = new Box(5f,10f,10f);
+		Box hudWaitingBox = new Box(0.5f,0.5f,0.5f);
 		hudWaitingGeom = new Geometry("Waiting", hudWaitingBox);
 		Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create
 		mat.setColor("Color", new ColorRGBA(0.4f,0.76f,0.38f,0.8f));
@@ -481,28 +486,30 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		hudCompanyFlying = new TreeMap<String, Pair<BitmapText,Geometry>>();
 		hudCompanyDead = new TreeMap<String, Pair<BitmapText,Geometry>>();
 		for(String company:droneCompanies){
-			BitmapText hudCompanyDeliveryText = new BitmapText(consoleFont,false);
-			hudCompanyDeliveryText.setSize(consoleFont.getCharSet().getRenderedSize()*2);
-			hudCompanyDeliveryText.setColor(ColorRGBA.Black);
-			hudCompanyDeliveryText.setText("");
-			guiNode.attachChild(hudCompanyDeliveryText);
-			
-			Box hudCompanyDeliveryBox = new Box(5f, 10f, 10f);
+			/* Make a prototype box for the bar chart to show how many a company has delivered */
+			Box hudCompanyDeliveryBox = new Box(0.5f, 0.5f, 0.5f);
 			Geometry hudCompanyDeliveryGeom = new Geometry("Waiting", hudCompanyDeliveryBox);
 			mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create
-			mat.setColor("Color", new ColorRGBA(0.4f,1.0f,0.38f,0.2f));
+			mat.setColor("Color", new ColorRGBA(0.4f,1.0f,0.38f,0.5f));
 			hudCompanyDeliveryGeom.setMaterial(mat); // set the cube's material
 			guiNode.attachChild(hudCompanyDeliveryGeom);
+			
+			/* Make prototype text for the company's name */
+			BitmapText hudCompanyDeliveryText = new BitmapText(consoleFont,false);
+			hudCompanyDeliveryText.setSize(consoleFont.getCharSet().getRenderedSize());
+			hudCompanyDeliveryText.setColor(ColorRGBA.White);
+			hudCompanyDeliveryText.setText("");
+			guiNode.attachChild(hudCompanyDeliveryText);
 			
 			hudCompanyDelivery.put(company,new Pair<BitmapText,Geometry>(hudCompanyDeliveryText,hudCompanyDeliveryGeom));
 			
 			BitmapText hudCompanyFlyingText = new BitmapText(consoleFont,false);
-			hudCompanyFlyingText.setSize(consoleFont.getCharSet().getRenderedSize()*2);
-			hudCompanyFlyingText.setColor(ColorRGBA.Black);
+			hudCompanyFlyingText.setSize(consoleFont.getCharSet().getRenderedSize());
+			hudCompanyFlyingText.setColor(ColorRGBA.White);
 			hudCompanyFlyingText.setText("");
 			guiNode.attachChild(hudCompanyFlyingText);
 			
-			Box hudCompanyFlyingBox = new Box(5f, 10f, 10f);
+			Box hudCompanyFlyingBox = new Box(0.5f, 0.5f, 0.5f);
 			Geometry hudCompanyFlyingGeom = new Geometry("Waiting", hudCompanyFlyingBox);
 			mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create
 			mat.setColor("Color", new ColorRGBA(1.0f,0.4f,0.38f,0.2f));
@@ -512,15 +519,15 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			hudCompanyFlying.put(company,new Pair<BitmapText,Geometry>(hudCompanyFlyingText,hudCompanyFlyingGeom));
 			
 			BitmapText hudCompanyDeadText = new BitmapText(consoleFont,false);
-			hudCompanyDeadText.setSize(consoleFont.getCharSet().getRenderedSize()*2);
-			hudCompanyDeadText.setColor(ColorRGBA.Black);
+			hudCompanyDeadText.setSize(consoleFont.getCharSet().getRenderedSize());
+			hudCompanyDeadText.setColor(ColorRGBA.White);
 			hudCompanyDeadText.setText("");
 			guiNode.attachChild(hudCompanyDeadText);
 			
-			Box hudCompanyDeadBox = new Box(5f, 10f, 10f);
+			Box hudCompanyDeadBox = new Box(0.5f, 0.5f, 0.5f);
 			Geometry hudCompanyDeadGeom = new Geometry("Waiting", hudCompanyDeadBox);
 			mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create
-			mat.setColor("Color", new ColorRGBA(0.0f,0.0f,0.0f,0.2f));
+			mat.setColor("Color", new ColorRGBA(0.2f,0.2f,0.2f,0.2f));
 			hudCompanyDeadGeom.setMaterial(mat); // set the cube's material
 			guiNode.attachChild(hudCompanyDeadGeom);
 			
@@ -533,22 +540,75 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		flyCam.setEnabled(false);
 		
 		// Enable a chase cam for this target (typically the player).
-		ChaseCamera chaseCam = new ChaseCamera(cam, drones.values().iterator().next(), inputManager);
-		chaseCam.setSmoothMotion(true);
-		chaseCam.setMinDistance(2f);
-		chaseCam.setMaxDistance(10);
-		chaseCam.setZoomSensitivity(10);
-		chaseCam.setDefaultDistance(2f);
-		chaseCam.setMaxVerticalRotation(FastMath.PI);
-		chaseCam.setMinVerticalRotation(-1.0f*FastMath.PI);
+		ArrayList<Node> droneList = new ArrayList<Node>(drones.values());
+		int i = -1;
+		for(Entry<Drone, Node> d:drones.entrySet()){
+			i++;
+			if(d.getKey().getCompanyName().equals("Polaris")){
+				this.droneToChase = i;
+			}
+			
+			
+		}
+	    chaseCam = buildChaseCamera(droneList.get(this.droneToChase));
+		this.droneToChase ++;
 		
 		setDoneWithInit(true);
+	}
+
+	private ChaseCamera buildChaseCamera(Node drone) {
+		if (chaseCam == null) {
+			ChaseCamera chaseCam = new ChaseCamera(cam, drone, inputManager);
+			chaseCam.setSmoothMotion(true);
+			chaseCam.setMinDistance(2f);
+			chaseCam.setMaxDistance(10);
+			chaseCam.setZoomSensitivity(10);
+			chaseCam.setDefaultDistance(2f);
+			chaseCam.setMaxVerticalRotation(FastMath.PI);
+			chaseCam.setMinVerticalRotation(-1.0f * FastMath.PI);
+		} else {
+			chaseCam.setSpatial(drone);
+		}
+		return chaseCam;
+	}
+
+	/* |<-- hudLeftGutter --><-- hudCompanyWidth (name of company) --><-- hudCompanyBarGutter--><--hudWaitingBarWidth--><--hudRightGutter-->*/
+	Float hudLeftGutter = null; 
+	Float hudCompanyWidth = null;
+	Float hudCompanyBarGutter = null;
+	Float hudRightGutter = null;
+	Float hudWaitingBarWidth = null;
+	Float hudPersonBarWidth = null;
+	Float hudBottomGutter = null;
+	
+	private void initializeHUDMargins() {
+		if(hudBottomGutter == null){
+			hudBottomGutter = 10.0f;
+		}
+		if(hudLeftGutter == null){
+			hudLeftGutter = 10.0f;
+		}
+		if(hudCompanyWidth == null){ 
+			hudCompanyWidth= cam.getWidth()/4.0f; //Company name takes up 25%
+		}
+		if(hudCompanyBarGutter == null){
+			hudCompanyBarGutter= 10.0f;
+		}
+		if(hudRightGutter == null){
+			hudRightGutter = 10.0f;
+		}
+		if(hudWaitingBarWidth == null){
+			hudWaitingBarWidth = (cam.getWidth() - (hudLeftGutter + hudRightGutter));
+		}
+		if(hudPersonBarWidth == null){
+			hudPersonBarWidth = (0.0f+hudWaitingBarWidth)/(0.0f+people.size());
+		}
+		//System.out.println(""+ hudLeftGutter + " " +hudCompanyWidth + " " + hudCompanyBarGutter + " " + hudRightGutter +" "+ hudWaitingBarWidth +" "+ hudPersonBarWidth);
 	}
 
 	/* Use the main event loop to trigger repeating actions. */
 	@Override
 	public void simpleUpdate(float tpf) {
-		
 		int numNinjasWaiting = 0;
 		Map<String, Integer> droneDeliveries = new TreeMap<String,Integer>();
 		Map<String, Integer> droneFlying = new TreeMap<String,Integer>();
@@ -585,11 +645,12 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			case IN_DRONE: {
 				for (Entry<Drone, Node> droneEntry : drones.entrySet()) {
 					Drone drone = droneEntry.getKey();
-					for (Person p : drone.getPassengers()) {
-						if (personEntry.getKey().equals(p)) {
-							personEntry.getValue()
-									.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
+					synchronized(drone.getPassengers()){
+						for (Person p : drone.getPassengers()) {
+							if (personEntry.getKey().equals(p)) {
+								personEntry.getValue().setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
 											drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
+							}
 						}
 					}
 				}
@@ -637,30 +698,34 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			}
 		}
 		
-		hudWaitingGeom.setLocalScale(numNinjasWaiting, 1, 1);
-		hudWaitingGeom.setLocalTranslation(450+(numNinjasWaiting/2.0f*10.0f),10+hudWaitingText.getLineHeight()/2,0);
+		float waitingBarWidth = numNinjasWaiting*hudPersonBarWidth;
+		hudWaitingText.setLocalTranslation(hudLeftGutter,hudBottomGutter+hudWaitingText.getSize(),1);
+		hudWaitingGeom.setLocalScale(waitingBarWidth, hudWaitingText.getSize(), 1);
+		hudWaitingGeom.setLocalTranslation(hudLeftGutter+waitingBarWidth/2.0f,hudBottomGutter+hudWaitingText.getSize()/2.0f,0);
 		
-		int i = 0;
+		int i = -1;
 		for(Entry<String, Pair<BitmapText, Geometry>> p: hudCompanyDelivery.entrySet()){
 			i++;
 			Geometry hudCompanyDeliveryGeom = p.getValue().getValue();
 			BitmapText hudCompanyDeliveryText = p.getValue().getKey();
-			Integer count = droneDeliveries.get(p.getKey());
-			if(count == null){
-				count = 0;
+			Integer deliveredCount = droneDeliveries.get(p.getKey());
+			if(deliveredCount == null){
+				deliveredCount = 0;
 			}
 			
 			Long totalWait = droneTotalWaitingTime.get(p.getKey());
 			if(totalWait == null){
 				totalWait = 0L;
 			}
-			String formattedCompany = String.format("%-20s %09d",p.getKey().subSequence(0, Math.min(p.getKey().length(),20)),(count==0)?totalWait:totalWait/count);
-			hudCompanyDeliveryText.setText(formattedCompany);
-			hudCompanyDeliveryText.setLocalTranslation(10,10+(25.0f*i)+hudCompanyDeliveryText.getLineHeight(),0);
 			
-			hudCompanyDeliveryGeom.setLocalScale(count, 1, 1);
-			float deliveredWidth = (count/2.0f*10.0f);
-			hudCompanyDeliveryGeom.setLocalTranslation(450+deliveredWidth,10+(25*i)+hudCompanyDeliveryText.getLineHeight()/2.0f,0);
+			/* Write company name */
+			String formattedCompany = String.format("%-20s %09d",p.getKey().subSequence(0, Math.min(p.getKey().length(),20)),(deliveredCount==0)?totalWait:totalWait/deliveredCount);
+			hudCompanyDeliveryText.setText(formattedCompany);
+			hudCompanyDeliveryText.setLocalTranslation(hudLeftGutter,hudBottomGutter+hudWaitingText.getSize()+(hudCompanyDeliveryText.getSize()*(i+1)),1.0f);
+			
+			float deliveredWidth = (deliveredCount*hudPersonBarWidth);
+			hudCompanyDeliveryGeom.setLocalScale(deliveredWidth, hudCompanyDeliveryText.getSize(), 1);
+			hudCompanyDeliveryGeom.setLocalTranslation(hudLeftGutter+deliveredWidth/2.0f,hudBottomGutter+hudWaitingText.getSize()+(hudCompanyDeliveryText.getSize()*i)+hudCompanyDeliveryText.getSize()/2.0f,0);
 			
 			/* Now tack on the in flight bars */
 			Integer flyingCount = droneFlying.get(p.getKey()); 
@@ -671,9 +736,9 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			Geometry hudCompanyFlyingGeom = hudCompanyFlying.get(p.getKey()).getValue();
 			BitmapText hudCompanyFlyingText = hudCompanyFlying.get(p.getKey()).getKey();
 			
-			hudCompanyFlyingGeom.setLocalScale(flyingCount, 1, 1);
-			float flyingWidth = (flyingCount/2.0f*10.0f);
-			hudCompanyFlyingGeom.setLocalTranslation(450+2*deliveredWidth+flyingWidth,10+(25*i)+hudCompanyFlyingText.getLineHeight()/2.0f,0);
+			float flyingWidth = flyingCount * hudPersonBarWidth;
+			hudCompanyFlyingGeom.setLocalScale(flyingWidth, hudCompanyFlyingText.getSize(), 1);
+			hudCompanyFlyingGeom.setLocalTranslation(hudLeftGutter+deliveredWidth+flyingWidth/2.0f,hudBottomGutter+hudWaitingText.getSize()+(hudCompanyDeliveryText.getSize()*i)+hudCompanyDeliveryText.getSize()/2.0f,0);
 			
 			/* Now tack on the death bars */
 			Integer deathCount = droneDeaths.get(p.getKey()); 
@@ -684,10 +749,9 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			Geometry hudCompanyDeathGeom = hudCompanyDead.get(p.getKey()).getValue();
 			BitmapText hudCompanyDeathText = hudCompanyDead.get(p.getKey()).getKey();
 			
-			hudCompanyDeathGeom.setLocalScale(deathCount, 1, 1);
-			float deadWidth = deathCount/2.0f*10.0f;
-			hudCompanyDeathGeom.setLocalTranslation(450+2*deliveredWidth+2*flyingWidth+deadWidth,10+(25*i)+hudCompanyDeathText.getLineHeight()/2.0f,0);
-			
+			float deathWidth = deathCount*hudPersonBarWidth;
+			hudCompanyDeathGeom.setLocalScale(deathWidth, hudCompanyDeathText.getSize(), 1);
+			hudCompanyDeathGeom.setLocalTranslation(hudLeftGutter+deliveredWidth+flyingWidth+deathWidth/2.0f,hudBottomGutter+hudWaitingText.getSize() +(hudCompanyDeliveryText.getSize()*i)+hudCompanyDeliveryText.getSize()/2.0f,0);
 		}
 		
 		
@@ -944,6 +1008,9 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		inputManager.addListener(actionListener, "Idle2");
 		inputManager.addMapping("Idle3", new KeyTrigger(KeyInput.KEY_3));
 		inputManager.addListener(actionListener, "Idle3");
+		
+		inputManager.addMapping("Switch Camera Target", new KeyTrigger(KeyInput.KEY_C));
+		inputManager.addListener(actionListener, "Switch Camera Target");
 	}
 
 	private ActionListener actionListener = new ActionListener() {
@@ -958,6 +1025,33 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 				} else if (name.equals("Idle3")) {
 					channel.setAnim("Idle3", 0.05f);
 					channel.setLoopMode(LoopMode.DontLoop);
+				} else if (name.equals("Switch Camera Target")) {
+					//chaseCam
+					ArrayList<Entry<Drone,Node>> droneList = new ArrayList<Entry<Drone,Node>>(drones.entrySet());
+					boolean newCamera = false;
+					for(;droneToChase < droneList.size();droneToChase++){
+						if(
+								(droneList.get(droneToChase).getKey().getState() != DroneState.DEAD)&&
+								(droneList.get(droneToChase).getKey().getState() != DroneState.QUARANTINED) &&
+								(droneList.get(droneToChase).getKey().getState() != DroneState.DYING) &&
+								(droneList.get(droneToChase).getKey().getState() != DroneState.EXPLODING) &&
+								(droneList.get(droneToChase).getKey().getState() != DroneState.IGNORED)){
+							newCamera = true;
+							chaseCam = buildChaseCamera(droneList.get(droneToChase).getValue());
+						}
+					}
+					if (!newCamera) {
+						for (droneToChase = 0; droneToChase < droneList.size(); droneToChase++) {
+							if ((droneList.get(droneToChase).getKey().getState() != DroneState.DEAD)
+									&& (droneList.get(droneToChase).getKey().getState() != DroneState.QUARANTINED)
+									&& (droneList.get(droneToChase).getKey().getState() != DroneState.DYING)
+									&& (droneList.get(droneToChase).getKey().getState() != DroneState.EXPLODING)
+									&& (droneList.get(droneToChase).getKey().getState() != DroneState.IGNORED)) {
+								newCamera = true;
+								chaseCam = buildChaseCamera(droneList.get(droneToChase).getValue());
+							}
+						}
+					}
 				}
 			}
 		}
