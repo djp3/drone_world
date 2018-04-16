@@ -33,7 +33,7 @@ public class DroneControllerSkeleton implements DroneController {
 	/*********************************************/
 	/****	Things students can override *****/
 	static int droneCounter = 0;
-	static int incrementDroneCounter() {
+	protected static int incrementDroneCounter() {
 		droneCounter++;
 		return droneCounter;
 	}
