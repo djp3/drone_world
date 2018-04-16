@@ -11,14 +11,14 @@ public class MySimulationController implements SimulationController {
 	static private final boolean SAME_RANDOM_NUMBERS_EACH_TIME = true;
 	
 	//True if you want to render the drones (longer to start up when higher resolution)
-	static private final boolean HIGH_RESOLUTION = false;
+	static private final boolean HIGH_RESOLUTION = true;
 	
 	//Number of types of 3D models to load to represent drones  (up to 4, the more you pick the longer to start up)
-	static private final int DRONE_MODEL_COUNT = 1;
+	static private final int DRONE_MODEL_COUNT = 4;
 	
 	//1 for real-time
 	//100 (max) to run the simulator as fast as possible
-	static private final int SIMULATOR_SPEED = 100;
+	static private final int SIMULATOR_SPEED = 20;
 	
 	//While debugging it is helpful to not have the simulator quarantine your drones because
 	//if you pause your code to debug it, then that pause causes your drone to be quarantined
