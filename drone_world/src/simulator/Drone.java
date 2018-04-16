@@ -1,5 +1,6 @@
 package simulator;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -253,8 +254,10 @@ public class Drone implements Comparable<Drone>{
 	void quarantine(){
 		System.out.println("Drone quarantined. "+this.getCompanyName()+" "+this.getName());
 		setState(DroneState.QUARANTINED);
-		for(Person p:this.getPassengers()){
-			p.setState(PersonState.QUARANTINED);
+		synchronized(this.getPassengers()){
+			for(Person p:this.getPassengers()){
+				p.setState(PersonState.QUARANTINED);
+			}
 		}
 	}
 	
@@ -304,6 +307,7 @@ public class Drone implements Comparable<Drone>{
 		
 		this.capacity = capacity;
 		this.passengers = new TreeSet<Person>();
+		this.passengers = Collections.synchronizedSet(this.passengers);
 		
 	}
 	
@@ -367,8 +371,10 @@ public class Drone implements Comparable<Drone>{
 		}
 		else{
 			this.passengers = new HashSet<Person>();
-			for(Person p: drone.getPassengers()){
-				this.passengers.add(p);
+			synchronized(drone.getPassengers()){
+				for(Person p: drone.getPassengers()){
+					this.passengers.add(p);
+				}
 			}
 		}
 		
