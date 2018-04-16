@@ -13,11 +13,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
-import reference.GreedyController;
-import reference.MyDroneController;
-import reference.MySimulationController;
-import reference.PromiscuousController;
-import reference.RandomDroneController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
@@ -184,8 +179,10 @@ public class Simulator {
 									throw new RuntimeException("Why didn't the person get on board?");
 								}
 								person.setState(PersonState.IN_DRONE);
-								if(!drone.getPassengers().add(person)){
-									throw new RuntimeException("Why didn't the person get become a passenger?");
+								synchronized(drone.getPassengers()){
+									if(!drone.getPassengers().add(person)){
+										throw new RuntimeException("Why didn't the person get become a passenger?");
+									}
 								}
 							}
 							
@@ -197,53 +194,55 @@ public class Simulator {
 							}
 							
 							// If the drone is full then it takes off
-							if(drone.getPassengers().size() == drone.getCapacity()){
-								droneTakeOff(drone);
-							}
-							else if(drone.getPassengers().size() > drone.getCapacity()){
-								throw new IllegalArgumentException("Somehow we overloaded the drone"+drone);
-							}
-							else{
-								//Figure out who is still waiting to board this drone 
-								LinkedList<Person> waiting = new LinkedList<Person>();
-								for(Person person: drone.getStart().getWaitingToEmbark()){
-									if((drone.getManifest().contains(person.getDestination())) || (PEOPLE_ALWAYS_BOARD_DRONE)){
-										waiting.add(person);
-									}
-								}
-								//If no one is waiting then the drone takes off
-								if(waiting.size() == 0){
+							synchronized(drone.getPassengers()){
+								if(drone.getPassengers().size() == drone.getCapacity()){
 									droneTakeOff(drone);
 								}
+								else if(drone.getPassengers().size() > drone.getCapacity()){
+									throw new IllegalArgumentException("Somehow we overloaded the drone"+drone);
+								}
 								else{
-									// Figure out how many people to load
-									int nextEmbarkGroupSize = drone.getEmbarkingCapacity();
-									int remainingCapacity = drone.getCapacity() - drone.getPassengers().size();
-									if(remainingCapacity < nextEmbarkGroupSize){
-										nextEmbarkGroupSize = remainingCapacity;
+									//Figure out who is still waiting to board this drone 
+									LinkedList<Person> waiting = new LinkedList<Person>();
+									for(Person person: drone.getStart().getWaitingToEmbark()){
+										if((drone.getManifest().contains(person.getDestination())) || (PEOPLE_ALWAYS_BOARD_DRONE)){
+											waiting.add(person);
+										}
 									}
-									if(waiting.size() < nextEmbarkGroupSize){
-										nextEmbarkGroupSize = waiting.size();
-									}
-									if(nextEmbarkGroupSize == 0){
-										throw new IllegalArgumentException("We should have already accounted for all cases where this is 0");
+									//If no one is waiting then the drone takes off
+									if(waiting.size() == 0){
+										droneTakeOff(drone);
 									}
 									else{
-										drone.setEmbarkingStart(clockTick);
-										for(int i = 0; i < nextEmbarkGroupSize;i++){
-											Person loadMe = waiting.remove();
-											//Remove them from the place
-											if(!drone.getStart().getWaitingToEmbark().remove(loadMe)){
-												throw new RuntimeException("Why didn't the person embark?");
-											}
-											loadMe.setDeliveryCompany(drone.getCompanyName());
-											loadMe.setStartTransitTime(clockTick);
-											loadMe.setState(PersonState.EMBARKING);
-											drone.getEmbarkers().add(loadMe);
+										// Figure out how many people to load
+										int nextEmbarkGroupSize = drone.getEmbarkingCapacity();
+										int remainingCapacity = drone.getCapacity() - drone.getPassengers().size();
+										if(remainingCapacity < nextEmbarkGroupSize){
+										nextEmbarkGroupSize = remainingCapacity;
 										}
-										drone.getController().droneEmbarkingAGroupStart(cloneDrone);
-										if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
-											drone.quarantine();
+										if(waiting.size() < nextEmbarkGroupSize){
+											nextEmbarkGroupSize = waiting.size();
+										}
+										if(nextEmbarkGroupSize == 0){
+											throw new IllegalArgumentException("We should have already accounted for all cases where this is 0");
+										}
+										else{
+											drone.setEmbarkingStart(clockTick);
+											for(int i = 0; i < nextEmbarkGroupSize;i++){
+												Person loadMe = waiting.remove();
+												//Remove them from the place
+												if(!drone.getStart().getWaitingToEmbark().remove(loadMe)){
+													throw new RuntimeException("Why didn't the person embark?");
+												}
+												loadMe.setDeliveryCompany(drone.getCompanyName());
+												loadMe.setStartTransitTime(clockTick);
+												loadMe.setState(PersonState.EMBARKING);
+												drone.getEmbarkers().add(loadMe);
+											}
+											drone.getController().droneEmbarkingAGroupStart(cloneDrone);
+											if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
+												drone.quarantine();
+											}
 										}
 									}
 								}
@@ -278,8 +277,10 @@ public class Simulator {
 					case EXPLODING:{
 						setSimulationEnded(false);
 						
-						for(Person p: drone.getPassengers()){
-							p.setState(PersonState.DYING);
+						synchronized(drone.getPassengers()){
+							for(Person p: drone.getPassengers()){
+								p.setState(PersonState.DYING);
+							}
 						}
 						
 						long timeToGo = drone.getTransitEnd() - clockTick;
@@ -382,8 +383,10 @@ public class Simulator {
 							if(drone.getDisembarkers().size() != 0){
 								throw new IllegalStateException("Simulator Error:There shouldn't be anyone disembarking if we are in transit");
 							}
-							for(Person p: drone.getPassengers()){
-								p.setPosition(drone.getPosition());
+							synchronized(drone.getPassengers()){
+								for(Person p: drone.getPassengers()){
+									p.setPosition(drone.getPosition());
+								}
 							}
 						
 							/* Call back to controller */
@@ -428,9 +431,11 @@ public class Simulator {
 							}
 							//Find all the people who still want to disembark
 							LinkedList<Person> waiting = new LinkedList<Person>();
-							for(Person person:drone.getPassengers()){
-								if((person.getDestination().equals(drone.getDestination().getName())) || (PEOPLE_ALWAYS_DISEMBARK_DRONE)){
-									waiting.add(person);
+							synchronized(drone.getPassengers()){
+								for(Person person:drone.getPassengers()){
+									if((person.getDestination().equals(drone.getDestination().getName())) || (PEOPLE_ALWAYS_DISEMBARK_DRONE)){
+										waiting.add(person);
+									}
 								}
 							}
 							if(waiting.size() == 0){
@@ -448,8 +453,10 @@ public class Simulator {
 								else{
 									for(int i =0; i< nextDisembarkGroupSize; i++){
 										Person person = waiting.remove();
-										if(!drone.getPassengers().remove(person)){
-											throw new RuntimeException("Why didn't the person get removed?");
+										synchronized(drone.getPassengers()){
+											if(!drone.getPassengers().remove(person)){
+												throw new RuntimeException("Why didn't the person get removed?");
+											}
 										}
 										person.setState(PersonState.DISEMBARKING);
 										drone.getDisembarkers().add(person);
@@ -511,8 +518,10 @@ public class Simulator {
 					case IDLING:{
 						setSimulationEnded(false);
 						
-						for(Person p: drone.getPassengers()){
-							p.setState(PersonState.IN_DRONE);
+						synchronized(drone.getPassengers()){
+							for(Person p: drone.getPassengers()){
+								p.setState(PersonState.IN_DRONE);
+							}
 						}
 						
 						if(!drone.getStart().equals(drone.getDestination())){
@@ -528,8 +537,10 @@ public class Simulator {
 					break;
 					case DYING:{
 						setSimulationEnded(false);
-						for(Person p: drone.getPassengers()){
-							p.setState(PersonState.DEAD);
+						synchronized(drone.getPassengers()){
+							for(Person p: drone.getPassengers()){
+								p.setState(PersonState.DEAD);
+							}
 						}
 						drone.setState(DroneState.DEAD);
 					}
@@ -572,9 +583,11 @@ public class Simulator {
 			for(Drone d: drones){
 				if(!someWaiting){
 					if(d.getEmbarkers().size() == 0){
-						if(d.getPassengers().size() == 0){
-							if(d.getDisembarkers().size() == 0){
-								d.setState(DroneState.IGNORED);
+						synchronized(d.getPassengers()){
+							if(d.getPassengers().size() == 0){
+								if(d.getDisembarkers().size() == 0){
+									d.setState(DroneState.IGNORED);
+								}
 							}
 						}
 					}
@@ -729,6 +742,10 @@ public class Simulator {
 	
 	public boolean isHighResolution(){
 		return this.simulationController.isHighResolution();
+	}
+	
+	public int getNumberOfDroneModels(){
+		return this.simulationController.getNumberOfDroneModels();
 	}
 	
 	/**
@@ -895,9 +912,9 @@ public class Simulator {
 			Drone drone;
 			if(DRONE_CAPACITY_VARIES){
 				int capacity = MAX_DRONES_PER_CONTROLLER - i;
-				if(i > DRONE_MAX_CAPACITY){
-					i = i % (DRONE_MAX_CAPACITY-1);
-					i++;
+				if(capacity > DRONE_MAX_CAPACITY){
+					capacity = capacity % (DRONE_MAX_CAPACITY);
+					capacity++;
 				}
 				drone = new Drone(controller,thePlace,thePlace,capacity);
 			}
@@ -915,10 +932,10 @@ public class Simulator {
 		ArrayList<Place> randomizePlaces = new ArrayList<Place>();
 		randomizePlaces.addAll(places);
 		
-		String[] namesFirst = { "Jason", "Reilly", "Emma", "Kalie", "Hannah", "Rebecca", "Kevin", "Sophia", "David", "Tanner", "Mo", "Ryley", "Dante", "Sam", "Maya", "Dempsey", "Ben", "Heather", "M'kya", "Kaylee" };
+		String[] namesFirst = { "Sam", "Drew", "Jonah", "Isaiah", "Natelli", "Blake", "Jordan", "Winston", "Hannah", "Boaz", "Andrew", "Trevor", "Tristan", "Prof.", "Emily", "Maya", "Matt", "Chena", "Matthew", "Jason"};
 		List<String> randomizeFirst = Arrays.asList(namesFirst);
 		
-		String[] namesLast = { "Campbell", "Cole", "Donelson", "Drown", "Fisk", "Frink", "Gao", "Gigliotti", "Kyle", "Leslie", "Mahjoub", "Oroku", "Polesselli", "Reep", "Rouillard", "Salazar", "Thomas", "Totten", "Williams", "Yoon" };
+		String[] namesLast = { "Amundson", "Austin", "Casale", "Chiu", "Cripe", "Dayman", "Douthit", "Gee", "Gong", "Van Heukelem", "Kim", "Kirkby", "Lloyd", "Patterson", "Peterson", "Rouillard", "Smith", "Underhill", "Walton", "Watts"};
 		List<String> randomizeLast = Arrays.asList(namesLast);
 		
 		Set<Person> ret = new TreeSet<Person>();
@@ -957,10 +974,14 @@ public class Simulator {
 		Set<Drone> drones = new TreeSet<Drone>();
 		
 		//Add each companies drones here
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyController(),simController.shouldQuarantineDrones()))); //Professor's Controller
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousController(),simController.shouldQuarantineDrones()))); //Professor's Controller
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerPatterson(),simController.shouldQuarantineDrones())));
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones()))); //Student's Controller
+		
+		//Add reference drones here
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new DistanceAwarePromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		
 		//Generate people
 		Set<Person> people = loadPeople(simController.getRandom(),places);
