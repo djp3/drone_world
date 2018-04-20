@@ -4,42 +4,51 @@ import simulator.Drone;
 import simulator.Simulator;
 import simulator.interfaces.DroneController;
 
-/**
- * This is the class that students should work with to create there drone controller
- * 
+/** 
+ * This is a class that is a parent class for students' drone controllers.
+ * Students should override methods in here by changing MyDroneController.java
+ * @author djp3
+ *
  */
 public class DroneControllerSkeleton implements DroneController {
 
-	// This is set by the simulator when the simulation starts so that you can get access to the places, drones, people, etc.
-	// with simulator.getX
+	/*********************************************/
+	/****	Things students shouldn't override *****/
+	// This is set by the simulator when the simulation starts so that you can get access to the places, drones, people, etc. with
+	//	simulator.getPlaces(),
+	//	simulator.getDrones(),
+	//	simulator.getPeople() etc.
 	private Simulator simulator = null;
 	
-	// Students probably don't want to change this
 	@Override
 	public void setSimulator(Simulator simulator) {
 		this.simulator = simulator;
 	}
 	
-	// Students probably don't want to change this
 	protected Simulator getSimulator(){
 		return this.simulator;
+	}
+	/*********************************************/
+	
+	/*********************************************/
+	/****	Things students can override *****/
+	static int droneCounter = 0;
+	static int incrementDroneCounter() {
+		droneCounter++;
+		return droneCounter;
 	}
 	
 	@Override
 	public String getNextDroneName() {
-		if((System.currentTimeMillis()%2) == 0){
-			return "Hopper The Drone";
-		}
-		else{
-			return "Borg";
-		}
+		return "Skeleton Drone #"+incrementDroneCounter();
 	}
 
 	@Override
 	public String getCompanyName() {
-		return "Vanilla Company";
+		return "Skeleton Drone Controller";
 	}
 
+	/*** These are all the messages that the simulator will send to the controller when drones are in different situations ***/
 	@Override
 	public void droneSimulationStart(Drone drone) {
 		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Simulation Starting");
@@ -186,6 +195,5 @@ public class DroneControllerSkeleton implements DroneController {
 	public void droneHasDied(Drone drone) {
 		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Drone Died");
 	}
-
 
 }
