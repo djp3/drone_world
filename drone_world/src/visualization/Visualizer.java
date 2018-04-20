@@ -155,7 +155,6 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	private Set<String> explodingDrones = new HashSet<String>();
 	private Set<String> smokingDrones = new HashSet<String>();
 	private Set<String> quarantinedDrones = new HashSet<String>();
-	private float countThing  = 0.0f;
 	
 	/** Initialize the materials used in this scene. */
 	public void initMaterials() {

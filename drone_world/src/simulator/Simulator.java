@@ -13,8 +13,13 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
+import reference.MyDroneController;
 import reference.MySimulationController;
+import robodrones.Borg;
 import robodrones.DistanceAwarePromiscuousDroneController;
+import robodrones.GreedyDroneController;
+import robodrones.PromiscuousDroneController;
+import robodrones.RandomDroneController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
@@ -22,15 +27,15 @@ import simulator.interfaces.SimulationController;
 import visualization.Visualizer;
 
 public class Simulator {
-	public static final int MAX_DRONES_PER_CONTROLLER = 1;// 10
-	public static final int DRONE_MAX_CAPACITY = 1; //10
+	public static final int MAX_DRONES_PER_CONTROLLER = 10;
+	public static final int DRONE_MAX_CAPACITY = 10;
 	
-	private static final boolean DRONE_CAPACITY_VARIES = false; //true
-	private static boolean DRONES_RUN_OUT_OF_CHARGE = true; //true
+	private static final boolean DRONE_CAPACITY_VARIES = true;
+	private static boolean DRONES_RUN_OUT_OF_CHARGE = true; 
 	
-	public static final int MAX_PEOPLE = 10; //1000
+	public static final int MAX_PEOPLE = 1000;
 	
-	public static final int MAX_LOCATIONS = 10; //100
+	public static final int MAX_LOCATIONS = 100;
 	
 	private static final long SIMULATION_SPEED = 100;
 	
@@ -742,6 +747,10 @@ public class Simulator {
 		}
 	}
 	
+	public boolean dronesRunOutOfCharge() {
+		return DRONES_RUN_OUT_OF_CHARGE;
+	}
+	
 	public boolean isHighResolution(){
 		return this.simulationController.isHighResolution();
 	}
@@ -977,13 +986,14 @@ public class Simulator {
 		
 		//Add each companies drones here
 		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerPatterson(),simController.shouldQuarantineDrones())));
-		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones()))); //Student's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones()))); //Student's Controller
 		
 		//Add reference drones here
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new DistanceAwarePromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
-		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
-		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
-		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		
 		//Generate people
 		Set<Person> people = loadPeople(simController.getRandom(),places);

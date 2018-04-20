@@ -11,7 +11,7 @@ public class MySimulationController implements SimulationController {
 	static private final boolean SAME_RANDOM_NUMBERS_EACH_TIME = true;
 	
 	//True if you want to render the drones (longer to start up)
-	static private final boolean HIGH_RESOLUTION = false;
+	static private final boolean HIGH_RESOLUTION = true;
 	
 	//Number of types of 3D models to load to represent drones  (up to 4, the more you pick the longer to start up)
 	static private final int DRONE_MODEL_COUNT = 1;
