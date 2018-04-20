@@ -15,9 +15,6 @@ import java.util.TreeSet;
 
 import reference.MySimulationController;
 import robodrones.DistanceAwarePromiscuousDroneController;
-import robodrones.GreedyDroneController;
-import robodrones.PromiscuousDroneController;
-import robodrones.RandomDroneController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
@@ -749,6 +746,10 @@ public class Simulator {
 		return this.simulationController.isHighResolution();
 	}
 	
+	public int getNumberOfDroneModels(){
+		return this.simulationController.getNumberOfDroneModels();
+	}
+	
 	/**
 	 * Returns a copy of all the places in the simulation
 	 * @return
@@ -933,10 +934,10 @@ public class Simulator {
 		ArrayList<Place> randomizePlaces = new ArrayList<Place>();
 		randomizePlaces.addAll(places);
 		
-		String[] namesFirst = { "Jason", "Reilly", "Emma", "Kalie", "Hannah", "Rebecca", "Kevin", "Sophia", "David", "Tanner", "Mo", "Ryley", "Dante", "Sam", "Maya", "Dempsey", "Ben", "Heather", "M'kya", "Kaylee" };
+		String[] namesFirst = { "Sam", "Drew", "Jonah", "Isaiah", "Natelli", "Blake", "Jordan", "Winston", "Hannah", "Boaz", "Andrew", "Trevor", "Tristan", "Prof.", "Emily", "Maya", "Matt", "Chena", "Matthew", "Jason"};
 		List<String> randomizeFirst = Arrays.asList(namesFirst);
 		
-		String[] namesLast = { "Campbell", "Cole", "Donelson", "Drown", "Fisk", "Frink", "Gao", "Gigliotti", "Kyle", "Leslie", "Mahjoub", "Oroku", "Polesselli", "Reep", "Rouillard", "Salazar", "Thomas", "Totten", "Williams", "Yoon" };
+		String[] namesLast = { "Amundson", "Austin", "Casale", "Chiu", "Cripe", "Dayman", "Douthit", "Gee", "Gong", "Van Heukelem", "Kim", "Kirkby", "Lloyd", "Patterson", "Peterson", "Rouillard", "Smith", "Underhill", "Walton", "Watts"};
 		List<String> randomizeLast = Arrays.asList(namesLast);
 		
 		Set<Person> ret = new TreeSet<Person>();
