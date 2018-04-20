@@ -157,7 +157,6 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	private Set<String> quarantinedDrones = new HashSet<String>();
 	private float countThing  = 0.0f;
 	
-	
 	/** Initialize the materials used in this scene. */
 	public void initMaterials() {
 		ground_mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -187,9 +186,15 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		canonical_place.setShadowMode(ShadowMode.Cast);
 	}
 
-	private void initDrone(boolean isHighResolution) {
+	private void initDrone(boolean isHighResolution,int numberOfDroneTypes) {
 		boolean box = !isHighResolution;
 		canonical_drones = new ArrayList<Spatial>();
+		if(numberOfDroneTypes < 0) {
+			numberOfDroneTypes = 1;
+		}
+		else if(numberOfDroneTypes > 4) {
+			numberOfDroneTypes = 4;
+		}
 
 		if (box) {
 			List<ColorRGBA> colors = new ArrayList<ColorRGBA>();
@@ -212,47 +217,55 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 				canonical_drones.add(drone);
 			}
 		} else {
-			assetManager.registerLocator("assets/Quandtum_SAP-1/", FileLocator.class);
-			Spatial drone = assetManager.loadModel("Quandtum_SAP-1_v2_0.blend");
-			assetManager.unregisterLocator("assets/Quandtum_SAP-1/", FileLocator.class);
-			drone.scale(0.1f);
-			drone.setLocalTranslation(0f, 0f, 0f);
-			drone.setShadowMode(ShadowMode.Cast);
-			canonical_drones.add(drone);
+			Spatial drone;
+			Quaternion q1;
+			if(numberOfDroneTypes > 0) {
+				assetManager.registerLocator("assets/Quandtum_SAP-1/", FileLocator.class);
+				drone = assetManager.loadModel("Quandtum_SAP-1_v2_0.blend");
+				assetManager.unregisterLocator("assets/Quandtum_SAP-1/", FileLocator.class);
+				drone.scale(0.1f);
+				drone.setLocalTranslation(0f, 0f, 0f);
+				drone.setShadowMode(ShadowMode.Cast);
+				canonical_drones.add(drone);
+			}	
 			
-			System.out.println("This program uses a model from XhyldazhK at http://www.blendswap.com/blends/view/76328");
-			assetManager.registerLocator("assets/nauyaca/", FileLocator.class);
-			drone = assetManager.loadModel("spaceship01.blend");
-			assetManager.unregisterLocator("assets/nauyaca/", FileLocator.class);
-			drone.scale(0.02f);
-			drone.setLocalTranslation(0f, 0.33f, 0f);
-			Quaternion q1 = new Quaternion().fromAngleNormalAxis(FastMath.HALF_PI,Vector3f.UNIT_X);
-			drone.setLocalRotation(q1);
-			drone.setShadowMode(ShadowMode.Cast);
-			canonical_drones.add(drone);
+			if(numberOfDroneTypes > 1) {
+				System.out.println("This program uses a model from XhyldazhK at http://www.blendswap.com/blends/view/76328");
+				assetManager.registerLocator("assets/nauyaca/", FileLocator.class);
+				drone = assetManager.loadModel("spaceship01.blend");
+				assetManager.unregisterLocator("assets/nauyaca/", FileLocator.class);
+				drone.scale(0.02f);
+				drone.setLocalTranslation(0f, 0.33f, 0f);
+				q1 = new Quaternion().fromAngleNormalAxis(FastMath.HALF_PI,Vector3f.UNIT_X);
+				drone.setLocalRotation(q1);
+				drone.setShadowMode(ShadowMode.Cast);
+				canonical_drones.add(drone);
+			}
 			
-			assetManager.registerLocator("assets/simple", FileLocator.class);
-			drone = assetManager.loadModel("Spaceship_Request.blend");
-			assetManager.unregisterLocator("assets/simple", FileLocator.class);
-			drone.scale(0.04f);
-			drone.setLocalTranslation(0f, 0.2f, 0f);
-			q1 = new Quaternion().fromAngleNormalAxis(FastMath.PI,Vector3f.UNIT_Y);
-			drone.setLocalRotation(q1);
-			drone.setShadowMode(ShadowMode.Cast);
-			canonical_drones.add(drone);
+			if(numberOfDroneTypes > 2) {
+				assetManager.registerLocator("assets/simple", FileLocator.class);
+				drone = assetManager.loadModel("Spaceship_Request.blend");
+				assetManager.unregisterLocator("assets/simple", FileLocator.class);
+				drone.scale(0.04f);
+				drone.setLocalTranslation(0f, 0.2f, 0f);
+				q1 = new Quaternion().fromAngleNormalAxis(FastMath.PI,Vector3f.UNIT_Y);
+				drone.setLocalRotation(q1);
+				drone.setShadowMode(ShadowMode.Cast);
+				canonical_drones.add(drone);
+			}	
 			
-			System.out.println("This program uses a model from granthus at http://www.blendswap.com/blends/view/42451");
-						
-			assetManager.registerLocator("assets/42451_Orion_Rising", FileLocator.class);
-			drone = assetManager.loadModel("OrionRising01.blend");
-			assetManager.unregisterLocator("assets/42451_Orion_Rising", FileLocator.class);
-			drone.scale(0.04f);
-			drone.setLocalTranslation(0f, 0.2f, 0f);
-			q1 = new Quaternion().fromAngleNormalAxis(FastMath.PI,Vector3f.UNIT_Y);
-			drone.setLocalRotation(q1);
-			drone.setShadowMode(ShadowMode.Cast);
-			canonical_drones.add(drone);
-			
+			if(numberOfDroneTypes > 3) {
+				System.out.println("This program uses a model from granthus at http://www.blendswap.com/blends/view/42451");
+				assetManager.registerLocator("assets/42451_Orion_Rising", FileLocator.class);
+				drone = assetManager.loadModel("OrionRising01.blend");
+				assetManager.unregisterLocator("assets/42451_Orion_Rising", FileLocator.class);
+				drone.scale(0.04f);
+				drone.setLocalTranslation(0f, 0.2f, 0f);
+				q1 = new Quaternion().fromAngleNormalAxis(FastMath.PI,Vector3f.UNIT_Y);
+				drone.setLocalRotation(q1);
+				drone.setShadowMode(ShadowMode.Cast);
+				canonical_drones.add(drone);
+			}	
 		}
 	}
 
@@ -303,7 +316,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		initMaterials();
 		initGround();
 		initBase();
-		initDrone(this.simulator.isHighResolution());
+		initDrone(this.simulator.isHighResolution(),this.simulator.getNumberOfDroneModels());
 		initPerson();
 		initializeHUDMargins();
 		

@@ -13,6 +13,9 @@ public class MySimulationController implements SimulationController {
 	//True if you want to render the drones (longer to start up)
 	static private final boolean HIGH_RESOLUTION = false;
 	
+	//Number of types of 3D models to load to represent drones  (up to 4, the more you pick the longer to start up)
+	static private final int DRONE_MODEL_COUNT = 1;
+	
 	//1 for real-time
 	//100 (max) to run the simulator as fast as possible
 	static private final int SIMULATOR_SPEED = 100;
@@ -45,6 +48,11 @@ public class MySimulationController implements SimulationController {
 	@Override
 	public boolean isHighResolution() {
 		return HIGH_RESOLUTION;
+	}
+	
+	@Override
+	public int getNumberOfDroneModels() {
+		return DRONE_MODEL_COUNT;
 	}
 
 	@Override

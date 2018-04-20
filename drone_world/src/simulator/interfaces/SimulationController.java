@@ -18,6 +18,12 @@ public interface SimulationController {
 	boolean isHighResolution();
 	
 	
+	/**
+	 * return the number of 3D Models that you want to load to represent the drones in the visualization. Loading models takes time. 
+	 */
+	int getNumberOfDroneModels();
+	
+	
 	
 	/**
 	 * How fast do you want the simulator to run?
