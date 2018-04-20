@@ -15,6 +15,7 @@ import java.util.TreeSet;
 
 import reference.MyDroneController;
 import reference.MySimulationController;
+import robodrones.Borg;
 import robodrones.DistanceAwarePromiscuousDroneController;
 import robodrones.GreedyDroneController;
 import robodrones.PromiscuousDroneController;
@@ -988,6 +989,7 @@ public class Simulator {
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones()))); //Student's Controller
 		
 		//Add reference drones here
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new DistanceAwarePromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller

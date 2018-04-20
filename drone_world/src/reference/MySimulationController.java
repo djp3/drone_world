@@ -14,15 +14,16 @@ public class MySimulationController implements SimulationController {
 	static private final boolean HIGH_RESOLUTION = true;
 	
 	//Number of types of 3D models to load to represent drones  (up to 4, the more you pick the longer to start up)
-	static private final int DRONE_MODEL_COUNT = 4;
+	static private final int DRONE_MODEL_COUNT = 1;
 	
 	//1 for real-time
 	//100 (max) to run the simulator as fast as possible
-	static private final int SIMULATOR_SPEED = 20;
+	static private final int SIMULATOR_SPEED = 100;
 	
 	//While debugging it is helpful to not have the simulator quarantine your drones because
 	//if you pause your code to debug it, then that pause causes your drone to be quarantined
-	static private final boolean QUARANTINE_DRONES = false;
+	static private final boolean QUARANTINE_DRONES= true;
+	
 	
 	//Stop the simulation after this many clock ticks in case the drones aren't making
 	//any progress
