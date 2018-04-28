@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
