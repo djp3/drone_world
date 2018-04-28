@@ -27,15 +27,15 @@ import simulator.interfaces.SimulationController;
 import visualization.Visualizer;
 
 public class Simulator {
-	public static final int MAX_DRONES_PER_CONTROLLER = 5;
-	public static final int DRONE_MAX_CAPACITY = 1;
+	public static final int MAX_DRONES_PER_CONTROLLER = 10;
+	public static final int DRONE_MAX_CAPACITY = 10;
 	
-	private static final boolean DRONE_CAPACITY_VARIES = false;
-	private static boolean DRONES_RUN_OUT_OF_CHARGE = false;
+	private static final boolean DRONE_CAPACITY_VARIES = true;
+	private static boolean DRONES_RUN_OUT_OF_CHARGE = true; 
 	
-	public static final int MAX_PEOPLE = 100;
+	public static final int MAX_PEOPLE = 1000;
 	
-	public static final int MAX_LOCATIONS = 10;
+	public static final int MAX_LOCATIONS = 100;
 	
 	private static final long SIMULATION_SPEED = 100;
 	

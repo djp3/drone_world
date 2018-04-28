@@ -24,7 +24,6 @@ public class MySimulationController implements SimulationController {
 	//if you pause your code to debug it, then that pause causes your drone to be quarantined
 	static private final boolean QUARANTINE_DRONES= true;
 	
-	
 	//Stop the simulation after this many clock ticks in case the drones aren't making
 	//any progress
 	static private final int SIMULATION_END_TIME= 20_000_000;
