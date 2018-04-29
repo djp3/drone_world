@@ -211,7 +211,7 @@ public class DroneControllerSafetyWrapper implements DroneController {
 					if(manageBehavior){
 						behavedBadly(behaviorUnit);
 					
-					if(wrapped != null){
+						if(wrapped != null){
 							wrapped.droneBehavingBadly(drone);
 							if(this.getBehaviorManagement(behaviorUnit) <= FINAL_TIMEOUT){
 								if(drone != null){
