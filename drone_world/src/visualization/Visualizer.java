@@ -2,6 +2,7 @@ package visualization;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -715,8 +716,39 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		hudWaitingGeom.setLocalScale(waitingBarWidth, hudWaitingText.getSize(), 1);
 		hudWaitingGeom.setLocalTranslation(hudLeftGutter+waitingBarWidth/2.0f,hudBottomGutter+hudWaitingText.getSize()/2.0f,0);
 		
-		int i = -1;
+		//Sort the companies by the number of delivered ninjas, lowest to highest
+		List<Integer> winning = new ArrayList<Integer>(droneDeliveries.values());
+		Collections.sort(winning,Collections.reverseOrder());
+		List<Pair<String,Pair<BitmapText,Geometry>>> source = new ArrayList<Pair<String,Pair<BitmapText,Geometry>>>(); 
+		List<Pair<String,Pair<BitmapText,Geometry>>> sorted = new ArrayList<Pair<String,Pair<BitmapText,Geometry>>>(); 
 		for(Entry<String, Pair<BitmapText, Geometry>> p: hudCompanyDelivery.entrySet()){
+			source.add(new Pair<>(p.getKey(),p.getValue()));
+		}
+		
+		for(Integer w:winning){
+			int i;
+			for(i =0; i < source.size();i++) {
+				Integer deliveries = droneDeliveries.get( source.get(i).getKey() );
+				if(deliveries != null) {
+					if(deliveries.equals(w)) {
+						sorted.add(source.get(i));
+						break;
+					}
+				}
+			}
+			source.remove(i);
+		}
+		
+		// Add the companies with no deliveries 
+		for(int i =0; i < source.size();i++) {
+			Integer deliveries = droneDeliveries.get( source.get(i).getKey() );
+			if(deliveries == null) {
+				sorted.add(source.get(i));
+			}
+		}
+		
+		int i = -1;
+		for(Pair<String, Pair<BitmapText, Geometry>> p: sorted){
 			i++;
 			Geometry hudCompanyDeliveryGeom = p.getValue().getValue();
 			BitmapText hudCompanyDeliveryText = p.getValue().getKey();
@@ -731,7 +763,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			}
 			
 			/* Write company name */
-			String formattedCompany = String.format("%-20s %09d",p.getKey().subSequence(0, Math.min(p.getKey().length(),20)),(deliveredCount==0)?totalWait:totalWait/deliveredCount);
+			String formattedCompany = String.format("%-30s %09d",p.getKey().subSequence(0, Math.min(p.getKey().length(),30)),(deliveredCount==0)?totalWait:totalWait/deliveredCount);
 			hudCompanyDeliveryText.setText(formattedCompany);
 			hudCompanyDeliveryText.setLocalTranslation(hudLeftGutter,hudBottomGutter+hudWaitingText.getSize()+(hudCompanyDeliveryText.getSize()*(i+1)),1.0f);
 			

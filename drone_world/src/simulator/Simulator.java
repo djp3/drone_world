@@ -15,11 +15,6 @@ import java.util.TreeSet;
 
 import reference.MyDroneController;
 import reference.MySimulationController;
-import robodrones.Borg;
-import robodrones.DistanceAwarePromiscuousDroneController;
-import robodrones.GreedyDroneController;
-import robodrones.PromiscuousDroneController;
-import robodrones.RandomDroneController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
@@ -943,10 +938,12 @@ public class Simulator {
 		ArrayList<Place> randomizePlaces = new ArrayList<Place>();
 		randomizePlaces.addAll(places);
 		
-		String[] namesFirst = { "Sam", "Drew", "Jonah", "Isaiah", "Natelli", "Blake", "Jordan", "Winston", "Hannah", "Boaz", "Andrew", "Trevor", "Tristan", "Prof.", "Emily", "Maya", "Matt", "Chena", "Matthew", "Jason"};
+		String[] namesFirst = {"Ethan", "Talia", "Drake", "Payton", "Cameron", "Jonathan", "James", "Kristen", "Patrick", "Levi", "Laura", "Tate", "Kim", "Isaac", "Dylan", "Josiah", "Nathan"};
+
 		List<String> randomizeFirst = Arrays.asList(namesFirst);
 		
-		String[] namesLast = { "Amundson", "Austin", "Casale", "Chiu", "Cripe", "Dayman", "Douthit", "Gee", "Gong", "Van Heukelem", "Kim", "Kirkby", "Lloyd", "Patterson", "Peterson", "Rouillard", "Smith", "Underhill", "Walton", "Watts"};
+		String[] namesLast = {"Bell", "Bjelland", "Bogataj", "Dugas", "Franklin", "Lee", "Lopez", "Mohrhoff", "Morrow", "Nelson", "Joy", "Province", "Shifley", "Siebelink", "Sund", "Swanson", "Young"};
+		
 		List<String> randomizeLast = Arrays.asList(namesLast);
 		
 		Set<Person> ret = new TreeSet<Person>();
@@ -985,8 +982,7 @@ public class Simulator {
 		Set<Drone> drones = new TreeSet<Drone>();
 		
 		//Add each companies drones here
-		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerPatterson(),simController.shouldQuarantineDrones())));
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones()))); //Student's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones())));
 		
 		//Add reference drones here
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()))); //Professor's Controller
