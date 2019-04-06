@@ -15,6 +15,10 @@ import java.util.TreeSet;
 
 import reference.MyDroneController;
 import reference.MySimulationController;
+import robodrones.DistanceAwarePromiscuousDroneController;
+import robodrones.GreedyDroneController;
+import robodrones.PromiscuousDroneController;
+import robodrones.RandomDroneController;
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
 import simulator.interfaces.DroneController;
@@ -34,8 +38,8 @@ public class Simulator {
 	
 	private static final long SIMULATION_SPEED = 100;
 	
-	private static final boolean PEOPLE_ALWAYS_BOARD_DRONE = false;
-	private static final boolean PEOPLE_ALWAYS_DISEMBARK_DRONE = false;
+	private static final boolean PEOPLE_ALWAYS_BOARD_DRONE = false; /* Even if the drone is going somewhere person doesn't want to go */
+	private static final boolean PEOPLE_ALWAYS_DISEMBARK_DRONE = false; /*Even if person isn't at destination */
 	
 	private static final int TRANSIT_HEIGHT = 2;
 	
@@ -985,7 +989,6 @@ public class Simulator {
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones())));
 		
 		//Add reference drones here
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new DistanceAwarePromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
