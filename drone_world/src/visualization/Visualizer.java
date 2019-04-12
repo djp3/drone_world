@@ -748,7 +748,6 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		}
 		
 		int i = -1;
-		//for(Entry<String, Pair<BitmapText, Geometry>> p: hudCompanyDelivery.entrySet()){
 		for(Pair<String, Pair<BitmapText, Geometry>> p: sorted){
 			i++;
 			Geometry hudCompanyDeliveryGeom = p.getValue().getValue();

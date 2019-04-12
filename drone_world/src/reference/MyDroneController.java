@@ -1,5 +1,8 @@
 package reference;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.TreeSet;
 
 import simulator.Drone;
@@ -28,17 +31,27 @@ public class MyDroneController extends DroneControllerSkeleton {
 		// Notify the parent class of the current event
 		super.droneIdling(drone);
 		
-		Place whereIsTheDrone = drone.getDestination();
+		//Find out where the drone currently is (idling at it's last destination)
+		Place x = drone.getDestination();
 		
+		//Get all the possible places to go
 		TreeSet<Place> places = getSimulator().getPlaces();
-		places.remove(whereIsTheDrone);
+		places.remove(x);
 		
-		if(places.size() > 0) {	
-			// Tell the passengers where the drone is going
-			getSimulator().setDroneManifest(drone, places.first().getName());
-			// Send the drone to it's location
-			getSimulator().routeDrone(drone, places.first().getName());
-		}	
+		List<Place> listOfPlaces = new ArrayList<Place>();
+		listOfPlaces.addAll(places);
+			
+		Random r = getSimulator().getSimulationController().getRandom();
+		Integer nextRandom = r.nextInt(listOfPlaces.size());
+			
+		// Pick a random destination
+		Place placeToGoTo = listOfPlaces.get(nextRandom);
+			
+		// Tell the passengers where the drone is going
+		getSimulator().setDroneManifest(drone, placeToGoTo.getName());
+			
+		// Send the drone to it's location
+		getSimulator().routeDrone(drone, placeToGoTo.getName());
 	}
 
 }

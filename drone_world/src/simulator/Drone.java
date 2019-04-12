@@ -175,7 +175,7 @@ public class Drone implements Comparable<Drone>{
 		return disembarkingDuration;
 	}
 
-	int getDisembarkingCapacity() {
+	public int getDisembarkingCapacity() {
 		return disembarkingCapacity;
 	}
 

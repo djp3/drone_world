@@ -31,7 +31,7 @@ public class Simulator {
 	public static final int DRONE_MAX_CAPACITY = 10;
 	
 	private static final boolean DRONE_CAPACITY_VARIES = true;
-	private static boolean DRONES_RUN_OUT_OF_CHARGE = true; 
+	private static boolean DRONES_RUN_OUT_OF_CHARGE = true;
 	
 	public static final int MAX_PEOPLE = 1000;
 	
@@ -39,8 +39,8 @@ public class Simulator {
 	
 	private static final long SIMULATION_SPEED = 100;
 	
-	private static final boolean PEOPLE_ALWAYS_BOARD_DRONE = false;
-	private static final boolean PEOPLE_ALWAYS_DISEMBARK_DRONE = false;
+	private static final boolean PEOPLE_ALWAYS_BOARD_DRONE = false; /* Even if the drone is going somewhere person doesn't want to go */
+	private static final boolean PEOPLE_ALWAYS_DISEMBARK_DRONE = false; /*Even if person isn't at destination */
 	
 	private static final int TRANSIT_HEIGHT = 2;
 	
@@ -943,10 +943,12 @@ public class Simulator {
 		ArrayList<Place> randomizePlaces = new ArrayList<Place>();
 		randomizePlaces.addAll(places);
 		
-		String[] namesFirst = { "Sam", "Drew", "Jonah", "Isaiah", "Natelli", "Blake", "Jordan", "Winston", "Hannah", "Boaz", "Andrew", "Trevor", "Tristan", "Prof.", "Emily", "Maya", "Matt", "Chena", "Matthew", "Jason"};
+		String[] namesFirst = {"Ethan", "Talia", "Drake", "Payton", "Cameron", "Jonathan", "James", "Kristen", "Patrick", "Levi", "Laura", "Tate", "Kim", "Isaac", "Dylan", "Josiah", "Nathan"};
+
 		List<String> randomizeFirst = Arrays.asList(namesFirst);
 		
-		String[] namesLast = { "Amundson", "Austin", "Casale", "Chiu", "Cripe", "Dayman", "Douthit", "Gee", "Gong", "Van Heukelem", "Kim", "Kirkby", "Lloyd", "Patterson", "Peterson", "Rouillard", "Smith", "Underhill", "Walton", "Watts"};
+		String[] namesLast = {"Bell", "Bjelland", "Bogataj", "Dugas", "Franklin", "Lee", "Lopez", "Mohrhoff", "Morrow", "Nelson", "Joy", "Province", "Shifley", "Siebelink", "Sund", "Swanson", "Young"};
+		
 		List<String> randomizeLast = Arrays.asList(namesLast);
 		
 		Set<Person> ret = new TreeSet<Person>();
@@ -985,11 +987,10 @@ public class Simulator {
 		Set<Drone> drones = new TreeSet<Drone>();
 		
 		//Add each companies drones here
-		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerPatterson(),simController.shouldQuarantineDrones())));
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones()))); //Student's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones())));
 		
 		//Add reference drones here
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new DistanceAwarePromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller

@@ -189,7 +189,6 @@ public class DroneControllerSafetyWrapper implements DroneController {
 		if(f != null){
 			do{
 				try {
-					
 					if(manageBehavior){
 						result = f.get(getBehaviorManagement(behaviorUnit),TimeUnit.MILLISECONDS);
 						behavedWell(behaviorUnit);
@@ -198,6 +197,7 @@ public class DroneControllerSafetyWrapper implements DroneController {
 						result = f.get();
 					}
 				} catch (InterruptedException e) {
+					f.cancel(true);
 				} catch (ExecutionException | TimeoutException e) {
 					//This is a drone Controller that throws an exception 
 					f.cancel(true);
