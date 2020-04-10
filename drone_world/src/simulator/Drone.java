@@ -27,7 +27,7 @@ public class Drone implements Comparable<Drone>{
 	private Place destination;
 	
 	//The list of places that passengers are told the drone is going to - effects their boarding
-	private Set<String> manifest;
+	private Set<Place> manifest;
 	
 	private DroneState state;
 	
@@ -127,11 +127,11 @@ public class Drone implements Comparable<Drone>{
 		destination = place;
 	}
 
-	public Set<String> getManifest() {
+	public Set<Place> getManifest() {
 		return manifest;
 	}
 
-	void setManifest(Set<String> manifest) {
+	void setManifest(Set<Place> manifest) {
 		this.manifest = manifest;
 	}
 
@@ -154,9 +154,17 @@ public class Drone implements Comparable<Drone>{
 	public int getEmbarkingDuration() {
 		return embarkingDuration;
 	}
+	
+	public void setEmbarkingDuration(int duration) {
+		this.embarkingDuration = duration;
+	}
 
 	public int getEmbarkingCapacity() {
 		return embarkingCapacity;
+	}
+	
+	public void setEmbarkingCapacity(int capacity) {
+		this.embarkingCapacity = capacity;
 	}
 
 	public Set<Person> getEmbarkers(){
@@ -174,9 +182,17 @@ public class Drone implements Comparable<Drone>{
 	public int getDisembarkingDuration() {
 		return disembarkingDuration;
 	}
+	
+	void setDisembarkingDuration(int duration) {
+		this.disembarkingDuration = duration;
+	}
 
 	public int getDisembarkingCapacity() {
 		return disembarkingCapacity;
+	}
+	
+	void setDisembarkingCapacity(int capacity) {
+		this.disembarkingCapacity = capacity;
 	}
 
 	public Set<Person> getDisembarkers(){
@@ -186,9 +202,17 @@ public class Drone implements Comparable<Drone>{
 	public long getAscensionTime() {
 		return this.ascensionTime;
 	}
+	
+	void setAscensionTime(long time) {
+		this.ascensionTime = time;
+	}
 
 	public long getDescensionTime() {
 		return this.descensionTime;
+	}
+	
+	void setDescensionTime(long time) {
+		this.descensionTime = time;
 	}
 
 	public long getTransitStart() {
@@ -299,13 +323,15 @@ public class Drone implements Comparable<Drone>{
 		this.start = start;
 		this.position = start.getPosition();
 		this.destination = destination;
-		this.manifest = new TreeSet<String>();
+		this.manifest = new TreeSet<Place>();
+		
+		this.setState(DroneState.BEGIN);
 		
 		if(capacity < 1){
 			throw new IllegalArgumentException("Drones must be able to carry 1 or greater");
 		}
 		
-		this.capacity = capacity;
+		this.setCapacity(capacity);
 		this.passengers = new TreeSet<Person>();
 		this.passengers = Collections.synchronizedSet(this.passengers);
 		
@@ -324,13 +350,13 @@ public class Drone implements Comparable<Drone>{
 		this.setStart(new Place(drone.getStart()));
 		this.setPosition(new Position(drone.getPosition()));
 		this.setDestination(new Place(drone.getDestination()));
-		this.setManifest(new TreeSet<String>());
+		this.setManifest(new TreeSet<Place>());
 		this.getManifest().addAll(drone.getManifest());
 		this.setState(drone.getState());
 		
-		this.embarkingStart = drone.getEmbarkingStart();
-		this.embarkingDuration = drone.getEmbarkingDuration();
-		this.embarkingCapacity = drone.getEmbarkingCapacity();
+		this.setEmbarkingStart(drone.getEmbarkingStart());
+		this.setEmbarkingDuration(drone.getEmbarkingDuration());
+		this.setEmbarkingCapacity(drone.getEmbarkingCapacity());
 		if(drone.getEmbarkers() == null){
 			this.embarkers = null;
 		}
@@ -341,9 +367,9 @@ public class Drone implements Comparable<Drone>{
 			}
 		}
 		
-		this.disembarkingStart = drone.getDisembarkingStart();
-		this.disembarkingDuration = drone.getDisembarkingDuration();
-		this.disembarkingCapacity = drone.getDisembarkingCapacity();
+		this.setDisembarkingStart(drone.getDisembarkingStart());
+		this.setDisembarkingDuration(drone.getDisembarkingDuration());
+		this.setDisembarkingCapacity(drone.getDisembarkingCapacity());
 		if(drone.getDisembarkers() == null){
 			this.disembarkers = null;
 		}
@@ -354,11 +380,11 @@ public class Drone implements Comparable<Drone>{
 			}
 		}
 		
-		this.ascensionTime = drone.getAscensionTime();
-		this.descensionTime = drone.getDescensionTime();
+		this.setAscensionTime(drone.getAscensionTime());
+		this.setDescensionTime(drone.getDescensionTime());
 		
-		this.transitStart = drone.getTransitStart();
-		this.transitEnd = drone.getTransitEnd();
+		this.setTransitStart(drone.getTransitStart());
+		this.setTransitEnd(drone.getTransitEnd());
 		
 		this.setCharge(drone.getCharge());
 		this.setRechargeRate(drone.getRechargeRate());
@@ -383,6 +409,8 @@ public class Drone implements Comparable<Drone>{
 
 
 
+
+	
 
 	@Override
 	public int hashCode() {
@@ -425,125 +453,156 @@ public class Drone implements Comparable<Drone>{
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (!(obj instanceof Drone)) {
 			return false;
-		if (!(obj instanceof Drone))
-			return false;
+		}
 		Drone other = (Drone) obj;
-		if (ascensionTime != other.ascensionTime)
+		if (ascensionTime != other.ascensionTime) {
 			return false;
-		if (capacity != other.capacity)
+		}
+		if (capacity != other.capacity) {
 			return false;
-		if (Double.doubleToLongBits(charge) != Double.doubleToLongBits(other.charge))
+		}
+		if (Double.doubleToLongBits(charge) != Double.doubleToLongBits(other.charge)) {
 			return false;
+		}
 		if (companyName == null) {
-			if (other.companyName != null)
+			if (other.companyName != null) {
 				return false;
-		} else if (!companyName.equals(other.companyName))
+			}
+		} else if (!companyName.equals(other.companyName)) {
 			return false;
+		}
 		if (controller == null) {
-			if (other.controller != null)
+			if (other.controller != null) {
 				return false;
-		} else if (!controller.equals(other.controller))
+			}
+		} else if (!controller.equals(other.controller)) {
 			return false;
-		if (descensionTime != other.descensionTime)
+		}
+		if (descensionTime != other.descensionTime) {
 			return false;
+		}
 		if (destination == null) {
-			if (other.destination != null)
+			if (other.destination != null) {
 				return false;
-		} else if (!destination.equals(other.destination))
+			}
+		} else if (!destination.equals(other.destination)) {
 			return false;
-		if (Double.doubleToLongBits(dischargeRate) != Double.doubleToLongBits(other.dischargeRate))
+		}
+		if (Double.doubleToLongBits(dischargeRate) != Double.doubleToLongBits(other.dischargeRate)) {
 			return false;
+		}
 		if (disembarkers == null) {
-			if (other.disembarkers != null)
+			if (other.disembarkers != null) {
 				return false;
-		} else if (!disembarkers.equals(other.disembarkers))
+			}
+		} else if (!disembarkers.equals(other.disembarkers)) {
 			return false;
-		if (disembarkingCapacity != other.disembarkingCapacity)
+		}
+		if (disembarkingCapacity != other.disembarkingCapacity) {
 			return false;
-		if (disembarkingDuration != other.disembarkingDuration)
+		}
+		if (disembarkingDuration != other.disembarkingDuration) {
 			return false;
-		if (disembarkingStart != other.disembarkingStart)
+		}
+		if (disembarkingStart != other.disembarkingStart) {
 			return false;
+		}
 		if (embarkers == null) {
-			if (other.embarkers != null)
+			if (other.embarkers != null) {
 				return false;
-		} else if (!embarkers.equals(other.embarkers))
+			}
+		} else if (!embarkers.equals(other.embarkers)) {
 			return false;
-		if (embarkingCapacity != other.embarkingCapacity)
+		}
+		if (embarkingCapacity != other.embarkingCapacity) {
 			return false;
-		if (embarkingDuration != other.embarkingDuration)
+		}
+		if (embarkingDuration != other.embarkingDuration) {
 			return false;
-		if (embarkingStart != other.embarkingStart)
+		}
+		if (embarkingStart != other.embarkingStart) {
 			return false;
+		}
 		if (id == null) {
-			if (other.id != null)
+			if (other.id != null) {
 				return false;
-		} else if (!id.equals(other.id))
+			}
+		} else if (!id.equals(other.id)) {
 			return false;
+		}
 		if (manifest == null) {
-			if (other.manifest != null)
+			if (other.manifest != null) {
 				return false;
-		} else if (!manifest.equals(other.manifest))
+			}
+		} else if (!manifest.equals(other.manifest)) {
 			return false;
+		}
 		if (name == null) {
-			if (other.name != null)
+			if (other.name != null) {
 				return false;
-		} else if (!name.equals(other.name))
+			}
+		} else if (!name.equals(other.name)) {
 			return false;
+		}
 		if (passengers == null) {
-			if (other.passengers != null)
+			if (other.passengers != null) {
 				return false;
-		} else if (!passengers.equals(other.passengers))
+			}
+		} else if (!passengers.equals(other.passengers)) {
 			return false;
+		}
 		if (position == null) {
-			if (other.position != null)
+			if (other.position != null) {
 				return false;
-		} else if (!position.equals(other.position))
+			}
+		} else if (!position.equals(other.position)) {
 			return false;
-		if (Double.doubleToLongBits(rechargeRate) != Double.doubleToLongBits(other.rechargeRate))
+		}
+		if (Double.doubleToLongBits(rechargeRate) != Double.doubleToLongBits(other.rechargeRate)) {
 			return false;
-		if (Double.doubleToLongBits(speed) != Double.doubleToLongBits(other.speed))
+		}
+		if (Double.doubleToLongBits(speed) != Double.doubleToLongBits(other.speed)) {
 			return false;
+		}
 		if (start == null) {
-			if (other.start != null)
+			if (other.start != null) {
 				return false;
-		} else if (!start.equals(other.start))
+			}
+		} else if (!start.equals(other.start)) {
 			return false;
-		if (state != other.state)
+		}
+		if (state != other.state) {
 			return false;
-		if (transitEnd != other.transitEnd)
+		}
+		if (transitEnd != other.transitEnd) {
 			return false;
-		if (transitStart != other.transitStart)
+		}
+		if (transitStart != other.transitStart) {
 			return false;
+		}
 		return true;
 	}
 
 	@Override
 	public int compareTo(Drone other) {
+		
+		if(other == null) {
+			return 1;
+		}
 		if (this.equals(other)){
 			return 0;
 		}
-		
-		if (other == null){
+		if ((this.getId() == null) && (other.getId() != null)){
+			return -1;
+		}
+		if ((this.getId() != null) && (other.getId() == null)){
 			return 1;
 		}
-		
-		if (this.getId() == null) {
-			if (other.getId() != null){
-				return -1;
-			}
-			else{
-				return 0;
-			}
-		} 
-		else if(other.getId() == null){
-			return 1;
-		}
-		
 		return(this.getId().compareTo(other.getId()));
 	}
 

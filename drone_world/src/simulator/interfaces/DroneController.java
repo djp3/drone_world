@@ -97,7 +97,7 @@ public interface DroneController {
 	
 	void droneRechargingStart(Drone drone);
 	void droneRecharging(Drone drone,double percent);
-	void droneDoneRecharging(Drone drone);
+	void droneRechargingEnd(Drone drone);
 	
 	/**
 	 * A drone that is idling should have it's start and destination be the same which is also the 

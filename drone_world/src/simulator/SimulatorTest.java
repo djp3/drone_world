@@ -138,7 +138,7 @@ public class SimulatorTest {
 			int first = random.nextInt(randomizeFirst.size());
 			int last = random.nextInt(randomizeLast.size());
 			
-			Person person = new Person(""+i,randomizeFirst.get(first)+" "+randomizeLast.get(last),randomizePlaces.get(start).getName(),randomizePlaces.get(start).getPosition(),randomizePlaces.get(end).getName(),PersonState.WAITING);
+			Person person = new Person(""+i,randomizeFirst.get(first)+" "+randomizeLast.get(last),randomizePlaces.get(start),randomizePlaces.get(start).getPosition(),randomizePlaces.get(end),PersonState.WAITING);
 			randomizePlaces.get(start).getWaitingToEmbark().add(person);
 			ret.add(person);
 		}
@@ -193,17 +193,17 @@ public class SimulatorTest {
 				Simulator s = getSimulator();
 
 				// Set manifest to all places
-				Set<String> places = new TreeSet<String>();
+				Set<Place> places = new TreeSet<Place>();
 				for (Place p : s.getPlaces()) {
-					places.add(p.getName());
+					places.add(p);
 				}
 				s.setDroneManifest(drone, places);
 
 				// Figure out where this drone should go
-				ArrayList<String> placeList = new ArrayList<String>();
+				ArrayList<Place> placeList = new ArrayList<Place>();
 				placeList.addAll(places);
 				// Remove current place
-				placeList.remove(drone.getStart().getName());
+				placeList.remove(drone.getStart());
 
 				// Use name to pick the next place so drone's go different
 				// places

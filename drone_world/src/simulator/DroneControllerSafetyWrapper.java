@@ -369,8 +369,8 @@ public class DroneControllerSafetyWrapper implements DroneController {
 	}
 
 	@Override
-	public void droneDoneRecharging(Drone drone) {
-		safeControllerCall("droneDoneRecharging", drone, (Drone d) -> {this.getWrapped().droneDoneRecharging(d);});
+	public void droneRechargingEnd(Drone drone) {
+		safeControllerCall("droneRechargingEnd", drone, (Drone d) -> {this.getWrapped().droneRechargingEnd(d);});
 	}
 
 	@Override
