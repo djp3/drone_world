@@ -27,6 +27,7 @@ public class MyDroneController extends DroneControllerSkeleton {
 		return "Generic Co.";
 	}
 	
+	
 	@Override
 	//This is an example of what do to when the simulator tells your controller that a drone is idling
 	public void droneIdling(Drone drone) {
@@ -48,10 +49,10 @@ public class MyDroneController extends DroneControllerSkeleton {
 		
 		if(placeToGoTo != null) {
 			// Tell the passengers where the drone is going
-			getSimulator().setDroneManifest(drone, placeToGoTo.getName());
+			getSimulator().setDroneManifest(drone, placeToGoTo);
 			
 			// Send the drone to it's location
-			getSimulator().routeDrone(drone, placeToGoTo.getName());
+			getSimulator().routeDrone(drone, placeToGoTo);
 		}
 	}
 
