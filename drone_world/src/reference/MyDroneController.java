@@ -1,8 +1,5 @@
 package reference;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 import java.util.TreeSet;
 
 import simulator.Drone;
@@ -16,42 +13,47 @@ import simulator.Place;
 public class MyDroneController extends DroneControllerSkeleton {
 	
 	
+	private TreeSet<Place> places = null;
+
 	@Override
+	// See comment in parent class
 	public String getNextDroneName() {
 		return "Generic Drone #"+incrementDroneCounter();
 	}
 	
 	@Override
+	//See comment in parent class
 	public String getCompanyName() {
 		return "Generic Co.";
 	}
 	
+	
 	@Override
+	//This is an example of what do to when the simulator tells your controller that a drone is idling
 	public void droneIdling(Drone drone) {
 		// Notify the parent class of the current event
 		super.droneIdling(drone);
 		
+		//See if we already know of places
+		if((places == null) || (places.size() == 0)) {
+			//Get all the possible places to go
+			places = getSimulator().getPlaces();
+		}
+		
 		//Find out where the drone currently is (idling at it's last destination)
 		Place x = drone.getDestination();
-		
-		//Get all the possible places to go
-		TreeSet<Place> places = getSimulator().getPlaces();
 		places.remove(x);
 		
-		List<Place> listOfPlaces = new ArrayList<Place>();
-		listOfPlaces.addAll(places);
-			
-		Random r = getSimulator().getSimulationController().getRandom();
-		Integer nextRandom = r.nextInt(listOfPlaces.size());
-			
 		// Pick a random destination
-		Place placeToGoTo = listOfPlaces.get(nextRandom);
+		Place placeToGoTo = places.pollFirst();
+		
+		if(placeToGoTo != null) {
+			// Tell the passengers where the drone is going
+			getSimulator().setDroneManifest(drone, placeToGoTo);
 			
-		// Tell the passengers where the drone is going
-		getSimulator().setDroneManifest(drone, placeToGoTo.getName());
-			
-		// Send the drone to it's location
-		getSimulator().routeDrone(drone, placeToGoTo.getName());
+			// Send the drone to it's location
+			getSimulator().routeDrone(drone, placeToGoTo);
+		}
 	}
 
 }

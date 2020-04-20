@@ -166,12 +166,12 @@ public class Simulator {
 				switch (drone.getState()){
 					case BEGIN:{
 						setSimulationEnded(false);
-						drone.getController().droneEmbarkingStart(cloneDrone);
 						if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
 							drone.quarantine();
 						}
 						else{
 							drone.setState(DroneState.EMBARKING);
+							drone.getController().droneEmbarkingStart(cloneDrone);
 						}
 					}
 					break;
@@ -440,7 +440,7 @@ public class Simulator {
 							LinkedList<Person> waiting = new LinkedList<Person>();
 							synchronized(drone.getPassengers()){
 								for(Person person:drone.getPassengers()){
-									if((person.getDestination().equals(drone.getDestination().getName())) || (PEOPLE_ALWAYS_DISEMBARK_DRONE)){
+									if((person.getDestination().equals(drone.getDestination())) || (PEOPLE_ALWAYS_DISEMBARK_DRONE)){
 										waiting.add(person);
 									}
 								}
@@ -483,7 +483,7 @@ public class Simulator {
 						
 						//If the controller has told the drone to leave
 						if(!drone.getStart().equals(drone.getDestination())){
-							drone.getController().droneDoneRecharging(cloneDrone);
+							drone.getController().droneRechargingEnd(cloneDrone);
 							if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
 								drone.quarantine();
 							}
@@ -495,7 +495,7 @@ public class Simulator {
 							double chargeDelta = (SIMULATION_SPEED/1000.0) * drone.getRechargeRate() ;
 							if(drone.getCharge()+ chargeDelta > 1.0){
 								drone.setCharge(1.0);
-								drone.getController().droneDoneRecharging(cloneDrone);
+								drone.getController().droneRechargingEnd(cloneDrone);
 								if(cloneDrone.getState().equals(DroneState.QUARANTINED)){
 									drone.quarantine();
 								}
@@ -550,6 +550,7 @@ public class Simulator {
 							}
 						}
 						drone.setState(DroneState.DEAD);
+						drone.getController().droneHasDied(cloneDrone);
 					}
 					break;
 					case DEAD:{
@@ -943,11 +944,11 @@ public class Simulator {
 		ArrayList<Place> randomizePlaces = new ArrayList<Place>();
 		randomizePlaces.addAll(places);
 		
-		String[] namesFirst = {"Ethan", "Talia", "Drake", "Payton", "Cameron", "Jonathan", "James", "Kristen", "Patrick", "Levi", "Laura", "Tate", "Kim", "Isaac", "Dylan", "Josiah", "Nathan"};
+		String[] namesFirst = {"Elias", "Nick", "Jack", "Josh", "Andrew", "Graham", "Ben", "William", "Olivia", "Claire", "Bri", "Lydia", "Karly", "Marcus", "Landon", "Grace", "John", "Jr", "Mary", "Noah", "Michael", "Evan"};
 
 		List<String> randomizeFirst = Arrays.asList(namesFirst);
 		
-		String[] namesLast = {"Bell", "Bjelland", "Bogataj", "Dugas", "Franklin", "Lee", "Lopez", "Mohrhoff", "Morrow", "Nelson", "Joy", "Province", "Shifley", "Siebelink", "Sund", "Swanson", "Young"};
+		String[] namesLast = {"Allman", "Brown", "Chiplin", "Cross", "Day", "Eberhardt", "Forster", "Grout", "Huebner", "Inglehart", "Johnson", "Kim", "Kingsley", "Kurschat", "Moir", "Olson", "Panos", "Perez", "Shkouratoff", "Stevens", "Todd", "Tsuei"};
 		
 		List<String> randomizeLast = Arrays.asList(namesLast);
 		
@@ -968,7 +969,7 @@ public class Simulator {
 			int first = random.nextInt(randomizeFirst.size());
 			int last = random.nextInt(randomizeLast.size());
 			
-			Person person = new Person(""+i,randomizeFirst.get(first)+" "+randomizeLast.get(last),randomizePlaces.get(start).getName(),randomizePlaces.get(start).getPosition(),randomizePlaces.get(end).getName(),PersonState.WAITING);
+			Person person = new Person(""+i,randomizeFirst.get(first)+" "+randomizeLast.get(last),randomizePlaces.get(start),randomizePlaces.get(start).getPosition(),randomizePlaces.get(end),PersonState.WAITING);
 			randomizePlaces.get(start).getWaitingToEmbark().add(person);
 			ret.add(person);
 		}
@@ -989,8 +990,9 @@ public class Simulator {
 		//Add each companies drones here
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones())));
 		
+		
 		//Add reference drones here
-		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new DistanceAwarePromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
@@ -1189,11 +1191,11 @@ public class Simulator {
 	 * MyController derivative classes call this function to announce the places they intend to go.
 	 * Passengers that are going to these locations will board the drone.  Note this is different than where the drone is actually going.
 	 * @param drone
-	 * @param placeManifest, a set of place names that you want to tell the passengers you intend to go to in case you have to make a stop on the way
+	 * @param placeManifest, a set of places that you want to tell the passengers you intend to go to in case you have to make a stop on the way
 	 */
-	public void setDroneManifest(Drone drone, Set<String> placeManifest) {
+	public void setDroneManifest(Drone drone, Set<Place> placeManifest) {
 		boolean success = false;
-		Set<String> validatedManifest = new TreeSet<String>();
+		Set<Place> validatedManifest = new TreeSet<Place>();
 		
 		if(drone != null){
 			if((placeManifest == null) || (placeManifest.size() == 0)){
@@ -1202,8 +1204,8 @@ public class Simulator {
 			}
 			else{
 				for(Place p: places){
-					if(placeManifest.contains(p.getName())){
-						validatedManifest.add(p.getName());
+					if(placeManifest.contains(p)){
+						validatedManifest.add(p);
 					}
 				}
 				for(Drone d:drones){
@@ -1225,8 +1227,27 @@ public class Simulator {
 	 * @param placeManifest, where you tell the passengers you are going
 	 */
 	public void setDroneManifest(Drone drone, String placeManifest) {
-		TreeSet<String> helper = new TreeSet<String>();
-		helper.add(placeManifest);
+		TreeSet<Place> helper = new TreeSet<Place>();
+		for(Place p: places) {
+			if(p.getName().equals(placeManifest)) {
+				helper.add(p);
+			}
+		}
+		setDroneManifest(drone,helper);
+	}
+	
+	/**
+	 * This is just an overloaded version of the set manifest in case the concept of provided multiple destinations is too hard for people to get
+	 * @param drone
+	 * @param placeManifest, where you tell the passengers you are going
+	 */
+	public void setDroneManifest(Drone drone, Place placeManifest) {
+		TreeSet<Place> helper = new TreeSet<Place>();
+		for(Place p: places) {
+			if(p.equals(placeManifest)) {
+				helper.add(p);
+			}
+		}
 		setDroneManifest(drone,helper);
 	}
 

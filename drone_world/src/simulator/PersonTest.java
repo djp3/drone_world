@@ -23,7 +23,7 @@ public class PersonTest {
 	public static Person makeDummyPerson(){
 		Place capeTown = new Place("Cape Town",new Position(-33.9249,18.4241,0));
 		Place paris = new Place("Paris",new Position(48.8566,2.3522,0));
-		return new Person("01","Doug","Paris",paris.getPosition(),capeTown.getName(),PersonState.WAITING);
+		return new Person("01","Doug",paris,paris.getPosition(),capeTown,PersonState.WAITING);
 	}
 
 	@Before
@@ -39,11 +39,11 @@ public class PersonTest {
 	public void test() {
 		Place capeTown = new Place("Cape Town",new Position(-33.9249,18.4241,0.0));
 		Place paris = new Place("Paris",new Position(48.8566,2.3522,0.0));
-		Person doug = new Person("01","Doug",paris.getName(),paris.getPosition(),capeTown.getName(),PersonState.WAITING);
+		Person doug = new Person("01","Doug",paris,paris.getPosition(),capeTown,PersonState.WAITING);
 		assertTrue(doug.getName().equals("Doug"));
-		assertTrue(doug.getStart().equals(paris.getName()));
+		assertTrue(doug.getStart().equals(paris));
 		assertTrue(doug.getPosition().equals(paris.getPosition()));
-		assertTrue(doug.getDestination().equals(capeTown.getName()));
+		assertTrue(doug.getDestination().equals(capeTown));
 		
 		Person sarah = new Person(doug);
 		assertTrue(sarah != doug);
@@ -56,12 +56,12 @@ public class PersonTest {
 	public void testEquals() {
 		Place capeTown = new Place("Cape Town",new Position(-33.9249,18.4241,0.0));
 		Place paris = new Place("Paris",new Position(48.8566,2.3522,0.0));
-		Person doug = new Person("01","Doug",paris.getName(),paris.getPosition(),capeTown.getName(),PersonState.WAITING);
+		Person doug = new Person("01","Doug",paris,paris.getPosition(),capeTown,PersonState.WAITING);
 		assertTrue(doug.getId().equals("01"));
 		assertTrue(doug.getName().equals("Doug"));
-		assertTrue(doug.getStart().equals(paris.getName()));
+		assertTrue(doug.getStart().equals(paris));
 		assertTrue(doug.getPosition().equals(paris.getPosition()));
-		assertTrue(doug.getDestination().equals(capeTown.getName()));
+		assertTrue(doug.getDestination().equals(capeTown));
 		
 		/*
 		Person sarah = new Person(doug);

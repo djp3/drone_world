@@ -13,9 +13,9 @@ public class Person implements Comparable<Person>, Savable{
 	String id;
 	String name;
 	//Name of place where person is starting
-	String start;
-	//Name of place where person is going
-	String destination;
+	Place start;
+	//Place where person is going
+	Place destination;
 	//The current position of the Person that is used to render them
 	Position position;
 	PersonState state;
@@ -45,20 +45,20 @@ public class Person implements Comparable<Person>, Savable{
 	}
 	
 
-	public String getDestination() {
+	public Place getDestination() {
 		return destination;
 	}
 
-	void setDestination(String destination) {
+	void setDestination(Place destination) {
 		this.destination = destination;
 	}
 	
 	
-	public String getStart() {
+	public Place getStart() {
 		return start;
 	}
 
-	void setStart(String start) {
+	void setStart(Place start) {
 		this.start = start;
 	}
 	
@@ -106,7 +106,7 @@ public class Person implements Comparable<Person>, Savable{
 		this.deliveryCompany = deliveryCompany;
 	}
 
-	public Person(String id,String name, String start,Position currentLocation,String destination,PersonState state) {
+	public Person(String id,String name, Place start,Position currentLocation,Place destination,PersonState state) {
 		this.id = id;
 		this.name = name;
 		this.start = start ;
@@ -137,12 +137,12 @@ public class Person implements Comparable<Person>, Savable{
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((deliveryCompany == null) ? 0 : deliveryCompany.hashCode());
-		result = prime * result + ((destination == null) ? 0 : destination.hashCode());
+		result = prime * result + ((destination == null) ? 0 : destination.getName().hashCode()); //Hash the name of the destination to break the refernece loop
 		result = prime * result + ((endTransitTime == null) ? 0 : endTransitTime.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((position == null) ? 0 : position.hashCode());
-		result = prime * result + ((start == null) ? 0 : start.hashCode());
+		result = prime * result + ((start == null) ? 0 : start.getName().hashCode()); //Hash the name of the start to break the reference loop
 		result = prime * result + ((startTransitTime == null) ? 0 : startTransitTime.hashCode());
 		result = prime * result + ((state == null) ? 0 : state.hashCode());
 		return result;
@@ -165,7 +165,7 @@ public class Person implements Comparable<Person>, Savable{
 		if (destination == null) {
 			if (other.destination != null)
 				return false;
-		} else if (!destination.equals(other.destination))
+		} else if (!destination.getName().equals(other.destination.getName())) //Name to break the reference loop
 			return false;
 		if (endTransitTime == null) {
 			if (other.endTransitTime != null)
@@ -190,7 +190,7 @@ public class Person implements Comparable<Person>, Savable{
 		if (start == null) {
 			if (other.start != null)
 				return false;
-		} else if (!start.equals(other.start))
+		} else if (!start.getName().equals(other.start.getName())) //Name to break the reference loop
 			return false;
 		if (startTransitTime == null) {
 			if (other.startTransitTime != null)

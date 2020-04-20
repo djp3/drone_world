@@ -176,7 +176,7 @@ public class DroneControllerSkeleton implements DroneController {
 	}
 
 	@Override
-	public void droneDoneRecharging(Drone drone) {
+	public void droneRechargingEnd(Drone drone) {
 		System.out.println("*** Simulator told: Drone " + drone.getId() + ": Recharging End");
 
 	}
