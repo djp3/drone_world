@@ -9,6 +9,7 @@ public class MySimulationController implements SimulationController {
 	//Set this to true to get consistent behavior each run while debugging
 	//Set it to false to get different random numbers on each run
 	static private final boolean SAME_RANDOM_NUMBERS_EACH_TIME = true; //false
+	static private final int RANDOM_NUMBER_SEED = 25; //Only matters if above is true 
 	
 	//True if you want to render the drones (longer to start up when higher resolution)
 	static private final boolean HIGH_RESOLUTION = true;
@@ -34,7 +35,7 @@ public class MySimulationController implements SimulationController {
 	public static final Random random;
 	static{
 		if(SAME_RANDOM_NUMBERS_EACH_TIME){
-			random = new Random(10);
+			random = new Random(RANDOM_NUMBER_SEED);
 		}
 		else{
 			random = new Random();
