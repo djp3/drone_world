@@ -147,6 +147,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	//Head's up display items
 	private BitmapText hudWaitingText;
 	private Geometry hudWaitingGeom;
+	private Geometry hudTimeBarGeom;
 	private TreeMap<String, Pair<BitmapText, Geometry>> hudCompanyDelivery;
 	private TreeMap<String, Pair<BitmapText, Geometry>> hudCompanyFlying;
 	private TreeMap<String, Pair<BitmapText, Geometry>> hudCompanyDead;
@@ -492,6 +493,13 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		hudWaitingGeom.setMaterial(mat); // set the cube's material
 		guiNode.attachChild(hudWaitingGeom);
 		
+		Box hudTimeBarBox = new Box(0.5f,0.5f,0.5f);
+		hudTimeBarGeom = new Geometry("Time Bar", hudTimeBarBox);
+		mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create
+		mat.setColor("Color", new ColorRGBA(0.76f,0.76f,0.76f,0.8f));
+		hudTimeBarGeom.setMaterial(mat); // set the cube's material
+		guiNode.attachChild(hudTimeBarGeom);
+		
 		TreeSet<String> droneCompanies = new TreeSet<String>();
 		for(Drone d:drones.keySet()){
 			droneCompanies.add(d.getCompanyName());
@@ -622,6 +630,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	Float hudWaitingBarWidth = null;
 	Float hudPersonBarWidth = null;
 	Float hudBottomGutter = null;
+	Float hudTimeBarWidth = null;
 	
 	private void initializeHUDMargins() {
 		if(hudBottomGutter == null){
@@ -641,6 +650,9 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		}
 		if(hudWaitingBarWidth == null){
 			hudWaitingBarWidth = (cam.getWidth() - (hudLeftGutter + hudRightGutter));
+		}
+		if(hudTimeBarWidth == null){
+			hudTimeBarWidth = (cam.getWidth() - (hudLeftGutter + hudRightGutter));
 		}
 		if(hudPersonBarWidth == null){
 			hudPersonBarWidth = (0.0f+hudWaitingBarWidth)/(0.0f+people.size());
@@ -739,6 +751,12 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 				throw new IllegalArgumentException("Unhandled Drone State: " + personEntry.getKey().getState());
 			}
 		}
+		
+		long maxTime = simulator.getSimulationController().getSimulationEndTime();
+		float timeBarWidth = hudWaitingBarWidth *((maxTime-simulator.getClockTick())/(maxTime+0.0f));
+		float hudTimeBarHeight = 5.0f;
+		hudTimeBarGeom.setLocalScale(timeBarWidth, hudTimeBarHeight, 1);
+		hudTimeBarGeom.setLocalTranslation(hudLeftGutter+timeBarWidth/2.0f,hudTimeBarHeight/2.0f,0);
 		
 		float waitingBarWidth = numNinjasWaiting*hudPersonBarWidth;
 		hudWaitingText.setLocalTranslation(hudLeftGutter,hudBottomGutter+hudWaitingText.getSize(),1);
