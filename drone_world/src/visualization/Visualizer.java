@@ -962,7 +962,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			case IN_TRANSIT: {
 				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
 						drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
-				baseNode.rotate(0,0.5f*tpf,0);
+				baseNode.rotate(0,tpf,0);
 				particlesNode.detachAllChildren();
 			}
 			break;
