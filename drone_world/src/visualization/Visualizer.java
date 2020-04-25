@@ -382,6 +382,8 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			} else {
 				channel.setAnim("Idle3", 0.05f);
 			}
+			// Make it so the ninjas aren't all synchronized in their animations
+			channel.setTime(random.nextFloat()*channel.getAnimMaxTime());
 			channel.setSpeed(random.nextFloat()*0.5f+0.5f);
 
 			BitmapText frontName = new BitmapText(guiFont, false);
@@ -1019,26 +1021,48 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
 		Person p = control.getSpatial().getUserData("person");
 		if (p.getState().equals(PersonState.EMBARKING)) {
-			channel.setAnim("Jump", 0.05f);
-			channel.setLoopMode(LoopMode.DontLoop);
+			//Only animated once
+			if(!channel.getAnimationName().contains("Walk")) {
+				channel.setAnim("Walk", 0.05f);
+				channel.setLoopMode(LoopMode.DontLoop);
+			}	
 		}
 		else if (p.getState().equals(PersonState.DISEMBARKING)) {
-			channel.setAnim("Jump", 0.05f);
-			channel.setLoopMode(LoopMode.DontLoop);
+			//Only animated once
+			if(!channel.getAnimationName().contains("Walk")) {
+				channel.setAnim("Walk", 0.05f);
+				channel.setLoopMode(LoopMode.DontLoop);
+			}
 		}
 		else if (p.getState().equals(PersonState.ARRIVED)) {
-			channel.setAnim("Death1", 0.05f);
-			channel.setLoopMode(LoopMode.DontLoop);
+			if(!channel.getAnimationName().equals("Spin")) {
+				channel.setSpeed(0.1f);
+				channel.setAnim("Spin", 0.05f);
+			}
 		}
 		else if (p.getState().equals(PersonState.IN_DRONE)) {
-			channel.setAnim("Spin", 0.05f);
-			channel.setLoopMode(LoopMode.DontLoop);
+			channel.setAnim("Stealth", 0.05f);
+			//channel.setLoopMode(LoopMode.DontLoop);
 		}
 		else if (p.getState().equals(PersonState.DYING)) {
-			channel.setAnim("Death2", 0.05f);
-			channel.setLoopMode(LoopMode.DontLoop);
+			//Only animated dying once
+			if(!channel.getAnimationName().equals("Death2")) {
+				channel.setAnim("Death2", 0.05f);
+				channel.setLoopMode(LoopMode.DontLoop);
+			}
 		}
 		else if (p.getState().equals(PersonState.DEAD)) {
+			//Leave the ninja lying down
+			if(!channel.getAnimationName().equals("Death1")) {
+				channel.setAnim("Death1", 0.05f);
+				channel.setLoopMode(LoopMode.DontLoop);
+			}
+			else {
+				channel.setTime(channel.getAnimMaxTime());
+			}
+		}
+		else if (p.getState().equals(PersonState.QUARANTINED)) {
+			channel.setAnim("Jump", 0.05f);
 		} else {
 			if (animName.equals("Idle2")) {
 				channel.setAnim("Idle1", 0.05f);
@@ -1050,9 +1074,9 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 				channel.setAnim("Backflip", 0.05f);
 				channel.setLoopMode(LoopMode.DontLoop);
 			} else if (animName.equals("Backflip")) {
-				channel.setAnim("Spin", 0.05f);
+				channel.setAnim("Crouch", 0.05f);
 				channel.setLoopMode(LoopMode.DontLoop);
-			} else if (animName.equals("Spin")) {
+			} else if (animName.equals("Crouch")) {
 				channel.setAnim("Block", 0.05f);
 				channel.setLoopMode(LoopMode.DontLoop);
 			} else if (animName.equals("Block")) {
