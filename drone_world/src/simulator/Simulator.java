@@ -3,6 +3,7 @@ package simulator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -151,15 +152,9 @@ public class Simulator {
 			clockTick += SIMULATION_SPEED;
 			
 			//Shuffle drones so that different drones get random priority on each round
-			//Shuffling manually to make sure that we only use a managed random number generator for consistency
 			ArrayList<Drone> shuffledDrones = new ArrayList<Drone>();
 			shuffledDrones.addAll(drones);
-			for(int j = 0 ; j < shuffledDrones.size(); j++){
-				int swapIndex = simulationController.getRandom().nextInt(shuffledDrones.size());
-				Drone foo = shuffledDrones.get(j);
-				shuffledDrones.set(j,shuffledDrones.get(swapIndex));
-				shuffledDrones.set(swapIndex,foo);
-			}
+			Collections.shuffle(shuffledDrones,simulationController.getRandom());
 			
 			for(Drone drone:shuffledDrones){
 				Drone cloneDrone = new Drone(drone);
@@ -628,15 +623,9 @@ public class Simulator {
 			if(notBusyCount > 10){  
 				notBusyCount = 0;
 				//Shuffle drones so that different drones get random priority on each round
-				//Shuffling manually to make sure that we only use a managed random number generator for consistency
 				ArrayList<Drone> shuffledDrones2 = new ArrayList<Drone>();
 				shuffledDrones2.addAll(drones);
-				for(int j = 0 ; j < shuffledDrones2.size(); j++){
-					int swapIndex = simulationController.getRandom().nextInt(shuffledDrones2.size());
-					Drone foo = shuffledDrones2.get(j);
-					shuffledDrones2.set(j,shuffledDrones2.get(swapIndex));
-					shuffledDrones2.set(swapIndex,foo);
-				}
+				Collections.shuffle(shuffledDrones2,simulationController.getRandom());
 				for(Drone d: shuffledDrones2){
 					if(d.getState().equals(DroneState.IDLING)){
 						d.quarantine();
@@ -655,15 +644,9 @@ public class Simulator {
 		//Tell the drones we are ending
 		{
 			//Shuffle drones so that different drones get random priority on each round
-			//Shuffling manually to make sure that we only use a managed random number generator for consistency
 			ArrayList<Drone> shuffledDrones = new ArrayList<Drone>();
 			shuffledDrones.addAll(drones);
-			for(int j = 0 ; j < shuffledDrones.size(); j++){
-				int swapIndex = simulationController.getRandom().nextInt(shuffledDrones.size());
-				Drone foo = shuffledDrones.get(j);
-				shuffledDrones.set(j,shuffledDrones.get(swapIndex));
-				shuffledDrones.set(swapIndex,foo);
-			}
+			Collections.shuffle(shuffledDrones,simulationController.getRandom());
 			for(int j = 0 ; j < shuffledDrones.size(); j++){
 				Drone d = shuffledDrones.get(j);
 				Drone cloneDrone = new Drone(d);
@@ -906,7 +889,7 @@ public class Simulator {
 		return ret;
 	}
 
-	private static Set<Drone> loadDrones(Set<Place> places,DroneController controller) {
+	private static Set<Drone> loadDrones(Set<Place> places,DroneController controller,Random r) {
 		
 		if((places == null) || (places.size() == 0)){
 			throw new IllegalArgumentException("Places is badly formed");
@@ -928,10 +911,10 @@ public class Simulator {
 					capacity = capacity % (DRONE_MAX_CAPACITY);
 					capacity++;
 				}
-				drone = new Drone(controller,thePlace,thePlace,capacity);
+				drone = new Drone(controller,thePlace,thePlace,capacity,r);
 			}
 			else{
-				drone = new Drone(controller,thePlace,thePlace,DRONE_MAX_CAPACITY);
+				drone = new Drone(controller,thePlace,thePlace,DRONE_MAX_CAPACITY,r);
 			}
 			drone.setState(DroneState.IDLING);
 			ret.add(drone);
@@ -940,9 +923,10 @@ public class Simulator {
 		return (ret);
 	}
 
-	private static Set<Person> loadPeople(Random random,Set<Place> places) {
+	private static Set<Person> loadPeople(Set<Place> places,Random random) {
 		ArrayList<Place> randomizePlaces = new ArrayList<Place>();
 		randomizePlaces.addAll(places);
+		Collections.shuffle(randomizePlaces,random);
 		
 		String[] namesFirst = {"Elias", "Nick", "Jack", "Josh", "Andrew", "Graham", "Ben", "William", "Olivia", "Claire", "Bri", "Lydia", "Karly", "Marcus", "Landon", "Grace", "John", "Jr", "Mary", "Noah", "Michael", "Evan"};
 
@@ -954,13 +938,6 @@ public class Simulator {
 		
 		Set<Person> ret = new TreeSet<Person>();
 		for(int i = 0; i < MAX_PEOPLE ; i++){
-			//Shuffling manually to make sure that we only use my random number generator for consistency
-			for(int j = 0 ; j < randomizePlaces.size(); j++){
-				int swapIndex = random.nextInt(randomizePlaces.size());
-				Place foo = randomizePlaces.get(j);
-				randomizePlaces.set(j,randomizePlaces.get(swapIndex));
-				randomizePlaces.set(swapIndex,foo);
-			}
 			int start = random.nextInt(randomizePlaces.size());
 			int end = random.nextInt(randomizePlaces.size());
 			while((start == end) &&(randomizePlaces.size() > 1)){
@@ -987,19 +964,20 @@ public class Simulator {
 		//Generate the drones
 		Set<Drone> drones = new TreeSet<Drone>();
 		
-		//Add each companies drones here
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones())));
+		Random randomSource = simController.getRandom();
 		
+		//Add each companies drones here
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones()),randomSource));
 		
 		//Add reference drones here
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()))); //Professor's Controller
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new DistanceAwarePromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
-		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController(),simController.shouldQuarantineDrones()))); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()),randomSource)); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new DistanceAwarePromiscuousDroneController(),simController.shouldQuarantineDrones()),randomSource)); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyDroneController(),simController.shouldQuarantineDrones()),randomSource)); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousDroneController(),simController.shouldQuarantineDrones()),randomSource)); //Professor's Controller
+		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new RandomDroneController(),simController.shouldQuarantineDrones()),randomSource)); //Professor's Controller
 		
 		//Generate people
-		Set<Person> people = loadPeople(simController.getRandom(),places);
+		Set<Person> people = loadPeople(places,randomSource);
 		
 		//Build simulator
 		Simulator simulator = new Simulator(simController,people,places,drones);

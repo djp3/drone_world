@@ -2,9 +2,9 @@ package simulator;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
 
 import simulator.enums.DroneState;
 import simulator.enums.PersonState;
@@ -286,12 +286,12 @@ public class Drone implements Comparable<Drone>{
 	}
 	
 
-	public Drone(DroneController controller, Place start,Place destination,int capacity) {
+	public Drone(DroneController controller, Place start,Place destination,int capacity,Random r) {
 		
 		this.controller = controller;
 		
 		// Make up a unique id
-		this.id = UUID.randomUUID().toString();
+		this.id = "id_"+Math.abs(r.nextLong());
 		
 		//Ask controller for drone and company name
 		this.name = this.controller.getNextDroneName();
