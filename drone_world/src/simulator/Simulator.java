@@ -570,7 +570,7 @@ public class Simulator {
 			boolean allDone = true;
 			boolean someWaiting = false;
 			for(Person p: people){
-				if((!p.getState().equals(PersonState.ARRIVED))&&(!p.getState().equals(PersonState.DEAD)) && (!p.getState().equals(PersonState.QUARANTINED))){
+				if(allDone && (!p.getState().equals(PersonState.ARRIVED))&&(!p.getState().equals(PersonState.DEAD)) && (!p.getState().equals(PersonState.QUARANTINED))){
 					allDone = false;
 				}
 				if(!someWaiting && p.getState().equals(PersonState.WAITING)){
@@ -992,7 +992,6 @@ public class Simulator {
 		
 		//Shut it down
 		visualization.stop(true);
-		
 	}
 
 
@@ -1005,33 +1004,53 @@ public class Simulator {
 		HashMap<String, Pair<Integer,Long>> dead = new HashMap<String,Pair<Integer,Long>>();
 		HashMap<String, Pair<Integer,Long>> quarantined = new HashMap<String,Pair<Integer,Long>>();
 		HashMap<String, Pair<Integer,Long>> total = new HashMap<String,Pair<Integer,Long>>();
+		HashMap<String, Pair<Integer,Long>> onboard = new HashMap<String,Pair<Integer,Long>>();
+		HashMap<String, Pair<Integer,Long>> misc = new HashMap<String,Pair<Integer,Long>>();
 		for(Person p: people){
 			if(p.getState().equals(PersonState.WAITING)){
 				waiting.add(p);
 			}
-			if(p.getState().equals(PersonState.ARRIVED)){
+			else if(p.getState().equals(PersonState.ARRIVED)){
 				delivered.merge(p.deliveryCompany,new Pair<Integer,Long>(1,p.getEndTransitTime()-p.getStartTransitTime()),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+				//Score goes up by one for delivering a passenger
 				total.merge(p.deliveryCompany,new Pair<Integer,Long>(1,p.getEndTransitTime()-p.getStartTransitTime()),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
 			}
-			if(p.getState().equals(PersonState.QUARANTINED)){
-				quarantined.merge(p.deliveryCompany,new Pair<Integer,Long>(-1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+			else {
+				//Score goes down by one for anything else if the passenger was associated with you
 				total.merge(p.deliveryCompany,new Pair<Integer,Long>(-1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+				
+				if(p.getState().equals(PersonState.QUARANTINED)){
+					quarantined.merge(p.deliveryCompany,new Pair<Integer,Long>(1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+				}
+				else if((p.getState().equals(PersonState.DEAD)) || p.getState().equals(PersonState.DYING)){
+					dead.merge(p.deliveryCompany,new Pair<Integer,Long>(1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+				}
+				else if((p.getState().equals(PersonState.EMBARKING)) || p.getState().equals(PersonState.IN_DRONE) || (p.getState().equals(PersonState.EMBARKING)) || p.getState().equals(PersonState.DISEMBARKING)){
+					onboard.merge(p.deliveryCompany,new Pair<Integer,Long>(1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+				}
+				else {
+					misc.merge(p.deliveryCompany,new Pair<Integer,Long>(1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
+					//System.out.println("Unaddressed state: "+p.getState().toString());
+				}
 			}
-			if(p.getState().equals(PersonState.DEAD)){
-				dead.merge(p.deliveryCompany,new Pair<Integer,Long>(-1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
-				total.merge(p.deliveryCompany,new Pair<Integer,Long>(-1,0L),(v1,v2) ->{return (new Pair<Integer,Long>(v1.getKey()+v2.getKey(),v1.getValue()+v2.getValue()));});
-			}
+				
+		}
+		
+		for(Entry<String, Pair<Integer, Long>> e:misc.entrySet()) {
+			System.out.println(e.getKey()+" ("+e.getValue().getKey()+","+e.getValue().getValue()+")");
 		}
 		
 		//Output all results
 		System.out.println("All Results:");
 		System.out.println("\t Time elapsed:"+timeElapsed);
 		if(waiting.size() == 0){
-			System.out.println("\tAll passengers delivered");
+			System.out.println("\tAll passengers were picked up by a drone");
 		}
 		else{
-			System.out.println("\t"+waiting.size()+" passengers never picked up");
+			System.out.println("\t"+waiting.size()+" passengers were never picked up");
 		}
+		
+		//Report company performance 
 		for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
 			int deliveredNum = 0;
 			if(delivered.size() > 0){
@@ -1043,30 +1062,48 @@ public class Simulator {
 			int quarantinedNum = 0;
 			if(quarantined.size() > 0 ){
 				if(quarantined.get(p.getKey())!= null){
-					quarantinedNum += (-1*quarantined.get(p.getKey()).getKey());
+					quarantinedNum += quarantined.get(p.getKey()).getKey();
 				}
 			}
 			
 			int deadNum = 0;
 			if(dead.size() > 0 ){
 				if(dead.get(p.getKey())!= null){
-					deadNum += (-1*dead.get(p.getKey()).getKey());
+					deadNum += dead.get(p.getKey()).getKey();
 				}
 			}
 			
-			System.out.println("\t"+p.getKey()+" delivered "+deliveredNum+" passengers in a total time of "+p.getValue().getValue()+ ", killed "+deadNum+", quarantined "+quarantinedNum);
+			int onboardNum = 0;
+			if(onboard.size() > 0 ){
+				if(onboard.get(p.getKey())!= null){
+					onboardNum += onboard.get(p.getKey()).getKey();
+				}
+			}
+			
+			int miscNum = 0;
+			if(misc.size() > 0 ){
+				if(misc.get(p.getKey())!= null){
+					miscNum += misc.get(p.getKey()).getKey();
+				}
+			}
+			
+			System.out.println("\t"+p.getKey()+" delivered "+deliveredNum+" passengers in a total time of "+p.getValue().getValue()+ ", killed "+deadNum+", quarantined "+quarantinedNum+", still onboard "+onboardNum+", unaccounted for "+miscNum);
 		}
 		
 		System.out.println("\nOrdered Results:");
-		while(total.size() > 0){
 		
-			//Figure out the highest score
+		//Loop through finding the highest remaining in total
+		while(total.size() > 0){
+			//Figure out the highest and lowest scores
+			//Figure out who delivered the most
 			int max = Integer.MIN_VALUE;
 			for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
 				if(p.getValue().getKey() > max){
 					max = p.getValue().getKey();
 				}
 			}
+			
+			//Figure out the minimum time of the people who delivered the most 
 			long minTime = Long.MAX_VALUE;
 			for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
 				if(p.getValue().getKey() == max){
@@ -1076,14 +1113,13 @@ public class Simulator {
 				}
 			}
 			
-			//See who has the highest score
+			//See which companies have the highest score
 			Map<String,Long> winners = new HashMap<String,Long>();
 			for(Entry<String, Pair<Integer, Long>> p:total.entrySet()){
 				if((p.getValue().getKey() == max) && (minTime == p.getValue().getValue())){
 					winners.put(p.getKey(),p.getValue().getValue());
 				}
 			}
-			
 		
 			//Output everyone who is a winner
 			for(Entry<String, Long> p:winners.entrySet()){
@@ -1097,18 +1133,32 @@ public class Simulator {
 				int quarantinedNum = 0;
 				if(quarantined.size() > 0 ){
 					if(quarantined.get(p.getKey())!= null){
-						quarantinedNum += (-1*quarantined.get(p.getKey()).getKey());
+						quarantinedNum += quarantined.get(p.getKey()).getKey();
 					}
 				}
 				
 				int deadNum = 0;
 				if(dead.size() > 0 ){
 					if(dead.get(p.getKey())!= null){
-						deadNum = (-1*dead.get(p.getKey()).getKey());
+						deadNum = dead.get(p.getKey()).getKey();
 					}
 				}
 				
-				System.out.println("\t"+p.getKey()+" delivered "+deliveredNum+" passengers in a total time of "+minTime+ ", killed "+deadNum+", quarantined "+quarantinedNum);
+				int onboardNum = 0;
+				if(onboard.size() > 0 ){
+					if(onboard.get(p.getKey())!= null){
+						onboardNum += onboard.get(p.getKey()).getKey();
+					}
+				}
+				
+				int miscNum = 0;
+				if(misc.size() > 0 ){
+					if(misc.get(p.getKey())!= null){
+						miscNum += misc.get(p.getKey()).getKey();
+					}
+				}
+				
+				System.out.println("\t"+p.getKey()+" delivered "+deliveredNum+" passengers in a total time of "+minTime+ ", killed "+deadNum+", quarantined "+quarantinedNum+", still onboard "+onboardNum+", unaccounted for "+miscNum);
 			}
 			
 			for(Entry<String, Long> x: winners.entrySet()){
