@@ -91,6 +91,8 @@ public class SimulatorTest {
 
 	private static Set<Drone> loadTestDrones(SimulationTestParameters params, Set<Place> places,DroneController controller) {
 		
+		Random r = new Random(10L);
+		
 		if((places == null) || (places.size() == 0)){
 			throw new IllegalArgumentException("Places is badly formed");
 		}
@@ -103,7 +105,7 @@ public class SimulatorTest {
 		for(int i = 0; i < params.maxDronesPerController ; i++){
 			//Start all drones at the same spot
 			Place thePlace = places.iterator().next();
-			Drone drone = new Drone(controller,thePlace,thePlace,params.droneCapacity);
+			Drone drone = new Drone(controller,thePlace,thePlace,params.droneCapacity,r);
 			drone.setState(DroneState.IDLING);
 			ret.add(drone);
 		}

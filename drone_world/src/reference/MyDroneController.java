@@ -1,6 +1,9 @@
 package reference;
 
-import java.util.TreeSet;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 import simulator.Drone;
 import simulator.Place;
@@ -12,13 +15,25 @@ import simulator.Place;
  */
 public class MyDroneController extends DroneControllerSkeleton {
 	
+	/**
+	 * Use this random number generator to get consistent random numbers 
+	 * @return a random number generator that is seeded by the Simulator
+	 */
+	public Random getRandom() {
+		return getSimulator().getSimulationController().getRandom();
+	}
 	
-	private TreeSet<Place> places = null;
 
 	@Override
 	// See comment in parent class
 	public String getNextDroneName() {
-		return "Generic Drone #"+incrementDroneCounter();
+		int i = incrementDroneCounter();
+		if(i == 1 ) {
+			return "Polaris"; //The camera follows one of the drones that have "Polaris" in it's name
+		}
+		else {
+			return "Generic Drone #"+incrementDroneCounter();
+		}
 	}
 	
 	@Override
@@ -34,20 +49,19 @@ public class MyDroneController extends DroneControllerSkeleton {
 		// Notify the parent class of the current event
 		super.droneIdling(drone);
 		
-		//See if we already know of places
-		if((places == null) || (places.size() == 0)) {
-			//Get all the possible places to go
-			places = getSimulator().getPlaces();
-		}
+		//Get all the possible places to go
+		Set<Place> setOfPlaces = getSimulator().getPlaces();
 		
 		//Find out where the drone currently is (idling at it's last destination)
-		Place x = drone.getDestination();
-		places.remove(x);
+		Place currentPlace = drone.getDestination();
 		
-		// Pick a random destination
-		Place placeToGoTo = places.pollFirst();
+		//Remove the current place from the set of all Places
+		setOfPlaces.remove(currentPlace);
 		
-		if(placeToGoTo != null) {
+		// Pick one of the destinations
+		List<Place> listOfPlaces = new ArrayList<Place>(setOfPlaces);
+		if(listOfPlaces.size() > 0) {
+			Place placeToGoTo = listOfPlaces.get(0);
 			// Tell the passengers where the drone is going
 			getSimulator().setDroneManifest(drone, placeToGoTo);
 			
@@ -55,5 +69,4 @@ public class MyDroneController extends DroneControllerSkeleton {
 			getSimulator().routeDrone(drone, placeToGoTo);
 		}
 	}
-
 }

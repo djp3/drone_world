@@ -88,7 +88,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	private Map<Drone, Node> drones;
 	
 	private ChaseCamera chaseCam = null;
-	private Integer droneToChase = 0;
+	Node chaseCamTarget = null;
 
 	private boolean _doneWithInit = false;
 	private Object _doneWithInitLock = new Object();
@@ -147,6 +147,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	//Head's up display items
 	private BitmapText hudWaitingText;
 	private Geometry hudWaitingGeom;
+	private Geometry hudTimeBarGeom;
 	private TreeMap<String, Pair<BitmapText, Geometry>> hudCompanyDelivery;
 	private TreeMap<String, Pair<BitmapText, Geometry>> hudCompanyFlying;
 	private TreeMap<String, Pair<BitmapText, Geometry>> hudCompanyDead;
@@ -382,6 +383,8 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			} else {
 				channel.setAnim("Idle3", 0.05f);
 			}
+			// Make it so the ninjas aren't all synchronized in their animations
+			channel.setTime(random.nextFloat()*channel.getAnimMaxTime());
 			channel.setSpeed(random.nextFloat()*0.5f+0.5f);
 
 			BitmapText frontName = new BitmapText(guiFont, false);
@@ -490,6 +493,13 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		hudWaitingGeom.setMaterial(mat); // set the cube's material
 		guiNode.attachChild(hudWaitingGeom);
 		
+		Box hudTimeBarBox = new Box(0.5f,0.5f,0.5f);
+		hudTimeBarGeom = new Geometry("Time Bar", hudTimeBarBox);
+		mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md"); // create
+		mat.setColor("Color", new ColorRGBA(0.76f,0.76f,0.76f,0.8f));
+		hudTimeBarGeom.setMaterial(mat); // set the cube's material
+		guiNode.attachChild(hudTimeBarGeom);
+		
 		TreeSet<String> droneCompanies = new TreeSet<String>();
 		for(Drone d:drones.keySet()){
 			droneCompanies.add(d.getCompanyName());
@@ -552,37 +562,64 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		//flyCam.setMoveSpeed(5);
 		flyCam.setEnabled(false);
 		
-		// Enable a chase cam for this target (typically the player).
-		ArrayList<Node> droneList = new ArrayList<Node>(drones.values());
-		int i = -1;
-		for(Entry<Drone, Node> d:drones.entrySet()){
-			i++;
-			if(d.getKey().getCompanyName().equals("Polaris")){
-				this.droneToChase = i;
-			}
-			
-			
-		}
-	    chaseCam = buildChaseCamera(droneList.get(this.droneToChase));
-		this.droneToChase ++;
+	    reassignChaseCamera();
 		
 		setDoneWithInit(true);
 	}
 
-	private ChaseCamera buildChaseCamera(Node drone) {
+	/**
+	 * Randomly pick pick a drone to follow with preferences for those that are living and called polaris
+	 */
+	public void reassignChaseCamera() {
+		
+		//Find a good drone to follow 
+		Node droneNode = null;
+		//Start with all the drones
+		Set<Entry<Drone, Node>> entrySet = drones.entrySet();
+		//Shuffle them up
+		ArrayList<Entry<Drone, Node>> entryList = new ArrayList<Entry<Drone,Node>>(entrySet);
+		Collections.shuffle(entryList); //Intentionally seperate Rondomness from simulator so visualization does not affect results
+		//Prioritize them
+		for(Entry<Drone, Node> d:entryList){
+			if( (d.getKey().getState() != DroneState.IGNORED) &&
+				(d.getKey().getState() != DroneState.DEAD) &&
+				(d.getKey().getState() != DroneState.IDLING) &&
+				(d.getKey().getState() != DroneState.IGNORED) &&
+				(d.getKey().getState() != DroneState.QUARANTINED)) {
+				if( d.getKey().getName().toLowerCase().contains("polaris")){
+					droneNode = d.getValue(); //find an active node with polaris in the name
+				}
+				else if( droneNode == null) {
+					droneNode = d.getValue(); //fina a drone with polaris in the name at least
+				}
+			}
+			else if( droneNode == null) {
+				droneNode = d.getValue(); //find a drone of some kind
+			}
+		}
+		
+		//Set the chaseCam
 		if (chaseCam == null) {
-			ChaseCamera chaseCam = new ChaseCamera(cam, drone, inputManager);
+			chaseCamTarget=droneNode;
+			chaseCam = new ChaseCamera(cam, droneNode, inputManager);
+			chaseCam.setEnabled(true);
+			chaseCam.setTrailingEnabled(true);
+			chaseCam.setTrailingSensitivity(5.0f);
+			chaseCam.setDefaultHorizontalRotation(FastMath.PI);
+			
 			chaseCam.setSmoothMotion(true);
 			chaseCam.setMinDistance(2f);
-			chaseCam.setMaxDistance(10);
-			chaseCam.setZoomSensitivity(10);
+			chaseCam.setMaxDistance(5f); //10
+			chaseCam.setZoomSensitivity(10f);
 			chaseCam.setDefaultDistance(2f);
 			chaseCam.setMaxVerticalRotation(FastMath.PI);
 			chaseCam.setMinVerticalRotation(-1.0f * FastMath.PI);
-		} else {
-			chaseCam.setSpatial(drone);
 		}
-		return chaseCam;
+		else {
+			chaseCamTarget.removeControl(chaseCam);
+			chaseCamTarget= droneNode;
+			chaseCamTarget.addControl(chaseCam);
+		}
 	}
 
 	/* |<-- hudLeftGutter --><-- hudCompanyWidth (name of company) --><-- hudCompanyBarGutter--><--hudWaitingBarWidth--><--hudRightGutter-->*/
@@ -593,6 +630,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	Float hudWaitingBarWidth = null;
 	Float hudPersonBarWidth = null;
 	Float hudBottomGutter = null;
+	Float hudTimeBarWidth = null;
 	
 	private void initializeHUDMargins() {
 		if(hudBottomGutter == null){
@@ -612,6 +650,9 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		}
 		if(hudWaitingBarWidth == null){
 			hudWaitingBarWidth = (cam.getWidth() - (hudLeftGutter + hudRightGutter));
+		}
+		if(hudTimeBarWidth == null){
+			hudTimeBarWidth = (cam.getWidth() - (hudLeftGutter + hudRightGutter));
 		}
 		if(hudPersonBarWidth == null){
 			hudPersonBarWidth = (0.0f+hudWaitingBarWidth)/(0.0f+people.size());
@@ -710,6 +751,12 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 				throw new IllegalArgumentException("Unhandled Drone State: " + personEntry.getKey().getState());
 			}
 		}
+		
+		long maxTime = simulator.getSimulationController().getSimulationEndTime();
+		float timeBarWidth = hudWaitingBarWidth *((maxTime-simulator.getClockTick())/(maxTime+0.0f));
+		float hudTimeBarHeight = 5.0f;
+		hudTimeBarGeom.setLocalScale(timeBarWidth, hudTimeBarHeight, 1);
+		hudTimeBarGeom.setLocalTranslation(hudLeftGutter+timeBarWidth/2.0f,hudTimeBarHeight/2.0f,0);
 		
 		float waitingBarWidth = numNinjasWaiting*hudPersonBarWidth;
 		hudWaitingText.setLocalTranslation(hudLeftGutter,hudBottomGutter+hudWaitingText.getSize(),1);
@@ -933,7 +980,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			case IN_TRANSIT: {
 				baseNode.setLocalTranslation(latLong2Transform(drone.getPosition().getLatitude(),
 						drone.getPosition().getLongitude(), drone.getPosition().getHeight()));
-				baseNode.rotate(0,0.5f*tpf,0);
+				baseNode.rotate(0,tpf,0);
 				particlesNode.detachAllChildren();
 			}
 			break;
@@ -992,26 +1039,48 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
 		Person p = control.getSpatial().getUserData("person");
 		if (p.getState().equals(PersonState.EMBARKING)) {
-			channel.setAnim("Jump", 0.05f);
-			channel.setLoopMode(LoopMode.DontLoop);
+			//Only animated once
+			if(!channel.getAnimationName().contains("Walk")) {
+				channel.setAnim("Walk", 0.05f);
+				channel.setLoopMode(LoopMode.DontLoop);
+			}	
 		}
 		else if (p.getState().equals(PersonState.DISEMBARKING)) {
-			channel.setAnim("Jump", 0.05f);
-			channel.setLoopMode(LoopMode.DontLoop);
+			//Only animated once
+			if(!channel.getAnimationName().contains("Walk")) {
+				channel.setAnim("Walk", 0.05f);
+				channel.setLoopMode(LoopMode.DontLoop);
+			}
 		}
 		else if (p.getState().equals(PersonState.ARRIVED)) {
-			channel.setAnim("Death1", 0.05f);
-			channel.setLoopMode(LoopMode.DontLoop);
+			if(!channel.getAnimationName().equals("Spin")) {
+				channel.setSpeed(0.1f);
+				channel.setAnim("Spin", 0.05f);
+			}
 		}
 		else if (p.getState().equals(PersonState.IN_DRONE)) {
-			channel.setAnim("Spin", 0.05f);
-			channel.setLoopMode(LoopMode.DontLoop);
+			channel.setAnim("Stealth", 0.05f);
+			//channel.setLoopMode(LoopMode.DontLoop);
 		}
 		else if (p.getState().equals(PersonState.DYING)) {
-			channel.setAnim("Death2", 0.05f);
-			channel.setLoopMode(LoopMode.DontLoop);
+			//Only animated dying once
+			if(!channel.getAnimationName().equals("Death2")) {
+				channel.setAnim("Death2", 0.05f);
+				channel.setLoopMode(LoopMode.DontLoop);
+			}
 		}
 		else if (p.getState().equals(PersonState.DEAD)) {
+			//Leave the ninja lying down
+			if(!channel.getAnimationName().equals("Death1")) {
+				channel.setAnim("Death1", 0.05f);
+				channel.setLoopMode(LoopMode.DontLoop);
+			}
+			else {
+				channel.setTime(channel.getAnimMaxTime());
+			}
+		}
+		else if (p.getState().equals(PersonState.QUARANTINED)) {
+			channel.setAnim("Jump", 0.05f);
 		} else {
 			if (animName.equals("Idle2")) {
 				channel.setAnim("Idle1", 0.05f);
@@ -1023,9 +1092,9 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 				channel.setAnim("Backflip", 0.05f);
 				channel.setLoopMode(LoopMode.DontLoop);
 			} else if (animName.equals("Backflip")) {
-				channel.setAnim("Spin", 0.05f);
+				channel.setAnim("Crouch", 0.05f);
 				channel.setLoopMode(LoopMode.DontLoop);
-			} else if (animName.equals("Spin")) {
+			} else if (animName.equals("Crouch")) {
 				channel.setAnim("Block", 0.05f);
 				channel.setLoopMode(LoopMode.DontLoop);
 			} else if (animName.equals("Block")) {
@@ -1070,32 +1139,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 					channel.setAnim("Idle3", 0.05f);
 					channel.setLoopMode(LoopMode.DontLoop);
 				} else if (name.equals("Switch Camera Target")) {
-					//chaseCam
-					ArrayList<Entry<Drone,Node>> droneList = new ArrayList<Entry<Drone,Node>>(drones.entrySet());
-					boolean newCamera = false;
-					for(;droneToChase < droneList.size();droneToChase++){
-						if(
-								(droneList.get(droneToChase).getKey().getState() != DroneState.DEAD)&&
-								(droneList.get(droneToChase).getKey().getState() != DroneState.QUARANTINED) &&
-								(droneList.get(droneToChase).getKey().getState() != DroneState.DYING) &&
-								(droneList.get(droneToChase).getKey().getState() != DroneState.EXPLODING) &&
-								(droneList.get(droneToChase).getKey().getState() != DroneState.IGNORED)){
-							newCamera = true;
-							chaseCam = buildChaseCamera(droneList.get(droneToChase).getValue());
-						}
-					}
-					if (!newCamera) {
-						for (droneToChase = 0; droneToChase < droneList.size(); droneToChase++) {
-							if ((droneList.get(droneToChase).getKey().getState() != DroneState.DEAD)
-									&& (droneList.get(droneToChase).getKey().getState() != DroneState.QUARANTINED)
-									&& (droneList.get(droneToChase).getKey().getState() != DroneState.DYING)
-									&& (droneList.get(droneToChase).getKey().getState() != DroneState.EXPLODING)
-									&& (droneList.get(droneToChase).getKey().getState() != DroneState.IGNORED)) {
-								newCamera = true;
-								chaseCam = buildChaseCamera(droneList.get(droneToChase).getValue());
-							}
-						}
-					}
+					reassignChaseCamera();
 				}
 			}
 		}

@@ -51,7 +51,7 @@ public class DroneTest {
 		Place destination = new Place(name, position);
 		
 		try {
-			new Drone(new DroneControllerSkeleton(),start,destination,0);
+			new Drone(new DroneControllerSkeleton(),start,destination,0,r);
 			fail("Capacity checkshould throw an exception");
 		} catch(IllegalArgumentException e) {
 			//capacity must be >= 0
@@ -77,7 +77,7 @@ public class DroneTest {
 		Place destination = new Place(name, position);
 		
 		Drone d1 = null;
-		d1 = new Drone(new DroneControllerSkeleton(),start,destination,1);
+		d1 = new Drone(new DroneControllerSkeleton(),start,destination,1,r);
 		Person p = new Person("id", "name", start, position, destination, PersonState.IN_DRONE);
 		Set<Person> passengers = d1.getPassengers();
 		passengers.add(p);
@@ -454,7 +454,7 @@ public class DroneTest {
 		Place destination = new Place(name, position);
 		
 		Drone d1 = null;
-		d1 = new Drone(new DroneControllerSkeleton(),start,destination,1);
+		d1 = new Drone(new DroneControllerSkeleton(),start,destination,1,r);
 		
 		Drone d2 = null;
 		d2 = new Drone(d1);
