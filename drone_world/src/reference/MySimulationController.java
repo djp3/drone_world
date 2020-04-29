@@ -8,7 +8,7 @@ public class MySimulationController implements SimulationController {
 	
 	//Set this to true to get consistent behavior each run while debugging
 	//Set it to false to get different random numbers on each run
-	static private final boolean SAME_RANDOM_NUMBERS_EACH_TIME = true; //false
+	static private final boolean SAME_RANDOM_NUMBERS_EACH_TIME = false;
 	static private final int RANDOM_NUMBER_SEED = 25; //Only matters if above is true 
 	
 	//True if you want to render the drones (longer to start up when higher resolution)
@@ -19,7 +19,7 @@ public class MySimulationController implements SimulationController {
 	
 	//1 for real-time
 	//100 (max) to run the simulator as fast as possible
-	static private final int SIMULATOR_SPEED = 100;
+	static private final int SIMULATOR_SPEED = 20;
 	
 	//While debugging it is helpful to not have the simulator quarantine your drones because
 	//if you pause your code to debug it, then if that pause is longer than 10 seconds then it
