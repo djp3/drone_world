@@ -578,7 +578,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		Set<Entry<Drone, Node>> entrySet = drones.entrySet();
 		//Shuffle them up
 		ArrayList<Entry<Drone, Node>> entryList = new ArrayList<Entry<Drone,Node>>(entrySet);
-		Collections.shuffle(entryList);
+		Collections.shuffle(entryList); //Intentionally seperate Rondomness from simulator so visualization does not affect results
 		//Prioritize them
 		for(Entry<Drone, Node> d:entryList){
 			if( (d.getKey().getState() != DroneState.IGNORED) &&
