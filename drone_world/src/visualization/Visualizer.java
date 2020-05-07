@@ -614,6 +614,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			chaseCam.setDefaultDistance(2f);
 			chaseCam.setMaxVerticalRotation(FastMath.PI);
 			chaseCam.setMinVerticalRotation(-1.0f * FastMath.PI);
+			chaseCam.setTrailingRotationInertia(0.5f);
 		}
 		else {
 			chaseCamTarget.removeControl(chaseCam);
