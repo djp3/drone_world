@@ -17,8 +17,8 @@ public class MySimulationController implements SimulationController {
 	//Number of types of 3D models to load to represent drones  (up to 4, the more you pick the longer to start up)
 	static private final int DRONE_MODEL_COUNT = 4;
 	
-	//1 for real-time
-	//100 (max) to run the simulator as fast as possible
+	//1 for one second in game time is one second in real-time (slow)
+	//100 to run the simulator as fast as possible (fast)
 	static private final int SIMULATOR_SPEED = 20;
 	
 	//While debugging it is helpful to not have the simulator quarantine your drones because
