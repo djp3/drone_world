@@ -9,7 +9,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<natives.version>0.0.6</natives.version>
 		<jme3_g>org.jmonkeyengine</jme3_g>
-		<!-- <jme3_v>3.1.0-stable</jme3_v>-->
 		<jme3_v>3.2.3-stable</jme3_v>
 		<jme3_testdata_v>3.4.0-alpha7</jme3_testdata_v>
 	</properties>
@@ -24,10 +23,6 @@
 			</snapshots>
 		</repository>
 		<repository>
-			<!--
-			<id>jcenter</id>
-			<url>https://jcenter.bintray.com</url>
-			  -->
 			<id>google-maven-central</id>
 			<name>GCS Maven Central mirror</name>
 			<url>https://maven-central.storage-download.googleapis.com/maven2/</url>
@@ -81,6 +76,5 @@
 				</configuration>
 			</plugin>
 		</plugins>
-
 	</build>
 </project>

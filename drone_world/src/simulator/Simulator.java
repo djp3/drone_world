@@ -33,7 +33,7 @@ public class Simulator {
 	
 	public static final int MAX_LOCATIONS = 10;
 	
-	private static final long SIMULATION_SPEED = 100;
+	private static final long SIMULATION_SPEED = 20;
 	
 	private static final boolean PEOPLE_ALWAYS_BOARD_DRONE = false; /* Even if the drone is going somewhere person doesn't want to go */
 	private static final boolean PEOPLE_ALWAYS_DISEMBARK_DRONE = false; /*Even if person isn't at destination */
@@ -923,11 +923,11 @@ public class Simulator {
 		randomizePlaces.addAll(places);
 		Collections.shuffle(randomizePlaces,random);
 		
-		String[] namesFirst = {"Ethan", "Faith", "Toby", "Adeline", "Frank", "Luke", "Sam", "Thomas", "Morgan", "Matthew", "Benjamin", "Josh", "Trent", "Ben", "Didi", "Carson", "Taylor", "Ethan", "Ben", "Landon"};
+		String[] namesFirst = {"Curtis", "Garrett", "Andy", "Valentina", "Silas Ten", "Trevor", "Ian", "Bailey", "Donovan", "Nathan", "Blake", "Nolan", "Daniel", "Laurel", "Luke", "John", "Finnegan", "Michael", "Jackson", "Logan", "Adam", "Levi", "Jackson", "Benjamin"};
 
 		List<String> randomizeFirst = Arrays.asList(namesFirst);
 		
-		String[] namesLast = {"Amaral", "Arenchild", "Banez", "Birchem", "Brase", "Bulow", "Dokolas", "Ferguson", "Fitzgerald", "Furnberg", "Loke", "Mali", "Mattson", "Mokracek", "Montgomery", "Mugambage", "Ndacyayisenga", "Olson", "Palombi", "Vaughan"};
+		String[] namesLast = {"Barnhart", "Buchanan", "Chung", "Costarelli", "Elshof", "English", "Grahn", "Hall", "Howat", "Kirk", "LaBrie", "Lundgaard", "Patterson", "Payne", "Rozinskas", "Schmidt", "Snyder", "Stull", "Thomas", "Towne", "Vekony", "Wicks", "Wolf", "Work" };
 
 		List<String> randomizeLast = Arrays.asList(namesLast);
 		
