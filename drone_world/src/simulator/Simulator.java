@@ -923,34 +923,34 @@ public class Simulator {
 		return (ret);
 	}
 
-	private static Set<Person> loadPeople(Set<Place> places,Random random) {
+	private static Set<Person> loadPeople(Set<Place> places, Random random) {
 		ArrayList<Place> randomizePlaces = new ArrayList<Place>();
 		randomizePlaces.addAll(places);
-		Collections.shuffle(randomizePlaces,random);
-		
-		String[] namesFirst = {"Ethan", "Faith", "Toby", "Adeline", "Frank", "Luke", "Sam", "Thomas", "Morgan", "Matthew", "Benjamin", "Josh", "Trent", "Ben", "Didi", "Carson", "Taylor", "Ethan", "Ben", "Landon"};
+		Collections.shuffle(randomizePlaces, random);
+
+		String[] namesFirst = { "Curtis", "Garrett", "Andy", "Valentina", "Silas Ten", "Trevor", "Ian", "Bailey", "Donovan", "Nathan", "Blake", "Nolan", "Daniel", "Laurel", "Luke", "John", "Finnegan", "Michael", "Jackson", "Logan", "Adam", "Levi", "Jackson", "Benjamin" };
 
 		List<String> randomizeFirst = Arrays.asList(namesFirst);
-		
-		String[] namesLast = {"Amaral", "Arenchild", "Banez", "Birchem", "Brase", "Bulow", "Dokolas", "Ferguson", "Fitzgerald", "Furnberg", "Loke", "Mali", "Mattson", "Mokracek", "Montgomery", "Mugambage", "Ndacyayisenga", "Olson", "Palombi", "Vaughan"};
+
+		String[] namesLast = { "Barnhart", "Buchanan", "Chung", "Costarelli", "Elshof", "English", "Grahn", "Hall", "Howat", "Kirk", "LaBrie", "Lundgaard", "Patterson", "Payne", "Rozinskas", "Schmidt", "Snyder", "Stull", "Thomas", "Towne", "Vekony", "Wicks", "Wolf", "Work" };
 
 		List<String> randomizeLast = Arrays.asList(namesLast);
-		
+
 		Set<Person> ret = new TreeSet<Person>();
-		for(int i = 0; i < MAX_PEOPLE ; i++){
+		for (int i = 0; i < MAX_PEOPLE; i++) {
 			int start = random.nextInt(randomizePlaces.size());
 			int end = random.nextInt(randomizePlaces.size());
-			while((start == end) &&(randomizePlaces.size() > 1)){
+			while ((start == end) && (randomizePlaces.size() > 1)) {
 				end = random.nextInt(randomizePlaces.size());
 			}
 			int first = random.nextInt(randomizeFirst.size());
 			int last = random.nextInt(randomizeLast.size());
-			
-			Person person = new Person(""+i,randomizeFirst.get(first)+" "+randomizeLast.get(last),randomizePlaces.get(start),randomizePlaces.get(start).getPosition(),randomizePlaces.get(end),PersonState.WAITING);
+
+			Person person = new Person("" + i, randomizeFirst.get(first) + " " + randomizeLast.get(last), randomizePlaces.get(start), randomizePlaces.get(start).getPosition(), randomizePlaces.get(end), PersonState.WAITING);
 			randomizePlaces.get(start).getWaitingToEmbark().add(person);
 			ret.add(person);
 		}
-		
+
 		return ret;
 	}
 

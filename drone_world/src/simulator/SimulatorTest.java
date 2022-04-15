@@ -276,7 +276,7 @@ public class SimulatorTest {
 				pickupComplete = true;
 			}
 			else{
-				if((System.currentTimeMillis() - start)> 1000){
+				if((System.currentTimeMillis() - start) > 1000){
 					fail("Picking up passengers took too long");
 				}
 				else{
@@ -297,7 +297,7 @@ public class SimulatorTest {
 				ascensionStarted = true;
 			}
 			else{
-				if((System.currentTimeMillis() - start)> 1000){
+				if((System.currentTimeMillis() - start) > 5000){
 					fail("Getting all drones to ascend took too long");
 				}
 				else{
