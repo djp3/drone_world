@@ -158,7 +158,7 @@ public class SimulatorTest {
 		}
 
 		@Override
-		public long simulatorSpeed() {
+		public int getSimulatorSpeed() {
 			return 100;
 		}
 		

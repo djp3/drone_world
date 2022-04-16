@@ -57,7 +57,7 @@ public class MySimulationController implements SimulationController {
 	}
 
 	@Override
-	public long simulatorSpeed() {
+	public int getSimulatorSpeed() {
 		return SIMULATOR_SPEED;
 	}
 	

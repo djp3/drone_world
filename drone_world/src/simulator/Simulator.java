@@ -37,8 +37,6 @@ public class Simulator {
 	
 	public static final int MAX_LOCATIONS = 10;
 	
-	private static final long SIMULATION_SPEED = 100;
-	
 	private static final boolean PEOPLE_ALWAYS_BOARD_DRONE = false; /* Even if the drone is going somewhere person doesn't want to go */
 	private static final boolean PEOPLE_ALWAYS_DISEMBARK_DRONE = false; /*Even if person isn't at destination */
 	
@@ -94,8 +92,13 @@ public class Simulator {
 			}
 		}
 	}
-
-
+	
+	private int getSimulatorSpeed() {
+		int r = simulationController.getSimulatorSpeed();
+		r = Math.min(100,r);
+		r = Math.max(1, r);
+		return r;
+	}
 
 
 	public void start(){
@@ -103,19 +106,19 @@ public class Simulator {
 		setQuitting(false);
 		setSimulationEnded(false);
 		
-		clockTick = -SIMULATION_SPEED;
+		clockTick = -(getSimulatorSpeed());
 		long previousTime;
 		long currentTime = System.currentTimeMillis();
 		
 		//Set up the speed of the simulation
-		long factor = simulationController.simulatorSpeed();
+		int factor = getSimulatorSpeed();
 		if(factor <= 0){
 			factor = 1;
 		}
-		else if (factor > SIMULATION_SPEED){
-			factor = SIMULATION_SPEED;
+		else if (factor > getSimulatorSpeed()){
+			factor = getSimulatorSpeed();
 		}
-		long waitTime = SIMULATION_SPEED/factor;
+		long waitTime = getSimulatorSpeed()/factor;
 		
 		//Tell the drones we are starting
 		{
@@ -148,7 +151,7 @@ public class Simulator {
 				currentTime = System.currentTimeMillis();
 			}
 			
-			clockTick += SIMULATION_SPEED;
+			clockTick += getSimulatorSpeed();
 			
 			//Shuffle drones so that different drones get random priority on each round
 			ArrayList<Drone> shuffledDrones = new ArrayList<Drone>();
@@ -315,7 +318,7 @@ public class Simulator {
 						//double duration = clockTick - start;
 						
 						//Move the drone forward 
-						double metersPerTick = speed *(SIMULATION_SPEED /1000.0);
+						double metersPerTick = speed * (getSimulatorSpeed() /1000.0);
 						
 						//Deduct charge
 						double charge = drone.getCharge();
@@ -486,7 +489,7 @@ public class Simulator {
 							}
 						}
 						else{
-							double chargeDelta = (SIMULATION_SPEED/1000.0) * drone.getRechargeRate() ;
+							double chargeDelta = (getSimulatorSpeed()/1000.0) * drone.getRechargeRate() ;
 							if(drone.getCharge()+ chargeDelta > 1.0){
 								drone.setCharge(1.0);
 								drone.getController().droneRechargingEnd(cloneDrone);
