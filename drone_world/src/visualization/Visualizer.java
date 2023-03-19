@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import com.jme3.anim.AnimComposer;
 import com.jme3.animation.AnimChannel;
 import com.jme3.animation.AnimControl;
 import com.jme3.animation.AnimEventListener;
@@ -182,7 +183,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	}
 
 	private void initBase() {
-		canonical_place = assetManager.loadModel("assets/house.blend");
+		canonical_place = assetManager.loadModel("assets/house.glb");
 		canonical_place.scale(0.015f);
 		canonical_place.setShadowMode(ShadowMode.Cast);
 	}
@@ -222,7 +223,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			Quaternion q1;
 			if(numberOfDroneTypes > 0) {
 				assetManager.registerLocator("assets/Quandtum_SAP-1/", FileLocator.class);
-				drone = assetManager.loadModel("Quandtum_SAP-1_v2_0.blend");
+				drone = assetManager.loadModel("Quandtum_SAP-1_v2_0.glb");
 				assetManager.unregisterLocator("assets/Quandtum_SAP-1/", FileLocator.class);
 				drone.scale(0.1f);
 				drone.setLocalTranslation(0f, 0f, 0f);
@@ -233,7 +234,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			if(numberOfDroneTypes > 1) {
 				System.out.println("This program uses a model from XhyldazhK at http://www.blendswap.com/blends/view/76328");
 				assetManager.registerLocator("assets/nauyaca/", FileLocator.class);
-				drone = assetManager.loadModel("spaceship01.blend");
+				drone = assetManager.loadModel("spaceship01.glb");
 				assetManager.unregisterLocator("assets/nauyaca/", FileLocator.class);
 				drone.scale(0.02f);
 				drone.setLocalTranslation(0f, 0.33f, 0f);
@@ -245,7 +246,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			
 			if(numberOfDroneTypes > 2) {
 				assetManager.registerLocator("assets/simple", FileLocator.class);
-				drone = assetManager.loadModel("Spaceship_Request.blend");
+				drone = assetManager.loadModel("Spaceship_Request.glb");
 				assetManager.unregisterLocator("assets/simple", FileLocator.class);
 				drone.scale(0.04f);
 				drone.setLocalTranslation(0f, 0.2f, 0f);
@@ -258,7 +259,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			if(numberOfDroneTypes > 3) {
 				System.out.println("This program uses a model from granthus at http://www.blendswap.com/blends/view/42451");
 				assetManager.registerLocator("assets/42451_Orion_Rising", FileLocator.class);
-				drone = assetManager.loadModel("OrionRising01.blend");
+				drone = assetManager.loadModel("OrionRising01.glb");
 				assetManager.unregisterLocator("assets/42451_Orion_Rising", FileLocator.class);
 				drone.scale(0.04f);
 				drone.setLocalTranslation(0f, 0.2f, 0f);
@@ -375,17 +376,20 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			
 			baseNode.attachChild(personNode);
 
-			control = personNode.getControl(AnimControl.class);
-			control.addListener(this);
-			channel = control.createChannel();
+			//control = personNode.getControl(AnimControl.class);
+			control = personNode.getControl(AnimComposer.class);
+			//control.addListener(this);
+			//channel = control.createChannel();
 			if (random.nextFloat() > .5) {
-				channel.setAnim("Idle1", 0.05f);
+				control.setCurrentAction("Idle1");
+				//channel.setAnim("Idle1", 0.05f);
 			} else {
-				channel.setAnim("Idle3", 0.05f);
+				control.setCurrentAction("Idle1");
+				//channel.setAnim("Idle3", 0.05f);
 			}
 			// Make it so the ninjas aren't all synchronized in their animations
-			channel.setTime(random.nextFloat()*channel.getAnimMaxTime());
-			channel.setSpeed(random.nextFloat()*0.5f+0.5f);
+			//channel.setTime(random.nextFloat()*channel.getAnimMaxTime());
+			//channel.setSpeed(random.nextFloat()*0.5f+0.5f);
 
 			BitmapText frontName = new BitmapText(guiFont, false);
 			frontName.setSize(guiFont.getCharSet().getRenderedSize());
@@ -1035,7 +1039,8 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	}
 
 	private AnimChannel channel;
-	private AnimControl control;
+	//private AnimControl control;
+	private AnimComposer control;
 
 	public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
 		Person p = control.getSpatial().getUserData("person");
