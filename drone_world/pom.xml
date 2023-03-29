@@ -8,7 +8,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<natives.version>0.0.6</natives.version>
 		<jme3_g>org.jmonkeyengine</jme3_g>
-		<jme3_v>3.6.0-beta3</jme3_v>
+		<jme3_v>3.6.0-stable</jme3_v>
 		<jme3_blender>3.3.2-stable</jme3_blender>
 	</properties>
 	<repositories>
