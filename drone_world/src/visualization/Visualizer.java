@@ -1158,7 +1158,15 @@ public class Visualizer extends SimpleApplication {
 		this.setSettings(settings);
 		//Start the jMonkeyEngine SimpleApplication
 		this.start();
-		
+
+		// Windows immediately returns from this.start() for some reason this stops it from quitting until the simulation is done.
+		while(this.simulator != null && !this.simulator.isQuitting()) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 		
 	}
 
