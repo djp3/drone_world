@@ -843,7 +843,7 @@ public class Simulator {
 		ret.add(new Place("In-N-Out",new Position(34.442533,-119.790726,0)));
 		ret.add(new Place("McDonald's",new Position(34.441046,-119.753056,0)));
 		ret.add(new Place("Courthouse",new Position(34.424117,-119.701909,0)));
-		ret.add(new Place("Princess Cruise",new Position(34.396725,-119.683566,0)));
+		ret.add(new Place("Cruise Ship",new Position(34.396725,-119.683566,0)));
 		ret.add(new Place("Mother Stearn's Candy",new Position(34.4097893,-119.6855427,0)));
 		
 		ret.add(new Place("Doctor Evil's Sub",new Position(34.395299,-119.658715,0)));
@@ -930,11 +930,11 @@ public class Simulator {
 		randomizePlaces.addAll(places);
 		Collections.shuffle(randomizePlaces,random);
 		
-		String[] namesFirst = {"Curtis", "Garrett", "Andy", "Valentina", "Silas Ten", "Trevor", "Ian", "Bailey", "Donovan", "Nathan", "Blake", "Nolan", "Daniel", "Laurel", "Luke", "John", "Finnegan", "Michael", "Jackson", "Logan", "Adam", "Levi", "Jackson", "Benjamin"};
+		String[] namesFirst = {"Yevgeny", "Will", "Benjamin", "Sam", "Sarah", "Samuel", "Nick", "Nathan", "Morgan", "Meghan", "Livingstone", "Lauren", "Kate", "Eli", "Joshua", "Jill", "Isaac", "Hannah", "Harrison", "Grant", "Griffin", "Derek", "David Ponce De", "David", "Darian", "Davis", "Connor", "Brycyn", "Bailey", "Anne Monique", "Amelia", "Allie", "Andrew"};
 
 		List<String> randomizeFirst = Arrays.asList(namesFirst);
 		
-		String[] namesLast = {"Barnhart", "Buchanan", "Chung", "Costarelli", "Elshof", "English", "Grahn", "Hall", "Howat", "Kirk", "LaBrie", "Lundgaard", "Patterson", "Payne", "Rozinskas", "Schmidt", "Snyder", "Stull", "Thomas", "Towne", "Vekony", "Wicks", "Wolf", "Work" };
+		String[] namesLast = {"Krahn", "Peterson", "Ubben", "Uwamahoro", "Fong", "Gossett", "Rogstad", "Peterson", "Choi", "Oyebade", "Leon", "Shoring", "Brown", "Oswald", "Bruggeman", "Desoto", "Jessop", "Ludwig", "Nielsen", "Tiao", "Ohara", "Landa", "Rwagatare", "Nugent", "Veth", "Colwell", "Taylor", "An", "Bean", "Tang", "Yeom", "Fittipaldi", "Beams"};
 
 		List<String> randomizeLast = Arrays.asList(namesLast);
 		
