@@ -1147,15 +1147,22 @@ public class Visualizer extends SimpleApplication {
 			t.start();
 		}
 
+		/* Handle all settings through software */
+		this.showSettings = false;  //Turn off dialog box at start of jMonkeyEngine
+
 		com.jme3.system.AppSettings settings=new com.jme3.system.AppSettings(true);
+
 		if( MySimulationController.FULL_SCREEN) {
 			settings.setFullscreen(true);
 		}
 		else {
 			settings.setResolution(MySimulationController.SCREEN_WIDTH, MySimulationController.SCREEN_HEIGHT);
 		}
+
 		settings.setGammaCorrection(false);
+
 		this.setSettings(settings);
+
 		//Start the jMonkeyEngine SimpleApplication
 		this.start();
 
