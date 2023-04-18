@@ -966,6 +966,32 @@ public class Simulator {
 		
 		//Add each companies drones here
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerYeom(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerTiao(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerNickTaylor(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerTang(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerShoring(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerLivingstone(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerRogstad(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerDavisPeterson(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerAlliePeterson(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerDavidO(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerKate(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerNugent(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerNielsen(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerDavidPonceDeLeon(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerLaurAnne(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerAkrahn(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerIsaacJessop(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerBrycyn(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerBaileyDarian(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerFittipaldi(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerDeSoto(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerBruggeman(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerBrown(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerBeanLudwig(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerBeams(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerSamuelAn(),simController.shouldQuarantineDrones()),randomSource));
 		
 		//Add reference drones here
 //		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()),randomSource)); //Professor's Controller
@@ -1085,7 +1111,7 @@ public class Simulator {
 				}
 			}
 			
-			System.out.println("\t"+p.getKey()+" delivered "+deliveredNum+" passengers in a total time of "+p.getValue().getValue()+ ", killed "+deadNum+", quarantined "+quarantinedNum+", still onboard "+onboardNum+", unaccounted for "+miscNum);
+			System.out.println("\t"+p.getKey()+" delivered "+deliveredNum+" passengers with a total transit time of "+p.getValue().getValue()+ ", killed "+deadNum+", quarantined "+quarantinedNum+", still onboard "+onboardNum+", unaccounted for "+miscNum);
 		}
 		
 		System.out.println("\nOrdered Results:");
