@@ -6,16 +6,21 @@ import simulator.interfaces.SimulationController;
 
 public class MySimulationController implements SimulationController {
 	
+	//Visualization settings
+	public static final boolean FULL_SCREEN = false;
+	public static final int SCREEN_WIDTH = 1280;
+	public static final int SCREEN_HEIGHT = 720;
+	
 	//Set this to true to get consistent behavior each run while debugging
 	//Set it to false to get different random numbers on each run
-	static private final boolean SAME_RANDOM_NUMBERS_EACH_TIME = false;
+	static private final boolean SAME_RANDOM_NUMBERS_EACH_TIME = true;
 	static private final int RANDOM_NUMBER_SEED = 25; //Only matters if above is true 
 	
 	//True if you want to render the drones (longer to start up when higher resolution)
 	static private final boolean HIGH_RESOLUTION = true;
 	
-	//Number of types of 3D models to load to represent drones  (up to 4, the more you pick the longer to start up)
-	static private final int DRONE_MODEL_COUNT = 4;
+	//Number of types of 3D models to load to represent drones  (up to 3, the more you pick the longer to start up)
+	static private final int DRONE_MODEL_COUNT = 3;
 	
 	//1 for one second in game time is one second in real-time (slow)
 	//100 to run the simulator as fast as possible (fast)

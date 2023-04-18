@@ -291,7 +291,9 @@ public class Drone implements Comparable<Drone>{
 		this.controller = controller;
 		
 		// Make up a unique id
-		this.id = "id_"+Math.abs(r.nextLong());
+		long x = r.nextLong();
+		if(x < 0) x = -x;
+		this.id = "id_"+x;
 		
 		//Ask controller for drone and company name
 		this.name = this.controller.getNextDroneName();

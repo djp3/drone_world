@@ -13,10 +13,10 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import com.jme3.animation.AnimChannel;
-import com.jme3.animation.AnimControl;
-import com.jme3.animation.AnimEventListener;
-import com.jme3.animation.LoopMode;
+import com.jme3.anim.AnimComposer;
+import com.jme3.anim.tween.Tween;
+import com.jme3.anim.tween.Tweens;
+import com.jme3.anim.tween.action.Action;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
 import com.jme3.asset.TextureKey;
@@ -28,14 +28,10 @@ import com.jme3.effect.shapes.EmitterPointShape;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.input.ChaseCamera;
-import com.jme3.input.KeyInput;
-import com.jme3.input.controls.ActionListener;
-import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
@@ -50,10 +46,7 @@ import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.SkyFactory;
 
-import robodrones.DistanceAwarePromiscuousDroneController;
-import robodrones.GreedyDroneController;
-import robodrones.PromiscuousDroneController;
-import robodrones.RandomDroneController;
+import reference.MySimulationController;
 import simulator.Drone;
 import simulator.Explosion;
 import simulator.Pair;
@@ -69,7 +62,7 @@ import simulator.enums.PersonState;
  * @author djp3
  *
  */
-public class Visualizer extends SimpleApplication implements AnimEventListener {
+public class Visualizer extends SimpleApplication {
 	
 	private Random random = new Random(10L);
 	private Simulator simulator;
@@ -81,7 +74,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 	private Spatial canonical_place;
 	private Spatial canonical_person;
 	
-	private List<Spatial> canonical_drones; //The first one is for the student drones, the rest are the professors competitors
+	private List<Spatial> canonical_drones; 
 
 	private Map<Person,Spatial> people;
 	private Map<Place,Spatial> places;
@@ -168,7 +161,6 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		ground_mat.setTexture("ColorMap", tex3);
 	}
 
-	@SuppressWarnings("deprecation")
 	private void initGround() {
 		ground = new Box(10f, 0.1f, 16.019f);
 		ground.scaleTextureCoordinates(new Vector2f(1, 1));
@@ -178,12 +170,12 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		ground_geo.setShadowMode(ShadowMode.Receive);
 		rootNode.attachChild(ground_geo);
 		
-		rootNode.attachChild(SkyFactory.createSky( assetManager, "Textures/Sky/Bright/FullskiesBlueClear03.dds", false));
+		rootNode.attachChild(SkyFactory.createSky( assetManager, "Textures/Sky/Bright/FullskiesBlueClear03.dds", SkyFactory.EnvMapType.CubeMap));
 	}
 
 	private void initBase() {
-		canonical_place = assetManager.loadModel("assets/house.blend");
-		canonical_place.scale(0.015f);
+		canonical_place = assetManager.loadModel("assets/WoodenShack/WoodenShack.glb");
+		canonical_place.scale(0.03f);
 		canonical_place.setShadowMode(ShadowMode.Cast);
 	}
 
@@ -219,59 +211,42 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			}
 		} else {
 			Spatial drone;
-			Quaternion q1;
+
 			if(numberOfDroneTypes > 0) {
-				assetManager.registerLocator("assets/Quandtum_SAP-1/", FileLocator.class);
-				drone = assetManager.loadModel("Quandtum_SAP-1_v2_0.blend");
-				assetManager.unregisterLocator("assets/Quandtum_SAP-1/", FileLocator.class);
+				assetManager.registerLocator("assets/drone/", FileLocator.class);
+				drone = assetManager.loadModel("drone.glb");
+				assetManager.unregisterLocator("assets/drone/", FileLocator.class);
+				drone.scale(0.05f);
+				drone.setLocalTranslation(0f, 0f, 0f);
+				drone.setShadowMode(ShadowMode.Cast);
+				canonical_drones.add(drone);
+			}	
+
+			if(numberOfDroneTypes > 1) {
+				assetManager.registerLocator("assets/spider-spy-drone-2/", FileLocator.class);
+				drone = assetManager.loadModel("Quandtum_BA-2_v1_0.glb");
+				assetManager.unregisterLocator("assets/spider-spy-drone-2/", FileLocator.class);
 				drone.scale(0.1f);
 				drone.setLocalTranslation(0f, 0f, 0f);
 				drone.setShadowMode(ShadowMode.Cast);
 				canonical_drones.add(drone);
 			}	
-			
-			if(numberOfDroneTypes > 1) {
-				System.out.println("This program uses a model from XhyldazhK at http://www.blendswap.com/blends/view/76328");
-				assetManager.registerLocator("assets/nauyaca/", FileLocator.class);
-				drone = assetManager.loadModel("spaceship01.blend");
-				assetManager.unregisterLocator("assets/nauyaca/", FileLocator.class);
-				drone.scale(0.02f);
-				drone.setLocalTranslation(0f, 0.33f, 0f);
-				q1 = new Quaternion().fromAngleNormalAxis(FastMath.HALF_PI,Vector3f.UNIT_X);
-				drone.setLocalRotation(q1);
+
+			if(numberOfDroneTypes > 2) {
+				assetManager.registerLocator("assets/spider-spy-drone/", FileLocator.class);
+				drone = assetManager.loadModel("Quandtum_SpiderSpyDrone_v1-2.glb");
+				assetManager.unregisterLocator("assets/spider-spy-drone/", FileLocator.class);
+				drone.scale(0.1f);
+				drone.setLocalTranslation(0f, 0f, 0f);
 				drone.setShadowMode(ShadowMode.Cast);
 				canonical_drones.add(drone);
 			}
-			
-			if(numberOfDroneTypes > 2) {
-				assetManager.registerLocator("assets/simple", FileLocator.class);
-				drone = assetManager.loadModel("Spaceship_Request.blend");
-				assetManager.unregisterLocator("assets/simple", FileLocator.class);
-				drone.scale(0.04f);
-				drone.setLocalTranslation(0f, 0.2f, 0f);
-				q1 = new Quaternion().fromAngleNormalAxis(FastMath.PI,Vector3f.UNIT_Y);
-				drone.setLocalRotation(q1);
-				drone.setShadowMode(ShadowMode.Cast);
-				canonical_drones.add(drone);
-			}	
-			
-			if(numberOfDroneTypes > 3) {
-				System.out.println("This program uses a model from granthus at http://www.blendswap.com/blends/view/42451");
-				assetManager.registerLocator("assets/42451_Orion_Rising", FileLocator.class);
-				drone = assetManager.loadModel("OrionRising01.blend");
-				assetManager.unregisterLocator("assets/42451_Orion_Rising", FileLocator.class);
-				drone.scale(0.04f);
-				drone.setLocalTranslation(0f, 0.2f, 0f);
-				q1 = new Quaternion().fromAngleNormalAxis(FastMath.PI,Vector3f.UNIT_Y);
-				drone.setLocalRotation(q1);
-				drone.setShadowMode(ShadowMode.Cast);
-				canonical_drones.add(drone);
-			}	
 		}
 	}
 
 	private void initPerson() {
 		canonical_person = assetManager.loadModel("Models/Ninja/Ninja.mesh.xml");
+		//canonical_person = assetManager.loadModel("Models/Sinbad/Sinbad.mesh.xml");
 		canonical_person.scale(0.001f);
 		canonical_person.rotate(0.0f, -3.0f, 0.0f);
 		canonical_person.setShadowMode(ShadowMode.Cast);
@@ -332,7 +307,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			Node baseNode = new Node();
 
 			// Display a line of text with a default font
-			BitmapText frontName = new BitmapText(guiFont, false);
+			BitmapText frontName = new BitmapText(guiFont);
 			frontName.setSize(guiFont.getCharSet().getRenderedSize());
 			frontName.setText(place.getName());
 			frontName.setLocalTranslation((place.getName().length() / 2.0f) * -0.05f ,0.55f,0.0f);
@@ -341,7 +316,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			
 			baseNode.attachChild(frontName);
 			
-			BitmapText backName = new BitmapText(guiFont, false);
+			BitmapText backName = new BitmapText(guiFont);
 			backName.setSize(guiFont.getCharSet().getRenderedSize());
 			backName.setText(place.getName());
 			backName.setLocalTranslation((place.getName().length() / 2.0f) * 0.05f ,0.55f,0.0f);
@@ -375,19 +350,69 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			
 			baseNode.attachChild(personNode);
 
-			control = personNode.getControl(AnimControl.class);
-			control.addListener(this);
-			channel = control.createChannel();
-			if (random.nextFloat() > .5) {
-				channel.setAnim("Idle1", 0.05f);
-			} else {
-				channel.setAnim("Idle3", 0.05f);
-			}
-			// Make it so the ninjas aren't all synchronized in their animations
-			channel.setTime(random.nextFloat()*channel.getAnimMaxTime());
-			channel.setSpeed(random.nextFloat()*0.5f+0.5f);
+			AnimComposer control = personNode.getControl(AnimComposer.class);
 
-			BitmapText frontName = new BitmapText(guiFont, false);
+			Action action;
+			Tween tweenDone;
+			action = control.action("Idle1");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"Idle1");
+			control.actionSequence("Idle1Once",action,tweenDone);
+
+			action = control.action("Idle2");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"Idle2");
+			control.actionSequence("Idle2Once",action,tweenDone);
+
+			action = control.action("Idle3");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"Idle3");
+			control.actionSequence("Idle3Once",action,tweenDone);
+
+			action = control.action("Walk");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"Walk");
+			control.actionSequence("WalkOnce",action,tweenDone);
+
+			action = control.action("Spin");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"Spin");
+			control.actionSequence("SpinOnce",action,tweenDone);
+
+			action = control.action("Stealth");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"Stealth");
+			control.actionSequence("StealthOnce",action,tweenDone);
+			
+			action = control.action("Death2");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"Death2");
+			control.actionSequence("Death2Once",action,tweenDone);
+
+			action = control.action("Death1");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"Death1");
+			control.actionSequence("Death1OnceNoCallback",action,tweenDone);
+
+			action = control.action("Jump");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"Jump");
+			control.actionSequence("JumpOnce",action,tweenDone);
+
+			action = control.action("Backflip");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"Backflip");
+			control.actionSequence("BackflipOnce",action,tweenDone);
+
+			action = control.action("Crouch");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"Crouch");
+			control.actionSequence("CrouchOnce",action,tweenDone);
+
+			action = control.action("Block");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"Block");
+			control.actionSequence("BlockOnce",action,tweenDone);
+
+			action = control.action("JumpNoHeight");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"JumpNoHeight");
+			control.actionSequence("JumpNoHeightOnce",action,tweenDone);
+
+			action = control.action("SideKick");
+			tweenDone = Tweens.callMethod(this, "onPersonActionDone",personNode,"SideKick");
+			control.actionSequence("SideKickOnce",action,tweenDone);
+
+			setRandomIdle(control);
+
+			BitmapText frontName = new BitmapText(guiFont);
 			frontName.setSize(guiFont.getCharSet().getRenderedSize());
 			frontName.setText(person.getName());
 			frontName.setLocalTranslation((person.getName().length() / 2.0f) * -0.04f ,0.35f,0.0f);
@@ -396,7 +421,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 
 			baseNode.attachChild(frontName);
 			
-			BitmapText backName = new BitmapText(guiFont, false);
+			BitmapText backName = new BitmapText(guiFont);
 			backName.setSize(guiFont.getCharSet().getRenderedSize());
 			backName.setText(person.getName());
 			backName.setLocalTranslation((person.getName().length() / 2.0f) * 0.04f ,0.35f,0.0f);
@@ -414,29 +439,15 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			rootNode.attachChild(baseNode);
 		}
 
+		int size = canonical_drones.size();
 		for (Entry<Drone, Node> droneEntry : drones.entrySet()) {
 
 			Drone drone = droneEntry.getKey();
 			Position position = drone.getStart().getPosition();
 
 			Spatial droneNode;
-			int size = canonical_drones.size();
-			int index = 0; //Assume the drone is a student drone (draw drone 0)
-			if(size > 1){  //If there are more drones available draw a different one for professor's drones
-				if(droneEntry.getKey().getCompanyName().equals(RandomDroneController.companyName)){
-					index = 0;
-					index = (index % (size-1)) +1; //Make the professor's drone be one with index greater than 0
-				} else if(droneEntry.getKey().getCompanyName().equals(GreedyDroneController.companyName)){
-					index = 1;
-					index = (index % (size-1)) +1; //Make the professor's drone be one with index greater than 0
-				} else if(droneEntry.getKey().getCompanyName().equals(PromiscuousDroneController.companyName)){
-					index = 2;
-					index = (index % (size-1)) +1; //Make the professor's drone be one with index greater than 0
-				} else if(droneEntry.getKey().getCompanyName().equals(DistanceAwarePromiscuousDroneController.companyName)){
-					index = 3;
-					index = (index % (size-1)) +1; //Make the professor's drone be one with index greater than 0
-				}
-			}
+			int index = drone.getCompanyName().hashCode()%size;
+			if(index < 0 ) index = -index;
 			droneNode = canonical_drones.get(index).clone();
 			droneNode.setName("drone");
 			
@@ -448,7 +459,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			baseNode.attachChild(particlesNode);
 			baseNode.attachChild(droneNode);
 			
-			BitmapText frontName = new BitmapText(guiFont, false);
+			BitmapText frontName = new BitmapText(guiFont);
 			frontName.setSize(guiFont.getCharSet().getRenderedSize());
 			frontName.setText(drone.getName());
 			frontName.setLocalTranslation((drone.getName().length() / 2.0f) * -0.04f ,-0.15f,0.0f);
@@ -458,7 +469,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 
 			baseNode.attachChild(frontName);
 			
-			BitmapText backName = new BitmapText(guiFont, false);
+			BitmapText backName = new BitmapText(guiFont);
 			backName.setSize(guiFont.getCharSet().getRenderedSize());
 			backName.setText(drone.getName());
 			backName.setLocalTranslation((drone.getName().length() / 2.0f) * 0.04f ,-0.15f,0.0f);
@@ -480,7 +491,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		setDisplayStatView(false);
 		setDisplayFps(false);
 		
-		hudWaitingText = new BitmapText(consoleFont,false);
+		hudWaitingText = new BitmapText(consoleFont);
 		hudWaitingText.setSize(consoleFont.getCharSet().getRenderedSize());
 		hudWaitingText.setColor(ColorRGBA.White);
 		hudWaitingText.setText("Ninjas in waiting");
@@ -518,7 +529,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			guiNode.attachChild(hudCompanyDeliveryGeom);
 			
 			/* Make prototype text for the company's name */
-			BitmapText hudCompanyDeliveryText = new BitmapText(consoleFont,false);
+			BitmapText hudCompanyDeliveryText = new BitmapText(consoleFont);
 			hudCompanyDeliveryText.setSize(consoleFont.getCharSet().getRenderedSize());
 			hudCompanyDeliveryText.setColor(ColorRGBA.White);
 			hudCompanyDeliveryText.setText("");
@@ -526,7 +537,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			
 			hudCompanyDelivery.put(company,new Pair<BitmapText,Geometry>(hudCompanyDeliveryText,hudCompanyDeliveryGeom));
 			
-			BitmapText hudCompanyFlyingText = new BitmapText(consoleFont,false);
+			BitmapText hudCompanyFlyingText = new BitmapText(consoleFont);
 			hudCompanyFlyingText.setSize(consoleFont.getCharSet().getRenderedSize());
 			hudCompanyFlyingText.setColor(ColorRGBA.White);
 			hudCompanyFlyingText.setText("");
@@ -541,7 +552,7 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			
 			hudCompanyFlying.put(company,new Pair<BitmapText,Geometry>(hudCompanyFlyingText,hudCompanyFlyingGeom));
 			
-			BitmapText hudCompanyDeadText = new BitmapText(consoleFont,false);
+			BitmapText hudCompanyDeadText = new BitmapText(consoleFont);
 			hudCompanyDeadText.setSize(consoleFont.getCharSet().getRenderedSize());
 			hudCompanyDeadText.setColor(ColorRGBA.White);
 			hudCompanyDeadText.setText("");
@@ -557,13 +568,10 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 			hudCompanyDead.put(company,new Pair<BitmapText,Geometry>(hudCompanyDeadText,hudCompanyDeadGeom));
 		}
 		
-		
-		initKeys();
-		//flyCam.setMoveSpeed(5);
 		flyCam.setEnabled(false);
 		
 	    reassignChaseCamera();
-		
+	    	
 		setDoneWithInit(true);
 	}
 
@@ -658,7 +666,6 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		if(hudPersonBarWidth == null){
 			hudPersonBarWidth = (0.0f+hudWaitingBarWidth)/(0.0f+people.size());
 		}
-		//System.out.println(""+ hudLeftGutter + " " +hudCompanyWidth + " " + hudCompanyBarGutter + " " + hudRightGutter +" "+ hudWaitingBarWidth +" "+ hudPersonBarWidth);
 	}
 
 	/* Use the main event loop to trigger repeating actions. */
@@ -959,10 +966,12 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 					ParticleEmitter emit = new ParticleEmitter("Emitter", Type.Triangle, 300);
 					emit.setParticlesPerSec(20);
 				    emit.setGravity(0, 0, 0);
-				    emit.setVelocityVariation(0.1f);
+			        emit.getParticleInfluencer().setVelocityVariation(0.1f);
+				    //emit.setVelocityVariation(0.1f);
 			        emit.setLowLife(1);
 			        emit.setHighLife(3);
-			        emit.setInitialVelocity(new Vector3f(0, .5f, 0));
+			        emit.getParticleInfluencer().setInitialVelocity(new Vector3f(0, .5f, 0));
+			        //emit.setInitialVelocity(new Vector3f(0, .5f, 0));
 				    emit.setImagesX(15);
 				    Material mat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
 				    mat.setTexture("Texture", assetManager.loadTexture("Effects/Smoke/Smoke.png"));
@@ -1034,117 +1043,61 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 		}
 	}
 
-	private AnimChannel channel;
-	private AnimControl control;
+	private void setRandomIdle(AnimComposer control) {
+		float r = random.nextFloat();
+		if (r < .3) {
+			control.setCurrentAction("Idle1Once");
+		}else if (r < .6) {
+			control.setCurrentAction("Idle2Once");
+		} else {
+			control.setCurrentAction("Idle3Once");
+		}
+	}
 
-	public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
-		Person p = control.getSpatial().getUserData("person");
+	void onPersonActionDone(Spatial personNode,String completedAction) {
+		AnimComposer control = personNode.getControl(AnimComposer.class);
+
+		Person p = personNode.getUserData("person");
 		if (p.getState().equals(PersonState.EMBARKING)) {
-			//Only animated once
-			if(!channel.getAnimationName().contains("Walk")) {
-				channel.setAnim("Walk", 0.05f);
-				channel.setLoopMode(LoopMode.DontLoop);
-			}	
+			control.setCurrentAction("WalkOnce");
 		}
 		else if (p.getState().equals(PersonState.DISEMBARKING)) {
-			//Only animated once
-			if(!channel.getAnimationName().contains("Walk")) {
-				channel.setAnim("Walk", 0.05f);
-				channel.setLoopMode(LoopMode.DontLoop);
-			}
+			control.setCurrentAction("WalkOnce");
 		}
 		else if (p.getState().equals(PersonState.ARRIVED)) {
-			if(!channel.getAnimationName().equals("Spin")) {
-				channel.setSpeed(0.1f);
-				channel.setAnim("Spin", 0.05f);
-			}
+			control.setCurrentAction("SpinOnce");
 		}
 		else if (p.getState().equals(PersonState.IN_DRONE)) {
-			channel.setAnim("Stealth", 0.05f);
-			//channel.setLoopMode(LoopMode.DontLoop);
+			control.setCurrentAction("StealthOnce");
 		}
 		else if (p.getState().equals(PersonState.DYING)) {
-			//Only animated dying once
-			if(!channel.getAnimationName().equals("Death2")) {
-				channel.setAnim("Death2", 0.05f);
-				channel.setLoopMode(LoopMode.DontLoop);
-			}
+			control.setCurrentAction("Death2Once");
 		}
 		else if (p.getState().equals(PersonState.DEAD)) {
-			//Leave the ninja lying down
-			if(!channel.getAnimationName().equals("Death1")) {
-				channel.setAnim("Death1", 0.05f);
-				channel.setLoopMode(LoopMode.DontLoop);
+			if(random.nextFloat() < .1) {
+				control.removeCurrentAction();
 			}
 			else {
-				channel.setTime(channel.getAnimMaxTime());
+				control.setCurrentAction("Death1OnceNoCallback");
 			}
 		}
 		else if (p.getState().equals(PersonState.QUARANTINED)) {
-			channel.setAnim("Jump", 0.05f);
+			control.setCurrentAction("JumpOnce");
 		} else {
-			if (animName.equals("Idle2")) {
-				channel.setAnim("Idle1", 0.05f);
-				channel.setLoopMode(LoopMode.DontLoop);
-			} else if (animName.equals("Idle1")) {
-				channel.setAnim("Idle3", 0.05f);
-				channel.setLoopMode(LoopMode.DontLoop);
-			} else if (animName.equals("Idle3")) {
-				channel.setAnim("Backflip", 0.05f);
-				channel.setLoopMode(LoopMode.DontLoop);
-			} else if (animName.equals("Backflip")) {
-				channel.setAnim("Crouch", 0.05f);
-				channel.setLoopMode(LoopMode.DontLoop);
-			} else if (animName.equals("Crouch")) {
-				channel.setAnim("Block", 0.05f);
-				channel.setLoopMode(LoopMode.DontLoop);
-			} else if (animName.equals("Block")) {
-				channel.setAnim("JumpNoHeight", 0.05f);
-				channel.setLoopMode(LoopMode.DontLoop);
-			} else if (animName.equals("JumpNoHeight")) {
-				channel.setAnim("SideKick", 0.05f);
-				channel.setLoopMode(LoopMode.DontLoop);
-			} else if (animName.equals("SideKick")) {
-				channel.setAnim("Idle2", 0.05f);
-				channel.setLoopMode(LoopMode.DontLoop);
+			switch (completedAction) {
+				case "Idle1": setRandomIdle(control); break;
+				case "Idle2": control.setCurrentAction("Idle3Once"); break;
+				case "Idle3": control.setCurrentAction("BackflipOnce"); break;
+				case "Backflip": control.setCurrentAction("CrouchOnce"); break;
+				case "Crouch": control.setCurrentAction("BlockOnce"); break;
+				case "Block": control.setCurrentAction("JumpNoHeightOnce"); break;
+				case "JumpNoHeight": control.setCurrentAction("SideKickOnce"); break;
+				case "SideKick": control.setCurrentAction("Idle1Once"); break;
+				default: setRandomIdle(control); break;
 			}
 		}
 	}
 
-	public void onAnimChange(AnimControl control, AnimChannel channel, String animName) {
-		// unused
-	}
-
-	private void initKeys() {
-		inputManager.addMapping("Idle1", new KeyTrigger(KeyInput.KEY_1));
-		inputManager.addListener(actionListener, "Idle1");
-		inputManager.addMapping("Idle2", new KeyTrigger(KeyInput.KEY_2));
-		inputManager.addListener(actionListener, "Idle2");
-		inputManager.addMapping("Idle3", new KeyTrigger(KeyInput.KEY_3));
-		inputManager.addListener(actionListener, "Idle3");
-		
-		inputManager.addMapping("Switch Camera Target", new KeyTrigger(KeyInput.KEY_C));
-		inputManager.addListener(actionListener, "Switch Camera Target");
-	}
-
-	private ActionListener actionListener = new ActionListener() {
-		public void onAction(String name, boolean keyPressed, float tpf) {
-			if (!keyPressed) {
-				if (name.equals("Idle1")) {
-					channel.setAnim("Idle1", 0.05f);
-					channel.setLoopMode(LoopMode.DontLoop);
-				} else if (name.equals("Idle2")) {
-					channel.setAnim("Idle2", 0.05f);
-					channel.setLoopMode(LoopMode.DontLoop);
-				} else if (name.equals("Idle3")) {
-					channel.setAnim("Idle3", 0.05f);
-					channel.setLoopMode(LoopMode.DontLoop);
-				} else if (name.equals("Switch Camera Target")) {
-					reassignChaseCamera();
-				}
-			}
-		}
-	};
 
 	@Override
 	public void handleError(String errorMsg, Throwable t) {
@@ -1172,26 +1125,56 @@ public class Visualizer extends SimpleApplication implements AnimEventListener {
 
 	public void launch() {
 		
+
+		//Launch the simulator
+		if (this.simulator != null) {
+			Thread t = new Thread(new Runnable(){
+				@Override
+				public void run() {
+					//Wait for the initialization to end in a different thread
+					while(!getDoneWithInit()){
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {
+						}
+					}
+
+					simulator.start();
+					stop();  //Stop the visualization
+				}
+			});
+			t.setDaemon(true);
+			t.start();
+		}
+
+		/* Handle all settings through software */
+		this.showSettings = false;  //Turn off dialog box at start of jMonkeyEngine
+
+		com.jme3.system.AppSettings settings=new com.jme3.system.AppSettings(true);
+
+		if( MySimulationController.FULL_SCREEN) {
+			settings.setFullscreen(true);
+		}
+		else {
+			settings.setResolution(MySimulationController.SCREEN_WIDTH, MySimulationController.SCREEN_HEIGHT);
+		}
+
+		settings.setGammaCorrection(false);
+
+		this.setSettings(settings);
+
 		//Start the jMonkeyEngine SimpleApplication
 		this.start();
-		
-		//Wait for the initialization to end in a different thread
-		while(!getDoneWithInit()){
+
+		// Windows immediately returns from this.start() for some reason this stops it from quitting until the simulation is done.
+		while(this.simulator != null && !this.simulator.isQuitting()) {
 			try {
-				Thread.sleep(100);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 		
-		//Launch the simulator
-		if (this.simulator != null) {
-			this.simulator.start();
-		}
-	}
-
-	public static void main(String[] args) {
-		Visualizer app = new Visualizer();
-		app.start(); 
 	}
 
 }
