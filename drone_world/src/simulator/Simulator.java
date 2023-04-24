@@ -16,6 +16,7 @@ import java.util.TreeSet;
 
 import reference.MyDroneController;
 import reference.MySimulationController;
+import robodrones.Borg;
 import robodrones.DistanceAwarePromiscuousDroneController;
 import robodrones.GreedyDroneController;
 import robodrones.PromiscuousDroneController;
@@ -31,7 +32,7 @@ public class Simulator {
 	public static final int DRONE_MAX_CAPACITY = 1;
 	
 	private static final boolean DRONE_CAPACITY_VARIES = false;
-	private static boolean DRONES_RUN_OUT_OF_CHARGE = false;
+	private static final boolean DRONES_RUN_OUT_OF_CHARGE = false;
 	
 	public static final int MAX_PEOPLE = 100;
 	
@@ -925,7 +926,7 @@ public class Simulator {
 		return (ret);
 	}
 
-	private static Set<Person> loadPeople(Set<Place> places,Random random) {
+	private static Set<Person> loadPeople(Set<Place> places, Random random) {
 		ArrayList<Place> randomizePlaces = new ArrayList<Place>();
 		randomizePlaces.addAll(places);
 		Collections.shuffle(randomizePlaces,random);
@@ -937,22 +938,22 @@ public class Simulator {
 		String[] namesLast = {"Krahn", "Peterson", "Ubben", "Uwamahoro", "Fong", "Gossett", "Rogstad", "Peterson", "Choi", "Oyebade", "Leon", "Shoring", "Brown", "Oswald", "Bruggeman", "Desoto", "Jessop", "Ludwig", "Nielsen", "Tiao", "Ohara", "Landa", "Rwagatare", "Nugent", "Veth", "Colwell", "Taylor", "An", "Bean", "Tang", "Yeom", "Fittipaldi", "Beams"};
 
 		List<String> randomizeLast = Arrays.asList(namesLast);
-		
+
 		Set<Person> ret = new TreeSet<Person>();
-		for(int i = 0; i < MAX_PEOPLE ; i++){
+		for (int i = 0; i < MAX_PEOPLE; i++) {
 			int start = random.nextInt(randomizePlaces.size());
 			int end = random.nextInt(randomizePlaces.size());
-			while((start == end) &&(randomizePlaces.size() > 1)){
+			while ((start == end) && (randomizePlaces.size() > 1)) {
 				end = random.nextInt(randomizePlaces.size());
 			}
 			int first = random.nextInt(randomizeFirst.size());
 			int last = random.nextInt(randomizeLast.size());
-			
-			Person person = new Person(""+i,randomizeFirst.get(first)+" "+randomizeLast.get(last),randomizePlaces.get(start),randomizePlaces.get(start).getPosition(),randomizePlaces.get(end),PersonState.WAITING);
+
+			Person person = new Person("" + i, randomizeFirst.get(first) + " " + randomizeLast.get(last), randomizePlaces.get(start), randomizePlaces.get(start).getPosition(), randomizePlaces.get(end), PersonState.WAITING);
 			randomizePlaces.get(start).getWaitingToEmbark().add(person);
 			ret.add(person);
 		}
-		
+
 		return ret;
 	}
 
@@ -970,9 +971,35 @@ public class Simulator {
 		
 		//Add each companies drones here
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneController(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerYeom(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerTiao(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerNickTaylor(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerTang(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerShoring(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerLivingstone(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerRogstad(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerDavisPeterson(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerAlliePeterson(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerDavidO(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerKate(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerNugent(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerNielsen(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerDavidPonceDeLeon(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerLaurAnne(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerAkrahn(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerIsaacJessop(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerBrycyn(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerBaileyDarian(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerFittipaldi(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerDeSoto(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerBruggeman(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerBrown(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerBeanLudwig(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerBeams(),simController.shouldQuarantineDrones()),randomSource));
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new MyDroneControllerSamuelAn(),simController.shouldQuarantineDrones()),randomSource));
 		
 		//Add reference drones here
-//		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()),randomSource)); //Professor's Controller
+		//drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new Borg(),simController.shouldQuarantineDrones()),randomSource)); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new DistanceAwarePromiscuousDroneController(),simController.shouldQuarantineDrones()),randomSource)); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new GreedyDroneController(),simController.shouldQuarantineDrones()),randomSource)); //Professor's Controller
 		drones.addAll(loadDrones(places,new DroneControllerSafetyWrapper(new PromiscuousDroneController(),simController.shouldQuarantineDrones()),randomSource)); //Professor's Controller
@@ -1089,7 +1116,7 @@ public class Simulator {
 				}
 			}
 			
-			System.out.println("\t"+p.getKey()+" delivered "+deliveredNum+" passengers in a total time of "+p.getValue().getValue()+ ", killed "+deadNum+", quarantined "+quarantinedNum+", still onboard "+onboardNum+", unaccounted for "+miscNum);
+			System.out.println("\t"+p.getKey()+" delivered "+deliveredNum+" passengers with a total transit time of "+p.getValue().getValue()+ ", killed "+deadNum+", quarantined "+quarantinedNum+", still onboard "+onboardNum+", unaccounted for "+miscNum);
 		}
 		
 		System.out.println("\nOrdered Results:");
